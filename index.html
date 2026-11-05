@@ -218,6 +218,13 @@ function feedback(s,kind=''){const el=$('feedback');el.className=s?'notice'+(kin
 function fillSummary(){const p=$('person').value.trim()||'(person not specified)';const amount=$('amount').value.trim();const amt=amount && Number(amount)>0?money(Math.round(Number(amount)*100)):'Price TBD';const reason=$('reason').value.trim();$('summary').textContent=($('direction').value==='to_me'?p+' owes you ': 'You owe '+p+' ')+amt+(reason?'\nReason: '+reason:'');}
 function showForm(parsed){$('direction').value=parsed.direction;$('person').value=parsed.person;$('amount').value=parsed.cents===null?'':(parsed.cents/100).toFixed(2);$('reason').value=parsed.reason;$('date').value=parsed.date;$('reviewForm').classList.remove('hide');fillSummary();}
 function hideForm(){$('reviewForm').classList.add('hide');$('todoReviewForm').classList.add('hide');$('entryType').textContent='';}
+function finishSuccessfulSave(){
+ // Dismiss the Android keyboard without focusing any other control.
+ const focused=document.activeElement;
+ if(focused&&typeof focused.blur==='function')focused.blur();
+ // Allow list/panel layout to settle before returning to the shared entry area.
+ requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'smooth'}));
+}
 
 function todoSummary(){
  const type=$('todoDueType').value,due=type==='day'?$('todoDueDay').value:type==='month'?$('todoDueMonth').value:'';
@@ -262,7 +269,7 @@ $('todoReviewForm').addEventListener('submit',event=>{
  const task={id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random()),title,dueType:type,due,done:false,created:new Date().toISOString()};
  try{localStorage.setItem(TODO_STORE,JSON.stringify([...tasks,task]));}
  catch(e){feedback('Could not save this reminder in your browser.','bad');return;}
- $('words').value='';hideForm();feedback('Saved to To-Do.');window.dispatchEvent(new Event('runningtab:todo-changed'));window.RunningTabView?.show('todo');$('words').focus();
+ $('words').value='';hideForm();feedback('Saved to To-Do.');window.dispatchEvent(new Event('runningtab:todo-changed'));window.RunningTabView?.show('todo');finishSuccessfulSave();
 });
 
 $('clear').addEventListener('click',()=>{$('words').value='';hideForm();feedback('');$('words').focus();});
@@ -276,7 +283,7 @@ $('reviewForm').addEventListener('submit',e=>{
  if(cents!==null&&(!Number.isSafeInteger(cents)||cents<=0||cents>10000000000)){feedback('Enter an amount greater than zero, or leave it blank if the price is not known yet.','bad');return;}
  const rec={id:(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),person,direction:$('direction').value,cents,reason:$('reason').value.trim(),date:$('date').value||today(),created:new Date().toISOString()};
  const next=[...records,rec];try{localStorage.setItem(STORE,JSON.stringify(next));}catch(e){feedback('Could not save to this browser. Check storage permissions.','bad');return;}
- records=next;$('words').value='';hideForm();render();feedback('Saved. Ready for another entry.');window.RunningTabView?.show('money');$('words').focus();
+ records=next;$('words').value='';hideForm();render();feedback('Saved. Ready for another entry.');window.RunningTabView?.show('money');finishSuccessfulSave();
 });
 function render(){
  const people=new Map();let to=0,owe=0;
