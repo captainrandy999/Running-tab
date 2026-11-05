@@ -37,10 +37,8 @@
   <div id="installStatus" class="hint" role="status"></div></div>
   <button id="installBtn" type="button" class="primary" hidden>Install app</button>
 </section>
- <section class="card" id="entry" aria-label="New entry">
-   <h2>Tell Running Tab</h2>
-   <label class="label" for="words">Type or dictate an entry for Money, To-Do, or Shopping</label>
-   <textarea id="words" placeholder="bitch better have my money..."></textarea>
+ <section class="card" id="entry" aria-label="Quick entry">
+   <textarea id="words" aria-label="Type or dictate a Money, To-Do, or Shopping entry" placeholder="bitch better have my money..."></textarea>
    <div class="hint">Try “Cody owes me $200”, “Remind me to call Cody by Saturday”, or “I need to buy milk and eggs”.</div>
    <div class="actions"><button type="button" class="secondary" id="mic" aria-label="Dictate using the microphone" aria-pressed="false">🎤 Dictate</button><button type="button" class="primary" id="review">Review</button><button type="button" class="outline" id="clear">Clear field</button></div>
 <div class="hint" id="micStatus" role="status" aria-live="polite"></div>
