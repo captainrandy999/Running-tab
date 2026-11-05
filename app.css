@@ -85,3 +85,18 @@ label.label{font-size:13px;letter-spacing:.05px}
 .compact-data .danger-zone{margin-top:12px;padding-top:10px}
 .compact-data .danger-zone .tools-grid{margin-top:7px}
 @media(prefers-reduced-motion:reduce){.view-viewport,.view-track{transition:none}}
+
+/* Three equally sized navigation buttons and independent shopping checklist. */
+.tabs button.tab-switch{font-size:13px;gap:5px;letter-spacing:-.2px;padding:12px 4px!important;white-space:nowrap}
+#shoppingPanel .shop-item{align-items:center}
+#shoppingPanel .shop-item .task-main{min-width:0}
+#shopClearChecked{margin-top:10px}
+#shopClearChecked[hidden]{display:none!important}
+/* A quiet, collapsible cue keeps the main input uncluttered. */
+.prompt-guide{margin:8px 0 2px;font-size:12px;color:#61788b}
+.prompt-guide summary{list-style:none;display:inline-flex;align-items:center;cursor:pointer;padding:4px 1px;gap:5px;font-size:12px;font-weight:600;color:#57758a}
+.prompt-guide summary::-webkit-details-marker{display:none}
+.prompt-guide summary::after{content:"⌄";margin-left:3px}
+.prompt-guide[open] summary::after{content:"⌃"}
+.prompt-examples{margin:5px 0 8px;padding:10px 12px;background:#f2f7fa;border:1px solid #e0eaef;border-radius:10px;display:grid;gap:7px;font-size:12px;line-height:1.4}
+.prompt-examples b{color:#294e69}
