@@ -34,6 +34,6 @@ Requires JDK 17, Android SDK Platform 35, Gradle 8.9 and Android Gradle Plugin 8
 
 ### Limitations
 
-Android home-screen widgets cannot embed a live WebView. Therefore this widget is a native **summary/list representation** of the Running Tab interface, not an exact live webpage. The list is scrollable; its rows are read-only. Button and tab taps are deliberate. The app must open for edits, confirmation, dictation and full Money transaction details.
+Android home-screen widgets cannot embed a live WebView. Therefore this widget is a native **summary/list representation** of the Running Tab interface, not an exact live webpage. The list is scrollable; its rows are read-only. Tap the moon icon (☾) in the widget header to enable night mode; tap the sun icon (☀) to switch back. The choice is remembered for each widget and also changes the list-row colors. Button and tab taps are deliberate. The app must open for edits, confirmation, dictation and full Money transaction details.
 
 The preview APK is intended for personal testing, not Play Store deployment.

@@ -8,6 +8,11 @@
   <TextView android:id="@+id/widgetTitle" android:layout_width="0dp" android:layout_weight="1"
    android:layout_height="wrap_content" android:text="Running Tab" android:textColor="#163B59"
    android:textStyle="bold" android:textSize="19sp" />
+  <TextView android:id="@+id/widgetTheme" android:layout_width="38dp" android:layout_height="38dp"
+   android:layout_marginEnd="5dp" android:gravity="center"
+   android:text="☾" android:textColor="#163B59" android:textSize="23sp"
+   android:background="@drawable/widget_tab_idle"
+   android:contentDescription="Switch to night mode" />
   <TextView android:id="@+id/widgetMic" android:layout_width="wrap_content" android:layout_height="38dp"
    android:gravity="center" android:paddingLeft="10dp" android:paddingRight="10dp"
    android:text="🎤 Dictate" android:textColor="#163B59" android:textSize="13sp"
@@ -42,7 +47,7 @@
   android:layout_height="wrap_content" android:padding="8dp"
   android:gravity="center" android:textColor="#647A8A"
   android:textSize="13sp" android:text="Nothing to show yet."/>
- <TextView android:layout_width="match_parent" android:layout_height="24dp"
+ <TextView android:id="@+id/widgetFooter" android:layout_width="match_parent" android:layout_height="24dp"
   android:gravity="center" android:text="Read only • Tap an item to open the app"
   android:textSize="10sp" android:textColor="#788D9B" />
 </LinearLayout>
