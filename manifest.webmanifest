@@ -1,0 +1,18 @@
+{
+  "name": "Running Tab",
+  "short_name": "Running Tab",
+  "description": "Simple running balances for who owes whom",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f7fa",
+  "theme_color": "#163b59",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
