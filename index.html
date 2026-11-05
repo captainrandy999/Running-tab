@@ -50,7 +50,7 @@
      <div><b>Shopping:</b> “Add bread and coffee to my shopping list”</div>
     </div>
    </details>
-   <div class="actions"><button type="button" class="secondary" id="mic" aria-label="Dictate using the microphone" aria-pressed="false">🎤 Dictate</button><button type="button" class="primary" id="review">Review</button><button type="button" class="outline" id="clear">Clear field</button></div>
+   <div class="actions entry-actions"><button type="button" class="secondary" id="mic" aria-label="Dictate using the microphone" aria-pressed="false">🎤 Dictate</button><button type="button" class="primary" id="review">Review</button><button type="button" class="outline" id="clear">Clear field</button></div>
 <div class="hint" id="micStatus" role="status" aria-live="polite"></div>
    <div id="feedback" aria-live="polite"></div>
    <div id="entryType" class="info" aria-live="polite"></div>
@@ -417,7 +417,15 @@ $('todoReviewForm').addEventListener('submit',event=>{
  $('words').value='';hideForm();feedback('Saved to To-Do.');window.dispatchEvent(new Event('runningtab:todo-changed'));window.RunningTabView?.show('todo');finishSuccessfulSave();
 });
 
-$('clear').addEventListener('click',()=>{$('words').value='';hideForm();feedback('');$('words').focus();});
+$('clear').addEventListener('click',()=>{
+ $('words').value='';
+ hideForm();
+ feedback('');
+ // Clearing should never reopen the software keyboard.
+ $('words').blur();
+ const focused=document.activeElement;
+ if(focused&&typeof focused.blur==='function')focused.blur();
+});
 $('cancel').addEventListener('click',()=>{hideForm();feedback('');$('words').focus();});
 $('words').addEventListener('input',()=>{hideForm();feedback('');});
 for(const n of ['direction','person','amount','reason'])$(n).addEventListener('input',fillSummary);
