@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#163b59">
+<title>Running Tab</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="./icon.svg">
+<meta name="description" content="A simple running ledger of money owed, with optional voice entry.">
+<style>
+:root {font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:#172a3c; background:#f4f7fa; color-scheme:light}
+*{box-sizing:border-box}body{margin:0;line-height:1.48}main{max-width:700px;margin:0 auto;padding:18px 12px 54px}h1,h2,h3,p{margin-top:0}h1{font-size:25px;letter-spacing:-.5px;margin-bottom:1px}h2{font-size:18px;margin-bottom:12px}button,input,select,textarea{font:inherit}button{border:0;border-radius:11px;min-height:45px;padding:10px 15px;font-weight:700;cursor:pointer}button.primary{background:#163b59;color:white}button.secondary{background:#e9f0f5;color:#163b59}button.outline{background:#fff;color:#163b59;border:1px solid #b9ccd9}button.danger{background:transparent;color:#9b3741;border:1px solid #e4c9cf}button:focus-visible,input:focus,textarea:focus,select:focus{outline:3px solid #8bb9d8;outline-offset:2px}input,textarea,select{display:block;border:1px solid #b9c9d5;background:#fff;border-radius:10px;padding:11px 12px;width:100%;color:#14283b;font-size:16px;min-height:46px}textarea{height:92px;resize:vertical}
+.head{display:flex;align-items:center;gap:11px;margin:3px 0 17px}.mark{background:#163b59;color:white;border-radius:13px;display:grid;place-items:center;width:46px;height:46px;font-weight:900;font-size:26px}.muted{color:#607386}.hint{font-size:13px;color:#607386;margin:7px 0}.card{background:#fff;border:1px solid #dde6ec;border-radius:17px;padding:17px;margin-bottom:14px;box-shadow:0 1px 3px #163b5908}.label{display:block;font-size:13px;color:#41586a;font-weight:700;margin:0 0 6px}.actions{display:flex;gap:9px;align-items:center;margin-top:11px;flex-wrap:wrap}.actions .primary{flex:1}.callout{background:#eef5f9;border:1px solid #cadae5;border-radius:11px;padding:12px;margin:13px 0 9px;font-size:14px;white-space:pre-line}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{margin-top:11px}.field.wide{grid-column:1/-1}.hide{display:none!important}.totals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}.stat{background:#fff;border:1px solid #dce5eb;border-radius:15px;padding:14px}.stat .label{color:#62778a;font-weight:600}.number{font-size:clamp(21px,5vw,29px);font-weight:800;letter-spacing:-.5px}.pos{color:#0b765d}.neg{color:#a33b43}.info{font-size:13px;color:#5b7081}.person{border:1px solid #dce5ec;border-radius:12px;margin-bottom:9px;background:#fcfdfe;overflow:hidden}.person summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:center;padding:13px}.person summary::-webkit-details-marker{display:none}.person .who{font-weight:800;overflow-wrap:anywhere}.person .right{text-align:right;flex-shrink:0}.person .amount{font-size:17px;font-weight:800}.person .detail{padding:0 13px 12px}.person .meta{border-top:1px solid #e8eef2;padding-top:10px;font-size:13px;color:#607486}.entry{padding:11px 0;display:flex;align-items:flex-start;justify-content:space-between;border-top:1px solid #e7edf2;gap:9px}.entry:nth-child(1){border-top:0}.entry-name{font-weight:700}.entry-notes{font-size:13px;color:#597085;overflow-wrap:anywhere}.entry-right{min-width:90px;text-align:right}.entry-right strong{display:block;white-space:nowrap}.small{font-size:12px;min-height:32px;padding:5px 8px;margin-top:4px}.tag{background:#fff2e4;color:#8d511d;font-size:12px;padding:3px 6px;border-radius:6px;font-weight:700}.notice{margin-top:12px;padding:9px 11px;border-radius:9px;background:#eff8f1;color:#216b44;font-size:14px}.notice.bad{background:#fff0ef;color:#932a31}.bottom{margin-top:25px;text-align:center}.bottom button{font-size:12px}.foot{font-size:12px;text-align:center;color:#718494;margin-top:8px}@media(max-width:430px){main{padding:12px 10px 32px}.card{padding:14px}.grid{grid-template-columns:1fr}.field.wide{grid-column:auto}.stat{padding:12px 10px}.person summary{padding:12px}}
+</style>
+</head>
+<body>
+<main>
+ <header class="head"><div class="mark">$</div><div><h1>Running Tab</h1><div class="info">Just money owed. Nothing more.</div></div></header>
+ <section class="card" aria-label="New entry">
+   <h2>What happened?</h2>
+   <label class="label" for="words">Type or dictate your entry</label>
+   <textarea id="words" placeholder="Cody owes me $531 for materials"></textarea>
+   <div class="hint">Also try “I owe Atlas $200 for supplies.” Tap Dictate, or use your Samsung keyboard microphone.</div>
+   <div class="actions"><button type="button" class="secondary" id="mic" aria-label="Dictate using the microphone" aria-pressed="false">🎤 Dictate</button><button type="button" class="primary" id="review">Review</button><button type="button" class="outline" id="clear">Clear field</button></div>
+<div class="hint" id="micStatus" role="status" aria-live="polite"></div>
+   <div id="feedback" aria-live="polite"></div>
+   <form id="reviewForm" class="hide">
+      <div class="callout" id="summary" aria-live="polite"></div>
+      <div class="info">Check the details below. Nothing is saved until you confirm.</div>
+      <div class="grid">
+        <div class="field"><label class="label" for="direction">Who owes whom?</label><select id="direction"><option value="to_me">They owe me</option><option value="i_owe">I owe them</option></select></div>
+        <div class="field"><label class="label" for="person">Person or company</label><input id="person" maxlength="100" list="people" required><datalist id="people"></datalist></div>
+        <div class="field"><label class="label" for="amount">Amount ($ CAD)</label><input id="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Blank = price TBD"></div>
+        <div class="field"><label class="label" for="date">Date</label><input id="date" type="date" required></div>
+        <div class="field wide"><label class="label" for="reason">Reason</label><input id="reason" maxlength="400" placeholder="Materials, gas, repairs…"></div>
+      </div>
+      <div class="actions"><button class="primary" type="submit" id="confirm">Confirm &amp; save</button><button type="button" class="secondary" id="cancel">Change sentence</button></div>
+   </form>
+ </section>
+ <div class="totals" aria-label="Running totals">
+    <div class="stat"><span class="label">Owed to me</span><div class="number pos" id="owedToMe">$0.00</div></div>
+    <div class="stat"><span class="label">I owe</span><div class="number neg" id="iOwe">$0.00</div></div>
+ </div>
+ <section class="card">
+   <h2>Totals by person</h2>
+   <div id="personList"><p class="info">No entries yet.</p></div>
+ </section>
+ <section class="bottom"><button type="button" class="danger" id="reset">Clear all test entries</button><div class="foot">This test version saves entries in this browser on this phone. No cloud sync.</div></section>
+</main>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const STORE='running-tab-simple-v1';
+const money=n=>new Intl.NumberFormat('en-CA',{style:'currency',currency:'CAD'}).format(n/100);
+const today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');};
+const safe=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const normalizeName=s=>String(s||'').trim().replace(/\b(cordi|cordy)\b/gi,'Cody').replace(/\s+/g,' ');
+const caseKey=s=>normalizeName(s).toLocaleLowerCase();
+let records=[];try{const raw=JSON.parse(localStorage.getItem(STORE)||'[]'); if(Array.isArray(raw))records=raw.filter(r=>r&&typeof r.person==='string'&&['to_me','i_owe'].includes(r.direction)&&(r.cents===null||(Number.isSafeInteger(r.cents)&&r.cents>0)));}catch(e){}
+const words={zero:0,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20,thirty:30,forty:40,fifty:50,sixty:60,seventy:70,eighty:80,ninety:90};
+function wordsToNumber(s){
+  const xs=s.toLowerCase().replace(/-/g,' ').split(/\s+/).filter(Boolean);if(!xs.length)return null;
+  let chunk=0,sum=0,has=false;
+  for(const x of xs){if(x==='and')continue;if(x in words){chunk+=words[x];has=true;}else if(x==='a'||x==='an'){chunk+=1;has=true;}else if(x==='hundred'){chunk=(chunk||1)*100;has=true;}else if(x==='thousand'){sum+=(chunk||1)*1000;chunk=0;has=true;}else return null;}
+  return has?sum+chunk:null;
+}
+function parseAmount(text){
+ const s=text.trim().replace(/^(?:some\s+)?money\b\s*/i,'');
+ // A dollar sign or digit is strong evidence of an explicit amount. Allow comma thousands/decimals.
+ const m=s.match(/(?:\$\s*)?(\d[\d,]*(?:\.\d{1,2})?)\s*(?:dollars?|bucks?)?\b/i);
+ if(m){let value=Number(m[1].replace(/,/g,''));if(Number.isFinite(value)&&value>0&&value<=100000000){return {cents:Math.round(value*100),left:s.slice(0,m.index).trim(),right:s.slice(m.index+m[0].length).trim()};}}
+ const values='(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|and|a|an)';
+ const re=new RegExp('^('+values+'(?:[\\s-]+'+values+')*)\\s+(?:dollars?|bucks?)\\b','i');
+ const wm=s.match(re);
+ if(wm){const n=wordsToNumber(wm[1]);if(n&&n>0)return {cents:n*100,left:'',right:s.slice(wm[0].length).trim()};}
+ // Also allow a bare number written in words, provided it is followed by a reason marker.
+ const bare=new RegExp('^('+values+'(?:[\\s-]+'+values+')*)\\s+(?=for\\b|because\\b)','i').exec(s);
+ if(bare){const n=wordsToNumber(bare[1]);if(n&&n>0)return {cents:n*100,left:'',right:s.slice(bare[1].length).trim()};}
+ return {cents:null,left:'',right:s};
+}
+function interpret(input){
+ const s=input.trim().replace(/[.!?]+$/,'').trim().replace(/\s+/g,' ');
+ if(!s)return {error:'Enter what happened first.'};
+ let direction,person,remaining;
+ const a=s.match(/^(.+?)\s+owes?\s+me\b\s*(.*)$/i);
+ const b=s.match(/^i\s+owe\s+(.+?)\s+(?=(?:\$\s*)?\d|(?:a|an|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand)\b|for\b|because\b|money\b|some\s+money\b)(.*)$/i);
+ if(a){direction='to_me';person=a[1];remaining=a[2];}
+ else if(b){direction='i_owe';person=b[1];remaining=s.slice(b[0].length-b[2].length).trim();}
+ else {
+   const c=s.match(/^i\s+owe\s+(.+?)\s*$/i);
+   if(c){return {error:'Please include an amount or “for a reason,” so I can identify the person correctly.'};}
+   return {error:'Try “Cody owes me $350 for materials” or “I owe Cody $200 for gas.”'};
+ }
+ person=normalizeName(person).replace(/^(?:the\s+)?(?:person|company)\s+/i,'').trim();
+ if(!person||person.length>100)return {error:'I could not identify the person or company. Please adjust your sentence.'};
+ const amount=parseAmount(remaining);
+ let reason=amount.right.replace(/^(?:(?:dollars?|bucks?|money)\s+)?(?:for|because(?: of)?|regarding|toward|towards)\s+/i,'').trim();
+ reason=reason.replace(/^[,:\s]+|[.!?\s]+$/g,'');
+ if(!reason && amount.left)reason=amount.left.replace(/^(?:for|because|regarding)\s+/i,'').trim();
+ if(amount.cents===null){reason=reason.replace(/^money\s*(?:for\s*)?/i,'').replace(/^(?:for|because(?: of)?)\s+/i,'').trim();}
+ return {direction,person,cents:amount.cents,reason,date:today()};
+}
+function feedback(s,kind=''){const el=$('feedback');el.className=s?'notice'+(kind==='bad'?' bad':''):'';el.textContent=s||'';}
+function fillSummary(){const p=$('person').value.trim()||'(person not specified)';const amount=$('amount').value.trim();const amt=amount && Number(amount)>0?money(Math.round(Number(amount)*100)):'Price TBD';const reason=$('reason').value.trim();$('summary').textContent=($('direction').value==='to_me'?p+' owes you ': 'You owe '+p+' ')+amt+(reason?'\nReason: '+reason:'');}
+function showForm(parsed){$('direction').value=parsed.direction;$('person').value=parsed.person;$('amount').value=parsed.cents===null?'':(parsed.cents/100).toFixed(2);$('reason').value=parsed.reason;$('date').value=parsed.date;$('reviewForm').classList.remove('hide');fillSummary();}
+function hideForm(){$('reviewForm').classList.add('hide');}
+$('review').addEventListener('click',()=>{const result=interpret($('words').value);if(result.error){hideForm();feedback(result.error,'bad');return;}const existing=records.find(x=>caseKey(x.person)===caseKey(result.person));if(existing)result.person=existing.person;showForm(result);feedback('');});
+$('clear').addEventListener('click',()=>{$('words').value='';hideForm();feedback('');$('words').focus();});
+$('cancel').addEventListener('click',()=>{hideForm();feedback('');$('words').focus();});
+$('words').addEventListener('input',()=>{hideForm();feedback('');});
+for(const n of ['direction','person','amount','reason'])$(n).addEventListener('input',fillSummary);
+$('reviewForm').addEventListener('submit',e=>{
+ e.preventDefault();let person=normalizeName($('person').value);const match=records.find(x=>caseKey(x.person)===caseKey(person));if(match)person=match.person;
+ const v=$('amount').value.trim();const dollars=v===''?null:Number(v);const cents=dollars===null?null:Math.round(dollars*100);
+ if(!person||person.length>100){feedback('Please enter a person or company.','bad');return;}
+ if(cents!==null&&(!Number.isSafeInteger(cents)||cents<=0||cents>10000000000)){feedback('Enter an amount greater than zero, or leave it blank if the price is not known yet.','bad');return;}
+ const rec={id:(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),person,direction:$('direction').value,cents,reason:$('reason').value.trim(),date:$('date').value||today(),created:new Date().toISOString()};
+ const next=[...records,rec];try{localStorage.setItem(STORE,JSON.stringify(next));}catch(e){feedback('Could not save to this browser. Check storage permissions.','bad');return;}
+ records=next;$('words').value='';hideForm();render();feedback('Saved. Ready for another entry.');$('words').focus();
+});
+function render(){
+ const people=new Map();let to=0,owe=0;
+ for(const r of records){if(!people.has(caseKey(r.person)))people.set(caseKey(r.person),{name:r.person,to:0,owe:0,tbd:0,entries:[]});const p=people.get(caseKey(r.person));p.entries.push(r);if(r.cents===null)p.tbd++;else if(r.direction==='to_me'){p.to+=r.cents;to+=r.cents;}else{p.owe+=r.cents;owe+=r.cents;}}
+ $('owedToMe').textContent=money(to);$('iOwe').textContent=money(owe);
+ const sorted=[...people.values()].sort((a,b)=>a.name.localeCompare(b.name));
+ $('people').innerHTML=sorted.map(p=>`<option value="${safe(p.name)}"></option>`).join('');
+ $('personList').innerHTML=sorted.length?sorted.map(p=>{
+ const net=p.to-p.owe;const label=net>0?'Owes you '+money(net):net<0?'You owe '+money(-net):'Settled';
+ const rows=p.entries.slice().reverse().map(r=>`<div class="entry"><div><div class="entry-name">${r.direction==='to_me'?'They owe you':'You owe them'}</div><div class="entry-notes">${safe(r.reason||'No reason entered')} · ${safe(r.date||'')}</div></div><div class="entry-right"><strong class="${r.direction==='to_me'?'pos':'neg'}">${r.cents===null?'<span class="tag">Price TBD</span>':money(r.cents)}</strong><button type="button" class="danger small" data-delete="${safe(r.id)}" aria-label="Delete entry">Delete</button></div></div>`).join('');
+ return `<details class="person"><summary><div><div class="who">${safe(p.name)}</div><div class="info">${p.entries.length} ${p.entries.length===1?'entry':'entries'}${p.tbd?' · '+p.tbd+' price TBD':''}</div></div><div class="right"><div class="amount ${net>0?'pos':net<0?'neg':''}">${label}</div><div class="info">Tap to see entries ▾</div></div></summary><div class="detail"><div class="meta">Owes you ${money(p.to)} · You owe ${money(p.owe)}${p.tbd?' · '+p.tbd+' unpriced':''}</div>${rows}</div></details>`;
+ }).join(''):'<p class="info">No entries yet. Add your first one above.</p>';
+ $('personList').querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',()=>{
+ const r=records.find(x=>x.id===b.dataset.delete);if(!r||!confirm('Delete this entry for '+r.person+'?'))return;
+ const next=records.filter(x=>x.id!==r.id);try{localStorage.setItem(STORE,JSON.stringify(next));}catch(e){feedback('Could not save deletion.','bad');return;}records=next;render();feedback('Entry deleted.');
+ }));
+}
+$('reset').addEventListener('click',()=>{if(!records.length)return;if(!confirm('Delete ALL test entries from this simple version? This cannot be undone.'))return;try{localStorage.removeItem(STORE);}catch(e){feedback('Could not clear local storage.','bad');return;}records=[];render();hideForm();$('words').value='';feedback('Test entries cleared.');});
+render();
+})();
+</script>
+
+<script>
+/* Optional dictation. No financial transaction is saved until Review / Confirm. */
+(()=>{
+'use strict';
+const input=document.getElementById('words');
+const button=document.getElementById('mic');
+const status=document.getElementById('micStatus');
+const API=window.SpeechRecognition||window.webkitSpeechRecognition;
+let rec=null,active=false,starting=false,prefix='',recognized='';
+function tell(message){status.textContent=message;}
+function idle(){active=false;starting=false;button.textContent='🎤 Dictate';button.setAttribute('aria-pressed','false');}
+function stop(){if((active||starting)&&rec){try{rec.stop();}catch(e){}}}
+if(!API){button.disabled=true;tell('This browser does not offer built-in speech recognition. You can still use your Samsung keyboard microphone.');return;}
+button.addEventListener('click',()=>{
+ if(active||starting){stop();return;}
+ if(!window.isSecureContext){tell('Open the HTTPS GitHub Pages link in Chrome to use this microphone button.');return;}
+ try{
+   rec=new API();starting=true;recognized='';prefix=input.value.trim();
+   rec.lang='en-CA';rec.continuous=false;rec.interimResults=true;rec.maxAlternatives=1;
+   rec.onstart=()=>{active=true;starting=false;button.textContent='■ Stop';button.setAttribute('aria-pressed','true');tell('Listening… speak your entry.');};
+   rec.onresult=e=>{
+     let result='';
+     for(let i=0;i<e.results.length;i++)result+=e.results[i][0].transcript+' ';
+     recognized=result.trim();
+     input.value=[prefix,recognized].filter(Boolean).join(' ');
+     input.dispatchEvent(new Event('input',{bubbles:true}));
+     tell(e.results[e.results.length-1].isFinal?'Ready. Tap Review to check the words.':'Listening…');
+   };
+   rec.onerror=e=>{const msg={'not-allowed':'Microphone access denied. Allow microphone permission for this site in Chrome.','service-not-allowed':'Speech recognition is blocked. Use your keyboard microphone instead.','network':'Speech recognition may need an internet connection.','no-speech':'No speech detected. Try again.','audio-capture':'No microphone is available.'};tell(msg[e.error]||'Speech recognition error: '+e.error);};
+   rec.onend=()=>{idle();if(status.textContent==='Listening… speak your entry.')tell('Ready. Tap Review.');};
+   rec.start();
+ }catch(e){idle();tell('Could not start speech recognition. Try the Samsung keyboard microphone.');}
+});
+document.getElementById('clear').addEventListener('click',()=>{stop();tell('');});
+if('serviceWorker' in navigator && location.protocol==='https:')navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+})();
+</script>
+</body>
+</html>
