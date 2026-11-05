@@ -100,3 +100,23 @@ label.label{font-size:13px;letter-spacing:.05px}
 .prompt-guide[open] summary::after{content:"⌃"}
 .prompt-examples{margin:5px 0 8px;padding:10px 12px;background:#f2f7fa;border:1px solid #e0eaef;border-radius:10px;display:grid;gap:7px;font-size:12px;line-height:1.4}
 .prompt-examples b{color:#294e69}
+
+
+/* One-tap reminder date picker, with no stacked select menus. */
+.calendar-field{position:relative}
+.calendar-trigger{display:block;width:100%;min-height:46px;text-align:left;padding:11px 13px;border:1px solid #bfd1db!important;border-radius:11px;background:#f5f9fa;color:#184b66;font-weight:750;box-shadow:none}
+.calendar-trigger:focus-visible{outline:3px solid #80b8c8;outline-offset:2px}
+.calendar-popup{width:100%;max-width:370px;margin:9px 0 7px;padding:12px;border:1px solid #d2e2e9;background:#fff;border-radius:16px;box-shadow:0 9px 25px #0d2f4918}
+.calendar-popup[hidden]{display:none!important}
+.calendar-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 9px}
+.calendar-top strong{font-size:16px;color:#213c51}
+.calendar-arrow{min-width:40px;min-height:38px;padding:1px 8px;background:#eaf1f5;color:#163b59;font-size:26px;line-height:1;font-weight:500}
+.calendar-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;text-align:center}
+.calendar-weekday{font-size:11px;color:#687c8b;font-weight:750;padding:7px 0}
+.calendar-day{font-size:14px;min-width:0;min-height:39px;padding:5px 0;border-radius:9px;background:#f7fafb;color:#1e394c;font-weight:600}
+.calendar-day.calendar-today{box-shadow:inset 0 0 0 2px #0d907b}
+.calendar-day.calendar-selected{background:#163b59!important;color:white}
+.calendar-day:focus-visible{outline:3px solid #74b1c2;outline-offset:1px}
+.calendar-foot{display:flex;flex-wrap:wrap;gap:6px;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid #e8eef1}
+.calendar-foot button{min-height:36px!important;padding:6px 9px!important;font-size:12px!important}
+@media(max-width:400px){.calendar-popup{padding:9px}.calendar-days{gap:2px}.calendar-day{min-height:38px}}
