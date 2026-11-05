@@ -1,0 +1,115 @@
+package ca.runningtab.widget;
+
+import android.app.PendingIntent;
+import android.appwidget.AppWidgetManager;
+import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
+import android.net.Uri;
+import android.view.View;
+import android.widget.RemoteViews;
+import java.util.List;
+
+public class RunningTabWidget extends AppWidgetProvider {
+    private static final String SWITCH = "ca.runningtab.widget.SWITCH_TAB";
+    private static final String[] TABS = {
+        SnapshotStore.MONEY, SnapshotStore.TODO, SnapshotStore.SHOPPING
+    };
+    private static final int[] BUTTONS = {R.id.widgetMoney, R.id.widgetTodo, R.id.widgetShopping};
+
+    @Override public void onUpdate(Context context, AppWidgetManager manager, int[] ids) {
+        for (int id : ids) update(context, manager, id);
+    }
+
+    @Override public void onReceive(Context context, Intent intent) {
+        super.onReceive(context, intent);
+        if (SWITCH.equals(intent.getAction())) {
+            int id = intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID);
+            String tab = intent.getStringExtra("tab");
+            if (id != AppWidgetManager.INVALID_APPWIDGET_ID
+                    && (SnapshotStore.MONEY.equals(tab) || SnapshotStore.TODO.equals(tab) || SnapshotStore.SHOPPING.equals(tab))) {
+                SnapshotStore.setTab(context, id, tab);
+                update(context, AppWidgetManager.getInstance(context), id);
+            }
+        }
+    }
+
+    @Override public void onAppWidgetOptionsChanged(Context context, AppWidgetManager manager,
+                                                      int widgetId, android.os.Bundle options) {
+        update(context, manager, widgetId);
+    }
+
+    @Override public void onDeleted(Context context, int[] ids) {
+        for (int id : ids) SnapshotStore.forgetTab(context, id);
+    }
+
+    static void refreshAll(Context context) {
+        AppWidgetManager manager = AppWidgetManager.getInstance(context);
+        int[] ids = manager.getAppWidgetIds(new ComponentName(context, RunningTabWidget.class));
+        for (int id : ids) update(context, manager, id);
+    }
+
+    private static PendingIntent switchIntent(Context context, int widgetId, int index) {
+        Intent i = new Intent(context, RunningTabWidget.class);
+        i.setAction(SWITCH);
+        i.setData(Uri.parse("runningtab://widget/tab/" + widgetId + "/" + index));
+        i.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
+        i.putExtra("tab", TABS[index]);
+        return PendingIntent.getBroadcast(context, widgetId * 10 + index, i,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    private static PendingIntent activityIntent(Context context, int widgetId, String tab,
+                                                boolean dictate, boolean collectionTemplate) {
+        Intent i = new Intent(context, MainActivity.class);
+        i.setAction("ca.runningtab.widget.OPEN");
+        i.setData(Uri.parse("runningtab://widget/open/" + widgetId + "/" + tab + "/" + dictate));
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        i.putExtra(MainActivity.EXTRA_SECTION, tab);
+        if (dictate) i.putExtra(MainActivity.EXTRA_DICTATE, true);
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT
+                | (collectionTemplate ? PendingIntent.FLAG_MUTABLE : PendingIntent.FLAG_IMMUTABLE);
+        return PendingIntent.getActivity(context, widgetId * 10 + (dictate ? 9 : 8), i, flags);
+    }
+
+    static void update(Context context, AppWidgetManager manager, int widgetId) {
+        String selected = SnapshotStore.tab(context, widgetId);
+        RemoteViews view = new RemoteViews(context.getPackageName(), R.layout.widget_running_tab);
+        for (int n = 0; n < BUTTONS.length; n++) {
+            boolean active = TABS[n].equals(selected);
+            view.setInt(BUTTONS[n], "setBackgroundResource",
+                    active ? R.drawable.widget_tab_active : R.drawable.widget_tab_idle);
+            view.setTextColor(BUTTONS[n], active ? Color.WHITE : Color.rgb(72, 101, 122));
+            view.setOnClickPendingIntent(BUTTONS[n], switchIntent(context, widgetId, n));
+        }
+        view.setOnClickPendingIntent(R.id.widgetMic, activityIntent(context, widgetId, selected, true, false));
+        view.setOnClickPendingIntent(R.id.widgetTitle, activityIntent(context, widgetId, selected, false, false));
+
+        WidgetData.Summary money = WidgetData.moneySummary(context);
+        view.setViewVisibility(R.id.widgetTotals,
+                SnapshotStore.MONEY.equals(selected) ? View.VISIBLE : View.GONE);
+        view.setTextViewText(R.id.widgetOwed, "Owed to you\n" + WidgetData.dollars(money.owedToMe));
+        view.setTextViewText(R.id.widgetIOwe, "You owe\n" + WidgetData.dollars(money.iOwe));
+        List<WidgetData.Row> rows = WidgetData.rows(context, selected);
+        String count = SnapshotStore.MONEY.equals(selected)
+                ? rows.size() + " people"
+                : rows.size() + (SnapshotStore.TODO.equals(selected) ? " remaining" : " to buy");
+        view.setTextViewText(R.id.widgetCount, count);
+        view.setTextViewText(R.id.widgetEmpty,
+                "No " + (SnapshotStore.MONEY.equals(selected) ? "money entries"
+                    : SnapshotStore.TODO.equals(selected) ? "reminders" : "shopping items") + " yet");
+
+        Intent service = new Intent(context, WidgetListService.class);
+        service.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, widgetId);
+        service.putExtra("tab", selected);
+        service.setData(Uri.parse("runningtab://widget/list/" + widgetId + "/" + selected));
+        view.setRemoteAdapter(R.id.widgetList, service);
+        view.setEmptyView(R.id.widgetList, R.id.widgetEmpty);
+        view.setPendingIntentTemplate(R.id.widgetList,
+                activityIntent(context, widgetId, selected, false, true));
+        manager.updateAppWidget(widgetId, view);
+        manager.notifyAppWidgetViewDataChanged(widgetId, R.id.widgetList);
+    }
+}
