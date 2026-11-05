@@ -12,6 +12,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
 <script src="./install.js" defer></script>
 <script src="./backup.js" defer></script>
+<script src="./todo-panel.js" defer></script>
+<script src="./view.js" defer></script>
 <style>
 :root {font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:#172a3c; background:#f4f7fa; color-scheme:light}
 *{box-sizing:border-box}body{margin:0;line-height:1.48}main{max-width:700px;margin:0 auto;padding:18px 12px 54px}h1,h2,h3,p{margin-top:0}h1{font-size:25px;letter-spacing:-.5px;margin-bottom:1px}h2{font-size:18px;margin-bottom:12px}button,input,select,textarea{font:inherit}button{border:0;border-radius:11px;min-height:45px;padding:10px 15px;font-weight:700;cursor:pointer}button.primary{background:#163b59;color:white}button.secondary{background:#e9f0f5;color:#163b59}button.outline{background:#fff;color:#163b59;border:1px solid #b9ccd9}button.danger{background:transparent;color:#9b3741;border:1px solid #e4c9cf}button:focus-visible,input:focus,textarea:focus,select:focus{outline:3px solid #8bb9d8;outline-offset:2px}input,textarea,select{display:block;border:1px solid #b9c9d5;background:#fff;border-radius:10px;padding:11px 12px;width:100%;color:#14283b;font-size:16px;min-height:46px}textarea{height:92px;resize:vertical}
@@ -22,8 +24,11 @@
 </head>
 <body>
 <main>
- <header class="head"><div class="mark">$</div><div><h1>Running Tab</h1><div class="info">Money — separate from To-Do</div></div></header>
-<nav class="tabs" aria-label="Running Tab sections"><a class="active" href="./index.html" aria-current="page">💰 Money</a><a href="./todo.html">✓ To-Do</a></nav>
+ <header class="head"><div class="mark">$</div><div><h1>Running Tab</h1><div class="info">Money &amp; reminders, made simple</div></div></header>
+<nav class="tabs" role="tablist" aria-label="Running Tab sections">
+<button type="button" role="tab" class="tab-switch active" data-view="money" id="tabMoney" aria-controls="moneyPanel" aria-selected="true">💰 Money</button>
+<button type="button" role="tab" class="tab-switch" data-view="todo" id="tabTodo" aria-controls="todoPanel" aria-selected="false">✓ To-Do</button>
+</nav>
 <section class="install-panel" id="installPanel" aria-label="Install Running Tab">
   <div><strong>Running Tab on your phone</strong><p>Install once and open it like a regular app.</p>
   <details class="install-tips"><summary>How to install</summary><p>In Chrome, tap the ⋮ menu → Add to Home screen → Install. The wording may be “Install app”.</p></details>
@@ -33,7 +38,7 @@
  <section class="card" id="entry" aria-label="New entry">
    <h2>Tell Running Tab</h2>
    <label class="label" for="words">Type or dictate a money entry or reminder</label>
-   <textarea id="words" placeholder="Cody owes me $531 for materials"></textarea>
+   <textarea id="words" placeholder="bitch better have my money..."></textarea>
    <div class="hint">Try “Cody owes me $200 for materials” or “Remind me to call Cody by Saturday”. Use Dictate or your Samsung keyboard microphone.</div>
    <div class="actions"><button type="button" class="secondary" id="mic" aria-label="Dictate using the microphone" aria-pressed="false">🎤 Dictate</button><button type="button" class="primary" id="review">Review</button><button type="button" class="outline" id="clear">Clear field</button></div>
 <div class="hint" id="micStatus" role="status" aria-live="polite"></div>
@@ -64,6 +69,9 @@
       <div class="actions"><button type="submit" class="primary">Confirm &amp; save to To-Do</button><button type="button" class="secondary" id="todoCancel">Change sentence</button></div>
    </form>
  </section>
+ <section id="viewViewport" class="view-viewport" aria-label="Money and To-Do lists">
+  <div id="viewTrack" class="view-track">
+   <section id="moneyPanel" class="view-panel" role="tabpanel" aria-labelledby="tabMoney">
  <div class="totals" aria-label="Running totals">
     <div class="stat"><span class="label">Owed to me</span><div class="number pos" id="owedToMe">$0.00</div></div>
     <div class="stat"><span class="label">I owe</span><div class="number neg" id="iOwe">$0.00</div></div>
@@ -72,16 +80,32 @@
    <h2>Totals by person</h2>
    <div id="personList"><p class="info">No entries yet.</p></div>
  </section>
- <section class="card" id="dataTools">
+   </section>
+   <section id="todoPanel" class="view-panel" role="tabpanel" aria-labelledby="tabTodo" aria-hidden="true" inert>
+    <section class="card">
+     <div class="list-head"><h2>To-Do list</h2><span class="tag" id="count">0 remaining</span></div>
+     <div id="pending"><p class="task-empty">No tasks yet.</p></div>
+     <details><summary id="doneCount">Completed (0)</summary><div id="completed"></div></details>
+    </section>
+    <div id="todoStatus" class="todo-status" role="status" aria-live="polite"></div>
+   </section>
+  </div>
+ </section>
+ <section class="compact-data" id="dataTools">
   <details class="app-settings" id="settingsDetail">
-    <summary>Backup &amp; settings</summary>
-    <p>Your entries stay on this phone, not on GitHub. Save a backup file regularly so you can restore both lists if you change browsers or phones.</p>
-    <div class="tools-grid"><button type="button" id="downloadBackup" class="primary">Download backup</button></div>
+   <summary>⚙ Data &amp; backup <span class="secondary-label">Export / restore</span></summary>
+   <div class="data-content">
+    <p>Your Money and To-Do records stay on this phone. Download a backup occasionally so you can restore both lists.</p>
+    <div class="tools-grid"><button type="button" id="downloadBackup" class="secondary">Download backup</button></div>
     <div class="field"><label class="label" for="restoreBackup">Restore backup (.json)</label><input id="restoreBackup" type="file" accept=".json,application/json"></div>
     <div id="backupStatus" class="app-status" role="status" aria-live="polite"></div>
-    <div class="danger-zone"><p>Remove money entries from this phone only:</p><button type="button" class="danger small" id="reset">Delete all money entries</button></div>
+    <div class="danger-zone">
+     <p>Delete saved data from this phone (each list separately):</p>
+     <div class="tools-grid"><button type="button" class="danger small" id="reset">Delete Money</button><button type="button" class="danger small" id="todoReset">Delete To-Dos</button></div>
+    </div>
+   </div>
   </details>
-</section>
+ </section>
 <div class="foot">Running Tab · Your information stays on this device. Microphone transcription may use an online speech service.</div>
 </main>
 <script>
@@ -238,7 +262,7 @@ $('todoReviewForm').addEventListener('submit',event=>{
  const task={id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random()),title,dueType:type,due,done:false,created:new Date().toISOString()};
  try{localStorage.setItem(TODO_STORE,JSON.stringify([...tasks,task]));}
  catch(e){feedback('Could not save this reminder in your browser.','bad');return;}
- $('words').value='';hideForm();feedback('Saved to To-Do. Open the To-Do tab to see it.');$('words').focus();
+ $('words').value='';hideForm();feedback('Saved to To-Do.');window.dispatchEvent(new Event('runningtab:todo-changed'));window.RunningTabView?.show('todo');$('words').focus();
 });
 
 $('clear').addEventListener('click',()=>{$('words').value='';hideForm();feedback('');$('words').focus();});
@@ -252,7 +276,7 @@ $('reviewForm').addEventListener('submit',e=>{
  if(cents!==null&&(!Number.isSafeInteger(cents)||cents<=0||cents>10000000000)){feedback('Enter an amount greater than zero, or leave it blank if the price is not known yet.','bad');return;}
  const rec={id:(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),person,direction:$('direction').value,cents,reason:$('reason').value.trim(),date:$('date').value||today(),created:new Date().toISOString()};
  const next=[...records,rec];try{localStorage.setItem(STORE,JSON.stringify(next));}catch(e){feedback('Could not save to this browser. Check storage permissions.','bad');return;}
- records=next;$('words').value='';hideForm();render();feedback('Saved. Ready for another entry.');$('words').focus();
+ records=next;$('words').value='';hideForm();render();feedback('Saved. Ready for another entry.');window.RunningTabView?.show('money');$('words').focus();
 });
 function render(){
  const people=new Map();let to=0,owe=0;
