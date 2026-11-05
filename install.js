@@ -4,6 +4,8 @@
 let deferred=null;
 const panel=document.getElementById('installPanel'),button=document.getElementById('installBtn'),message=document.getElementById('installStatus');
 if(!panel||!button)return;
+// The native Android wrapper is already an installed app; don't prompt to install the PWA again.
+if(window.RunningTabAndroid){panel.hidden=true;return;}
 const standalone=()=>window.matchMedia?.('(display-mode: standalone)').matches||navigator.standalone===true;
 const show=()=>{panel.hidden=!!standalone();button.hidden=!deferred;};
 show();
