@@ -120,3 +120,18 @@ label.label{font-size:13px;letter-spacing:.05px}
 .calendar-foot{display:flex;flex-wrap:wrap;gap:6px;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid #e8eef1}
 .calendar-foot button{min-height:36px!important;padding:6px 9px!important;font-size:12px!important}
 @media(max-width:400px){.calendar-popup{padding:9px}.calendar-days{gap:2px}.calendar-day{min-height:38px}}
+
+
+/* Review is designed for quick one-handed confirmation after dictation. */
+.review-actions{
+ position:sticky;top:8px;z-index:15;
+ padding:8px 0 10px;
+ background:#fff;
+ border-bottom:1px solid #e5eef2;
+ margin-top:8px;
+ margin-bottom:10px;
+ box-shadow:0 7px 12px -13px #173b59;
+}
+.review-actions button{min-height:44px}
+#shoppingSummary{max-height:145px;overflow-y:auto;overscroll-behavior:contain}
+@media(max-width:380px){.review-actions button{padding:8px 10px;font-size:13px}}
