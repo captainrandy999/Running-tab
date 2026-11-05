@@ -99,7 +99,7 @@ function render(){
 }
 $('reset').addEventListener('click',()=>{
  if(!tasks.length)return;
- if(!confirm('Clear ALL test reminders? Money entries will not be affected.'))return;
+ if(!confirm('Permanently delete ALL To-Do items stored on this phone? Money entries will not be affected.'))return;
  if(persist([])){render();status('Test To-Dos cleared.');}
 });
 window.addEventListener('storage',e=>{if(e.key!==STORE)return;try{const x=JSON.parse(e.newValue||'[]');if(Array.isArray(x)){tasks=x;render();}}catch(err){}});
