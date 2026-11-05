@@ -56,7 +56,8 @@
    <div id="entryType" class="info" aria-live="polite"></div>
    <form id="reviewForm" class="hide">
       <div class="callout" id="summary" aria-live="polite"></div>
-      <div class="info">Check the details below. Nothing is saved until you confirm.</div>
+      <div class="info">Review the interpretation below, and edit the fields if needed.</div>
+      <div class="actions review-actions"><button class="primary" type="submit" id="confirm">Confirm &amp; save</button><button type="button" class="secondary" id="cancel">Change sentence</button></div>
       <div class="grid">
         <div class="field"><label class="label" for="direction">Who owes whom?</label><select id="direction"><option value="to_me">They owe me</option><option value="i_owe">I owe them</option></select></div>
         <div class="field"><label class="label" for="person">Person or company</label><input id="person" maxlength="100" list="people" required><datalist id="people"></datalist></div>
@@ -64,12 +65,13 @@
         <div class="field"><label class="label" for="date">Date</label><input id="date" type="date" required></div>
         <div class="field wide"><label class="label" for="reason">Reason</label><input id="reason" maxlength="400" placeholder="Materials, gas, repairs…"></div>
       </div>
-      <div class="actions"><button class="primary" type="submit" id="confirm">Confirm &amp; save</button><button type="button" class="secondary" id="cancel">Change sentence</button></div>
+      
    </form>
    <form id="todoReviewForm" class="hide">
       <h2 style="margin:15px 0 8px">Review To-Do</h2>
       <div class="callout" id="todoSummary" aria-live="polite"></div>
-      <div class="info">This is a reminder, not a money transaction. Nothing saves until you confirm.</div>
+      <div class="info">Check the reminder and date. You can edit them below before saving.</div>
+      <div class="actions review-actions"><button type="submit" class="primary">Confirm &amp; save to To-Do</button><button type="button" class="secondary" id="todoCancel">Change sentence</button></div>
       <div class="field"><label class="label" for="todoTitle">Task</label><input id="todoTitle" type="text" maxlength="300" required></div>
       <div class="field calendar-field">
        <label class="label" for="todoDateButton">Due date</label>
@@ -91,15 +93,16 @@
         </div>
        </div>
       </div>
-      <div class="actions"><button type="submit" class="primary">Confirm &amp; save to To-Do</button><button type="button" class="secondary" id="todoCancel">Change sentence</button></div>
+      
    </form>
    <form id="shoppingReviewForm" class="hide">
     <h2 style="margin:15px 0 8px">Review Shopping List</h2>
     <div class="callout" id="shoppingSummary" aria-live="polite"></div>
-    <p class="info">Each line becomes a separate item. Edit, add, or remove lines before saving.</p>
+    <p class="info">Review each item below. Edit, add, or remove items in the list before saving.</p>
+      <div class="actions review-actions"><button type="submit" class="primary">Confirm &amp; save to Shopping</button><button type="button" class="secondary" id="shoppingCancel">Change sentence</button></div>
     <div class="field"><label class="label" for="shoppingItems">Shopping items (one per line)</label>
      <textarea id="shoppingItems" rows="4" maxlength="3000" required placeholder="Milk&#10;Bread&#10;Eggs"></textarea></div>
-    <div class="actions"><button type="submit" class="primary">Confirm &amp; save to Shopping</button><button type="button" class="secondary" id="shoppingCancel">Change sentence</button></div>
+    
    </form>
  </section>
  <section id="viewViewport" class="view-viewport" aria-label="Money, To-Do, and Shopping lists">
@@ -285,6 +288,19 @@ function feedback(s,kind=''){const el=$('feedback');el.className=s?'notice'+(kin
 function fillSummary(){const p=$('person').value.trim()||'(person not specified)';const amount=$('amount').value.trim();const amt=amount && Number(amount)>0?money(Math.round(Number(amount)*100)):'Price TBD';const reason=$('reason').value.trim();$('summary').textContent=($('direction').value==='to_me'?p+' owes you ': 'You owe '+p+' ')+amt+(reason?'\nReason: '+reason:'');}
 function showForm(parsed){$('direction').value=parsed.direction;$('person').value=parsed.person;$('amount').value=parsed.cents===null?'':(parsed.cents/100).toFixed(2);$('reason').value=parsed.reason;$('date').value=parsed.date;$('reviewForm').classList.remove('hide');fillSummary();}
 function hideForm(){$('reviewForm').classList.add('hide');$('todoReviewForm').classList.add('hide');$('shoppingReviewForm').classList.add('hide');window.RunningTabCalendar?.close();$('entryType').textContent='';}
+function bringReviewIntoView(formId){
+ const form=$(formId);
+ const focused=document.activeElement;
+ if(focused&&typeof focused.blur==='function')focused.blur();
+ // Let the newly revealed review layout and Android keyboard settle.
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  if(form.classList.contains('hide'))return;
+  const preview=form.querySelector('.callout')||form;
+  const previewTop=preview.getBoundingClientRect().top+window.scrollY;
+  // Leave breathing room above the interpretation; the save controls immediately follow it.
+  window.scrollTo({top:Math.max(0,previewTop-20),behavior:'smooth'});
+ }));
+}
 function finishSuccessfulSave(){
  // Dismiss the Android keyboard without focusing any other control.
  const focused=document.activeElement;
@@ -363,6 +379,7 @@ $('review').addEventListener('click',()=>{
   $('entryType').textContent='🛒 Shopping items';
   shoppingSummary();
   feedback('');
+  bringReviewIntoView('shoppingReviewForm');
   return;
  }
  if(isTodo(raw)){
@@ -373,13 +390,14 @@ $('review').addEventListener('click',()=>{
   $('todoDueMonth').value=result.dueType==='month'?result.due:'';
   $('todoReviewForm').classList.remove('hide');$('entryType').textContent='✓ To-Do entry';todoDueChange();
   feedback(result.unrecognized?'Date not recognized. Please correct it before confirming.':'');
+  bringReviewIntoView('todoReviewForm');
   return;
  }
  const result=interpret(raw);
  if(result.error){hideForm();feedback(result.error+' For a reminder, start with “Remind me to…”','bad');return;}
  const existing=records.find(x=>caseKey(x.person)===caseKey(result.person));
  if(existing)result.person=existing.person;
- hideForm();showForm(result);$('entryType').textContent='💰 Money entry';feedback('');
+ hideForm();showForm(result);$('entryType').textContent='💰 Money entry';feedback('');bringReviewIntoView('reviewForm');
 });
 $('todoCancel').addEventListener('click',()=>{hideForm();feedback('');$('words').focus();});
 $('todoDueType').addEventListener('change',todoDueChange);
