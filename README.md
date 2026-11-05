@@ -1,39 +1,41 @@
-# Running Tab — Simple
+# Running Tab
 
-Running Tab has **two separate sections**:
+A small, installable phone app for two separate things:
 
-- **Money:** track who owes you money, whom you owe, reasons, and running totals per person.
-- **To-Do:** dictate or type reminders, review and confirm them, check tasks off, and see remaining tasks ordered by due date. To-Do data is **separate** from Money and doesn't affect any balances.
+- **Money:** who owes you, whom you owe, reasons, and running balances by person (including Price TBD).
+- **To-Do:** checkable reminders sorted by deadlines; items with no date go last.
 
-## Publish the app
+## Install on Android
 
-In the GitHub repository, open **Settings → Pages**, set **Source** to **Deploy from a branch**, select **main** and **/(root)**, then save.
+Open **https://captainrandy999.github.io/Running-tab/** in Chrome.
 
-After GitHub Pages deploys, open:
+Use **Install app** when available, or tap **⋮ → Add to Home screen → Install app**. Running Tab then opens from a home-screen icon in a standalone window.
 
-https://captainrandy999.github.io/Running-tab/
+The app includes 192×192 and 512×512 icons, a Web App Manifest, and offline caching for its interface.
 
-The To-Do page is:
+## One entry field
 
-https://captainrandy999.github.io/Running-tab/todo.html
+Dictate with **🎤 Dictate**, use the Samsung keyboard microphone, or type:
 
-## Voice entry
+- "Cody owes me $250 for materials" → Money
+- "I owe Atlas $100 for supplies" → Money
+- "Remind me to call Cody by Saturday" → To-Do
+- "I need to renew insurance by June" → To-Do, June 1
+- "Remind me to file receipts by the end of June" → To-Do, June 30
+- "Remind me to call Cody" → To-Do without a date
 
-In Chrome on your Samsung, tap **🎤 Dictate**, allow microphone permission if requested, speak, tap **Review**, then **Confirm & save**. You can also type or use the Samsung keyboard microphone. Speech recognition availability varies by browser; it may require an internet connection or online speech processing.
+Tap **Review** to inspect and edit what the app understood, then **Confirm & save**. The app doesn't modify a record merely by reviewing it.
 
-Examples:
-- "Cody owes me $200 for materials"
-- "I owe Atlas $100 for gas"
-- "Remind me to call Cody by Saturday"
-- "I need to buy supplies by June" (June 1)
-- "Remind me to send receipts by the end of June" (June 30)
-- "Remind me to call the plumber" (no date — bottom of open list)
-- "Remind me to do yard work in June" (June, no specific day)
+The To-Do section is a checklist, **not an automatic phone notification/alarm service**.
 
-## Privacy
+## Storage and backups
 
-This is a **test app**. The app code is public on GitHub Pages, but money entries and To-Dos are stored in different keys in the browser's localStorage on your phone, not in your GitHub repository.
+Records are kept only in this browser's site storage on this device, **not** uploaded to the GitHub repository. The source code is public. Voice dictation may use an online transcription service even though app data is local.
 
-Clearing Chrome site storage or switching browsers can erase your entries; keep using test data for now. A future version should add export/backup before you rely on it for important financial records or reminders.
+Open **Money → Backup & settings** and tap **Download backup** to save one JSON file including money and reminders. **Restore backup** replaces both lists after confirmation. Keep backups in a safe place because clearing browser data, changing phones, and some browser storage cleanup can erase your local data.
 
-This is a To-Do list, **not a background notification service**. It will not send scheduled phone alerts.
+Offline use works for the app interface after installation/caching; voice dictation may require connectivity.
+
+## Updates
+
+Changes pushed to the `main` branch are automatically republished through GitHub Pages after deployment. The service worker caches app files for offline use and updates the cache when a new version is deployed.
