@@ -1,0 +1,59 @@
+/* To-Do list lives inside the Money/To-Do sliding view; records use the existing independent localStorage key. */
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const STORE='running-tab-todo-v1';
+const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let tasks=[];
+try{const r=JSON.parse(localStorage.getItem(STORE)||'[]');if(Array.isArray(r))tasks=r.filter(x=>x&&typeof x.id==='string'&&typeof x.title==='string'&&['day','month','none'].includes(x.dueType));}catch(e){}
+function label(t){
+ if(t.dueType==='none')return 'No date';
+ if(t.dueType==='month'){const mm=Number(String(t.due).slice(5,7));return (months[mm-1]||'Unknown month')+' '+String(t.due).slice(0,4)+' (no specific day)';}
+ const d=new Date(t.due+'T12:00:00');
+ return Number.isNaN(d.getTime())?'Check date':d.toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
+}
+function status(message,bad=false){const el=$('todoStatus');if(!el)return;el.textContent=message;el.className=message?'notice'+(bad?' bad':''):'';}
+function persist(next){try{localStorage.setItem(STORE,JSON.stringify(next));tasks=next;return true;}catch(e){status('Could not save the change on this device.',true);return false;}}
+function sortKey(t){return t.dueType==='none'?'9999-12-31':t.dueType==='month'?t.due+'-32':t.due;}
+function rows(items){
+ return items.map(t=>'<div class="task'+(t.done?' done':'')+'"><input type="checkbox" data-toggle="'+esc(t.id)+'" '+(t.done?'checked':'')+' aria-label="Mark '+esc(t.title)+(t.done?' not done':' complete')+'"><div class="task-main"><div class="task-name">'+esc(t.title)+'</div><div class="task-meta">'+esc(label(t))+'</div></div><button type="button" class="danger small" data-remove="'+esc(t.id)+'">Delete</button></div>').join('');
+}
+function render(){
+ const open=tasks.filter(t=>!t.done).sort((a,b)=>sortKey(a).localeCompare(sortKey(b))||String(a.created).localeCompare(String(b.created)));
+ const done=tasks.filter(t=>t.done).sort((a,b)=>String(b.completedAt||'').localeCompare(String(a.completedAt||'')));
+ $('count').textContent=open.length+' remaining';
+ $('doneCount').textContent='Completed ('+done.length+')';
+ $('pending').innerHTML=open.length?rows(open):'<p class="empty">Nothing outstanding.</p>';
+ $('completed').innerHTML=done.length?rows(done):'<p class="info">No completed items.</p>';
+ for(const root of ['pending','completed']){
+  $(root).querySelectorAll('[data-toggle]').forEach(el=>el.addEventListener('change',()=>{
+    const next=tasks.map(t=>t.id===el.dataset.toggle?{...t,done:el.checked,completedAt:el.checked?new Date().toISOString():null}:t);
+    if(persist(next)){render();status(el.checked?'Completed.':'Moved back to the To-Do list.');}
+    else el.checked=!el.checked;
+  }));
+  $(root).querySelectorAll('[data-remove]').forEach(el=>el.addEventListener('click',()=>{
+    const task=tasks.find(t=>t.id===el.dataset.remove);
+    if(!task||!confirm('Delete "'+task.title+'"?'))return;
+    if(persist(tasks.filter(t=>t.id!==task.id))){render();status('Reminder deleted.');}
+  }));
+ }
+}
+$('todoReset').addEventListener('click',()=>{
+ if(!tasks.length)return;
+ if(!confirm('Permanently delete ALL To-Do items stored on this phone? Money entries will not be affected.'))return;
+ if(persist([])){render();status('Test To-Dos cleared.');}
+});
+window.addEventListener('storage',e=>{if(e.key!==STORE)return;try{const x=JSON.parse(e.newValue||'[]');if(Array.isArray(x)){tasks=x;render();}}catch(err){}});
+function refreshFromStorage(){
+ try {
+  const found=JSON.parse(localStorage.getItem(STORE)||'[]');
+  if(Array.isArray(found)){
+   tasks=found.filter(x=>x&&typeof x.id==='string'&&typeof x.title==='string'&&['day','month','none'].includes(x.dueType));
+   render();
+  }
+ } catch(e){status('Could not refresh reminders from local storage.',true);}
+}
+window.addEventListener('runningtab:todo-changed',refreshFromStorage);
+render();
+})();
