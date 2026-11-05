@@ -35,27 +35,13 @@ textarea{height:94px;resize:vertical}.head{display:flex;align-items:center;gap:1
 .empty{text-align:center;color:#6d7e8d;padding:14px}details summary{cursor:pointer;font-weight:700;padding:8px 0}
 .bottom{text-align:center;margin-top:24px}
 @media(max-width:440px){main{padding:11px 9px 35px}.card{padding:13px}.grid{grid-template-columns:1fr}}
+.entry-link{display:inline-flex;align-items:center;justify-content:center;background:#163b59;color:#fff;text-decoration:none;border-radius:11px;min-height:45px;padding:10px 15px;font-weight:700}
 </style></head><body><main>
 <header class="head"><div class="mark">✓</div><div><h1>Running Tab</h1><div class="info">To-Do — separate from money</div></div></header>
 <nav class="tabs" aria-label="Running Tab sections"><a href="./index.html">💰 Money</a><a class="active" href="./todo.html" aria-current="page">✓ To-Do</a></nav>
 <section class="card">
-<h2>Add a reminder</h2>
-<label class="label" for="words">Type or dictate what you need to do</label>
-<textarea id="words" placeholder="Remind me to call the plumber by Saturday"></textarea>
-<p class="hint">Try “I need to buy materials by Saturday”, “Remind me to renew insurance by June”, “Remind me to submit receipts by the end of June”, or “Remind me to call Cody”.</p>
-<div class="actions"><button type="button" class="secondary" id="mic">🎤 Dictate</button><button type="button" class="primary" id="review">Review</button><button type="button" class="outline" id="clear">Clear field</button></div>
-<p class="hint" id="micStatus" role="status" aria-live="polite"></p><div id="status" role="status" aria-live="polite"></div>
-<form id="form" class="review hide">
-<h2>Review reminder</h2><div class="callout" id="summary"></div>
-<p class="info">Nothing is saved until you confirm. You can edit the details below.</p>
-<div class="field"><label class="label" for="taskTitle">To do</label><input id="taskTitle" type="text" maxlength="300" required></div>
-<div class="grid">
-<div class="field"><label class="label" for="dueType">Deadline</label><select id="dueType"><option value="day">Specific date</option><option value="month">Month only (no day)</option><option value="none">No date</option></select></div>
-<div class="field" id="dayWrap"><label class="label" for="dueDay">Date</label><input type="date" id="dueDay"></div>
-<div class="field hide" id="monthWrap"><label class="label" for="dueMonth">Month</label><input type="month" id="dueMonth"></div>
-</div>
-<div class="actions"><button class="primary" type="submit">Confirm &amp; save</button><button class="secondary" type="button" id="cancel">Change sentence</button></div>
-</form>
+<p style="margin:0" class="info">To add a reminder, use the single <b>Tell Running Tab</b> box on the main page. It will route your entry here after you review and confirm it.</p>
+<div class="actions"><a href="./index.html#entry" class="entry-link">＋ New entry</a></div>
 </section>
 <section class="card">
 <div class="list-head"><h2>To-Do list</h2><span class="tag" id="count">0 remaining</span></div>
@@ -63,127 +49,55 @@ textarea{height:94px;resize:vertical}.head{display:flex;align-items:center;gap:1
 <details><summary id="doneCount">Completed (0)</summary><div id="completed"></div></details>
 </section>
 <div class="bottom"><button type="button" class="danger small" id="reset">Clear test to-dos</button><p class="info">To-Do items are stored separately from money entries, in this browser on your phone.</p></div>
-</main><script>
+<div id="status" role="status" aria-live="polite"></div></main><script>
+
 (()=>{
 'use strict';
 const $=id=>document.getElementById(id);
 const STORE='running-tab-todo-v1';
 const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
-const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-const pad=n=>String(n).padStart(2,'0');
-const iso=d=>[d.getFullYear(),pad(d.getMonth()+1),pad(d.getDate())].join('-');
-const now=()=>new Date();
-const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const midx=s=>{const q=String(s||'').toLowerCase().replace(/\.$/,'');return q.length<3?-1:months.findIndex(m=>m.toLowerCase().startsWith(q));};
-const valid=(y,m,d)=>{const t=new Date(y,m,d);return t.getFullYear()===y&&t.getMonth()===m&&t.getDate()===d;};
-function futureYear(month,day,year){if(year!==undefined&&year!==null)return Number(year);const n=now();const d=new Date(n.getFullYear(),month,day);return d<new Date(n.getFullYear(),n.getMonth(),n.getDate())?n.getFullYear()+1:n.getFullYear();}
-function deadlineLabel(t){
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let tasks=[];
+try{const r=JSON.parse(localStorage.getItem(STORE)||'[]');if(Array.isArray(r))tasks=r.filter(x=>x&&typeof x.id==='string'&&typeof x.title==='string'&&['day','month','none'].includes(x.dueType));}catch(e){}
+function label(t){
  if(t.dueType==='none')return 'No date';
- if(t.dueType==='month'){const m=Number(t.due.slice(5,7));return months[m-1]+' '+t.due.slice(0,4)+' (no specific day)';}
+ if(t.dueType==='month'){const mm=Number(String(t.due).slice(5,7));return (months[mm-1]||'Unknown month')+' '+String(t.due).slice(0,4)+' (no specific day)';}
  const d=new Date(t.due+'T12:00:00');
  return Number.isNaN(d.getTime())?'Check date':d.toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
 }
-function interpret(input){
- let s=String(input||'').trim().replace(/\s+/g,' ').replace(/[.!?]+$/,'').trim();
- if(!s)return {error:'Type or say a reminder first.'};
- s=s.replace(/^(?:remind\s+me(?:\s+to)?|i\s+need\s+to|i\s+have\s+to|don'?t\s+forget\s+to)\s+/i,'').trim();
- let dueType='none',due='',unrecognized=false;
- function use(match,details){if(!match)return false;dueType=details.type;due=details.value;s=s.slice(0,match.index).trim();return true;}
- let m;
- // The end of a month: actual final calendar day, including leap years.
- m=s.match(/\s+(?:(?:by|before|on|at)\s+)?(?:the\s+)?end\s+of\s+([a-z]+)(?:\s+(\d{4}))?$/i);
- if(m){const mo=midx(m[1]);if(mo>=0){const finalDay=new Date(now().getFullYear(),mo+1,0).getDate();const y=futureYear(mo,finalDay,m[2]);const last=new Date(y,mo+1,0);use(m,{type:'day',value:iso(last)});}}
- // "by June" means June 1, NOT an arbitrary day and not an unknown date.
- if(dueType==='none'){m=s.match(/\s+(?:by|before)\s+([a-z]+)(?:\s+(\d{4}))?$/i);if(m){const mo=midx(m[1]);if(mo>=0){const y=futureYear(mo,1,m[2]);use(m,{type:'day',value:iso(new Date(y,mo,1))});}}}
- // "in June" without day remains an explicitly month-only task.
- if(dueType==='none'){m=s.match(/\s+(?:in|during)\s+([a-z]+)(?:\s+(\d{4}))?(?:\s*,?\s*no\s+day)?$/i);if(m){const mo=midx(m[1]);if(mo>=0){const y=futureYear(mo,1,m[2]);use(m,{type:'month',value:y+'-'+pad(mo+1)});}}}
- // Specific dates e.g. June 12, June 12th, 12 June.
- if(dueType==='none'){
- m=s.match(/\s+(?:by|on|before|due\s+(?:on|by))\s+([a-z]+)\s+(\d{1,2})(?:st|nd|rd|th)?(?:,?\s+(\d{4}))?$/i);
- let mon,day,year;
- if(m){mon=midx(m[1]);day=Number(m[2]);year=m[3];}
- else {m=s.match(/\s+(?:by|on|before)\s+(\d{1,2})(?:st|nd|rd|th)?\s+([a-z]+)(?:\s+(\d{4}))?$/i);if(m){mon=midx(m[2]);day=Number(m[1]);year=m[3];}}
- if(m&&mon>=0){const y=futureYear(mon,day,year);if(valid(y,mon,day))use(m,{type:'day',value:iso(new Date(y,mon,day))});}
- }
- // This Saturday / next Saturday / by Saturday, including current day.
- if(dueType==='none'){m=s.match(/\s+(?:by|on|before|due\s+(?:on|by))\s+(?:(next|this)\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i);
- if(m){const wk=days.findIndex(d=>d.toLowerCase()===m[2].toLowerCase());const d=now();let diff=(wk-d.getDay()+7)%7;if(m[1]&&m[1].toLowerCase()==='next')diff+=diff===0?7:7;d.setDate(d.getDate()+diff);use(m,{type:'day',value:iso(d)});}}
- if(dueType==='none'){m=s.match(/\s+(?:by|on|before)\s+(today|tomorrow)$/i);if(m){const d=now();if(m[1].toLowerCase()==='tomorrow')d.setDate(d.getDate()+1);use(m,{type:'day',value:iso(d)});}}
- if(dueType==='none'){m=s.match(/\s+(?:by|on)\s+(\d{4}-\d{2}-\d{2})$/);if(m){const parts=m[1].split('-').map(Number);if(valid(parts[0],parts[1]-1,parts[2]))use(m,{type:'day',value:m[1]});}}
- if(dueType==='none'&&/\s+(?:by|on|before|in|during)\s+\S+(?:\s+\S+){0,2}$/i.test(s))unrecognized=true;
- if(!s)return {error:'Please say what needs to be done.'};
- if(s.length>300)return {error:'The reminder is too long. Please shorten it.'};
- return {title:s[0].toUpperCase()+s.slice(1),dueType,due,unrecognized};
+function status(message,bad=false){const el=$('status');if(!el)return;el.textContent=message;el.className=message?'notice'+(bad?' bad':''):'';}
+function persist(next){try{localStorage.setItem(STORE,JSON.stringify(next));tasks=next;return true;}catch(e){status('Could not save the change on this device.',true);return false;}}
+function sortKey(t){return t.dueType==='none'?'9999-12-31':t.dueType==='month'?t.due+'-32':t.due;}
+function rows(items){
+ return items.map(t=>'<div class="task'+(t.done?' done':'')+'"><input type="checkbox" data-toggle="'+esc(t.id)+'" '+(t.done?'checked':'')+' aria-label="Mark '+esc(t.title)+(t.done?' not done':' complete')+'"><div class="task-main"><div class="task-name">'+esc(t.title)+'</div><div class="task-meta">'+esc(label(t))+'</div></div><button type="button" class="danger small" data-remove="'+esc(t.id)+'">Delete</button></div>').join('');
 }
-let tasks=[];
-try{const r=JSON.parse(localStorage.getItem(STORE)||'[]');if(Array.isArray(r))tasks=r.filter(x=>x&&typeof x.id==='string'&&typeof x.title==='string'&&['day','month','none'].includes(x.dueType));}catch(e){}
-function status(msg,bad=false){const e=$('status');e.textContent=msg||'';e.className=msg?'notice'+(bad?' bad':''):'';}
-function persist(next){try{localStorage.setItem(STORE,JSON.stringify(next));tasks=next;return true;}catch(e){status('Could not save to this browser. Check its storage settings.',true);return false;}}
-function summary(){
- const type=$('dueType').value;const due=type==='day'?$('dueDay').value:type==='month'?$('dueMonth').value:'';
- $('summary').textContent=($('taskTitle').value.trim()||'(task missing)')+'\nDeadline: '+(type==='none'?'No date':due?deadlineLabel({dueType:type,due}):'Please select a date');
-}
-function dueChange(){
- const ty=$('dueType').value;$('dayWrap').classList.toggle('hide',ty!=='day');$('monthWrap').classList.toggle('hide',ty!=='month');summary();
-}
-function hide(){$('form').classList.add('hide');}
-$('review').addEventListener('click',()=>{
- const r=interpret($('words').value);
- if(r.error){hide();status(r.error,true);return;}
- $('taskTitle').value=r.title;$('dueType').value=r.dueType;
- $('dueDay').value=r.dueType==='day'?r.due:'';$('dueMonth').value=r.dueType==='month'?r.due:'';
- $('form').classList.remove('hide');dueChange();
- status(r.unrecognized?'I could not identify the deadline. Please correct it before confirming.':'');
-});
-$('clear').addEventListener('click',()=>{$('words').value='';hide();status('');$('words').focus();});
-$('cancel').addEventListener('click',()=>{hide();status('');$('words').focus();});
-$('words').addEventListener('input',()=>{hide();status('');});
-['taskTitle','dueDay','dueMonth'].forEach(id=>$(id).addEventListener('input',summary));
-$('dueType').addEventListener('change',dueChange);
-$('form').addEventListener('submit',event=>{
- event.preventDefault();const title=$('taskTitle').value.trim(),dueType=$('dueType').value,due=dueType==='day'?$('dueDay').value:dueType==='month'?$('dueMonth').value:'';
- if(!title||title.length>300){status('Enter a short reminder.',true);return;}
- if(dueType!=='none'&&!due){status('Choose a deadline, or select No date.',true);return;}
- const rec={id:crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random(),title,dueType,due,done:false,created:new Date().toISOString()};
- if(!persist([...tasks,rec]))return;
- $('words').value='';hide();render();status('Reminder saved.');$('words').focus();
-});
-const sortKey=t=>t.dueType==='none'?'9999-12-31':t.dueType==='month'?t.due+'-32':t.due;
 function render(){
- const open=tasks.filter(t=>!t.done).sort((a,b)=>sortKey(a).localeCompare(sortKey(b))||a.created.localeCompare(b.created));
- const completed=tasks.filter(t=>t.done).sort((a,b)=>String(b.completedAt).localeCompare(String(a.completedAt)));
- $('count').textContent=open.length+' remaining';$('doneCount').textContent='Completed ('+completed.length+')';
- function rows(arr){return arr.map(t=>'<div class="task'+(t.done?' done':'')+'"><input type="checkbox" data-toggle="'+escapeHTML(t.id)+'" '+(t.done?'checked':'')+' aria-label="Mark '+escapeHTML(t.title)+' '+(t.done?'not done':'complete')+'"><div class="task-main"><div class="task-name">'+escapeHTML(t.title)+'</div><div class="task-meta">'+escapeHTML(deadlineLabel(t))+'</div></div><button type="button" class="danger small" data-remove="'+escapeHTML(t.id)+'">Delete</button></div>').join('');}
+ const open=tasks.filter(t=>!t.done).sort((a,b)=>sortKey(a).localeCompare(sortKey(b))||String(a.created).localeCompare(String(b.created)));
+ const done=tasks.filter(t=>t.done).sort((a,b)=>String(b.completedAt||'').localeCompare(String(a.completedAt||'')));
+ $('count').textContent=open.length+' remaining';
+ $('doneCount').textContent='Completed ('+done.length+')';
  $('pending').innerHTML=open.length?rows(open):'<p class="empty">Nothing outstanding.</p>';
- $('completed').innerHTML=completed.length?rows(completed):'<p class="info">No completed items.</p>';
- for(const id of ['pending','completed']){
-  $(id).querySelectorAll('[data-toggle]').forEach(el=>el.addEventListener('change',()=>{
-   const next=tasks.map(t=>t.id===el.dataset.toggle?{...t,done:el.checked,completedAt:el.checked?new Date().toISOString():null}:t);
-   if(persist(next)){render();status(el.checked?'Completed.':'Moved back to your To-Do list.');}else{el.checked=!el.checked;}
+ $('completed').innerHTML=done.length?rows(done):'<p class="info">No completed items.</p>';
+ for(const root of ['pending','completed']){
+  $(root).querySelectorAll('[data-toggle]').forEach(el=>el.addEventListener('change',()=>{
+    const next=tasks.map(t=>t.id===el.dataset.toggle?{...t,done:el.checked,completedAt:el.checked?new Date().toISOString():null}:t);
+    if(persist(next)){render();status(el.checked?'Completed.':'Moved back to the To-Do list.');}
+    else el.checked=!el.checked;
   }));
-  $(id).querySelectorAll('[data-remove]').forEach(el=>el.addEventListener('click',()=>{
-   const t=tasks.find(x=>x.id===el.dataset.remove);if(!t||!confirm('Delete the reminder "'+t.title+'"?'))return;
-   if(persist(tasks.filter(x=>x.id!==t.id))){render();status('Reminder deleted.');}
+  $(root).querySelectorAll('[data-remove]').forEach(el=>el.addEventListener('click',()=>{
+    const task=tasks.find(t=>t.id===el.dataset.remove);
+    if(!task||!confirm('Delete "'+task.title+'"?'))return;
+    if(persist(tasks.filter(t=>t.id!==task.id))){render();status('Reminder deleted.');}
   }));
  }
 }
-$('reset').addEventListener('click',()=>{if(!tasks.length)return;if(!confirm('Clear ALL test reminders? Money entries will not be affected.'))return;if(persist([])){render();hide();$('words').value='';status('Test To-Dos cleared.');}});
-render();
-const Mic=window.SpeechRecognition||window.webkitSpeechRecognition,button=$('mic'),micStatus=$('micStatus');let rec=null,active=false,starting=false,prefix='';
-const micSay=s=>{micStatus.textContent=s;};function idle(){active=false;starting=false;button.textContent='🎤 Dictate';}
-if(!Mic){button.disabled=true;micSay('Use the Samsung keyboard microphone if browser dictation is unavailable.');}
-else button.addEventListener('click',()=>{
- if(active||starting){try{rec.stop();}catch(e){}return;}
- if(!window.isSecureContext){micSay('Open the HTTPS GitHub Pages address in Chrome for microphone access.');return;}
- try{
-  rec=new Mic();starting=true;prefix=$('words').value.trim();rec.lang='en-CA';rec.continuous=false;rec.interimResults=true;
-  rec.onstart=()=>{active=true;starting=false;button.textContent='■ Stop';micSay('Listening…');};
-  rec.onresult=e=>{let phrase='';for(let i=0;i<e.results.length;i++)phrase+=e.results[i][0].transcript+' ';$('words').value=[prefix,phrase.trim()].filter(Boolean).join(' ');$('words').dispatchEvent(new Event('input',{bubbles:true}));micSay(e.results[e.results.length-1].isFinal?'Ready. Tap Review.':'Listening…');};
-  rec.onerror=e=>micSay(e.error==='not-allowed'?'Microphone denied. Allow this site in Chrome settings.':e.error==='network'?'Speech recognition needs an internet connection.':'Speech error: '+e.error);
-  rec.onend=()=>{idle();if(micStatus.textContent==='Listening…')micSay('Ready. Tap Review.');};
-  rec.start();
- }catch(e){idle();micSay('Could not start voice recognition. You can use the keyboard microphone instead.');}
+$('reset').addEventListener('click',()=>{
+ if(!tasks.length)return;
+ if(!confirm('Clear ALL test reminders? Money entries will not be affected.'))return;
+ if(persist([])){render();status('Test To-Dos cleared.');}
 });
+window.addEventListener('storage',e=>{if(e.key!==STORE)return;try{const x=JSON.parse(e.newValue||'[]');if(Array.isArray(x)){tasks=x;render();}}catch(err){}});
+render();
 if('serviceWorker' in navigator&&location.protocol==='https:')navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
 })();
 </script></body></html>
