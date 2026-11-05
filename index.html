@@ -270,7 +270,7 @@ function render(){
  const next=records.filter(x=>x.id!==r.id);try{localStorage.setItem(STORE,JSON.stringify(next));}catch(e){feedback('Could not save deletion.','bad');return;}records=next;render();feedback('Entry deleted.');
  }));
 }
-$('reset').addEventListener('click',()=>{if(!records.length)return;if(!confirm('Delete ALL test entries from this simple version? This cannot be undone.'))return;try{localStorage.removeItem(STORE);}catch(e){feedback('Could not clear local storage.','bad');return;}records=[];render();hideForm();$('words').value='';feedback('Test entries cleared.');});
+$('reset').addEventListener('click',()=>{if(!records.length)return;if(!confirm('Permanently delete ALL money entries stored on this phone? This cannot be undone.'))return;try{localStorage.removeItem(STORE);}catch(e){feedback('Could not clear local storage.','bad');return;}records=[];render();hideForm();$('words').value='';feedback('Test entries cleared.');});
 render();
 })();
 </script>
