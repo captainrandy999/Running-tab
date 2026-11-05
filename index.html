@@ -39,7 +39,15 @@
 </section>
  <section class="card" id="entry" aria-label="Quick entry">
    <textarea id="words" aria-label="Type or dictate a Money, To-Do, or Shopping entry" placeholder="bitch better have my money..."></textarea>
-   <div class="hint">Try “Cody owes me $200”, “Remind me to call Cody by Saturday”, or “I need to buy milk and eggs”.</div>
+   <details class="prompt-guide">
+    <summary>💡 How to say it</summary>
+    <div class="prompt-examples">
+     <div><b>Money:</b> “Cody owes me $200 for materials”</div>
+     <div><b>To-Do:</b> “Remind me to call Cody by Saturday”</div>
+     <div><b>Shopping:</b> “I need to buy milk and eggs”</div>
+     <div><b>Shopping:</b> “Add bread and coffee to my shopping list”</div>
+    </div>
+   </details>
    <div class="actions"><button type="button" class="secondary" id="mic" aria-label="Dictate using the microphone" aria-pressed="false">🎤 Dictate</button><button type="button" class="primary" id="review">Review</button><button type="button" class="outline" id="clear">Clear field</button></div>
 <div class="hint" id="micStatus" role="status" aria-live="polite"></div>
    <div id="feedback" aria-live="polite"></div>
