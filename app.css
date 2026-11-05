@@ -1,0 +1,49 @@
+/* Running Tab mobile app polish - shared by Money and To-Do. */
+:root{--navy:#163b59;--ink:#203348;--teal:#0d907b;--soft:#edf4f7;--line:#dce8ec}
+html{scroll-behavior:smooth}
+body{min-height:100vh;background:linear-gradient(160deg,#e9f3f6 0,#f5f8fa 340px,#f5f8fa 100%);color:var(--ink)}
+main{max-width:710px!important;padding-top:16px!important;padding-bottom:calc(112px + env(safe-area-inset-bottom))!important}
+.head{margin:0 0 18px!important;gap:12px}
+.head h1{font-size:26px!important;font-weight:850;letter-spacing:-.9px}
+.head .info{font-size:12px;letter-spacing:.2px}
+.mark{width:49px!important;height:49px!important;box-shadow:0 8px 18px #153c5a20;background:linear-gradient(150deg,#255878,#10354d)!important}
+.card{border:1px solid #dfe9ee!important;border-radius:20px!important;box-shadow:0 8px 28px #153c5a0a!important;background:#fff!important}
+.card h2{font-size:19px;letter-spacing:-.35px}
+button{transition:background .12s ease,transform .12s ease}
+button:active{transform:scale(.985)}
+button.primary,.entry-link{background:var(--navy)!important;color:white!important;box-shadow:0 3px 9px #153b5916}
+button.secondary{background:#eaf1f5!important}
+button.outline{border:1px solid #c8d7e0!important}
+textarea{min-height:106px!important;line-height:1.55}
+input,textarea,select{border-color:#cbdbe4!important}
+input:focus,textarea:focus,select:focus{border-color:#6ab1af!important;box-shadow:0 0 0 3px #0d907b16;outline:none}
+label.label{font-size:13px;letter-spacing:.05px}
+.actions{gap:8px}
+.callout{background:#ecf5f6!important;border-color:#cce5e3!important;border-radius:13px!important}
+.stat{border-radius:17px!important;box-shadow:0 5px 15px #17384b07}
+.person{background:#fff!important;border-radius:14px!important}
+.task{border-radius:14px!important;background:#fff!important}
+.task:has(input:checked){background:#f7f9fa!important}
+.tabs{position:fixed!important;z-index:60;bottom:calc(10px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:calc(100% - 22px);max-width:440px;padding:7px;gap:7px!important;background:#fffefa!important;border:1px solid #dae6eb;border-radius:18px;box-shadow:0 14px 35px #0a294433;margin:0!important}
+.tabs a{border:0!important;background:transparent!important;border-radius:13px!important;padding:12px 8px!important;display:flex;align-items:center;justify-content:center;gap:8px}
+.tabs a.active{color:#fff!important;background:var(--navy)!important;box-shadow:0 4px 12px #17395024}
+.tabs a:not(.active){color:#527084!important}
+.install-panel{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;border-radius:15px;background:#e9f5f3;border:1px solid #d2e9e3;margin-bottom:14px}
+.install-panel p{font-size:12px;color:#4b6968;margin:2px 0 0}
+.install-panel strong{font-size:14px}
+.install-panel button{white-space:nowrap;min-height:38px;font-size:13px}
+.app-settings{margin-top:15px}
+.app-settings summary{list-style:none;display:flex;align-items:center;justify-content:space-between;font-weight:800;cursor:pointer;padding:4px 0;gap:8px}
+.app-settings summary::-webkit-details-marker{display:none}
+.app-settings summary::after{content:"⌄";font-weight:900;color:#69839a}
+.app-settings[open] summary::after{content:"⌃"}
+.app-settings button,.app-settings input[type=file]{font-size:14px}
+.app-settings p{font-size:13px;color:#607486}
+.app-settings .tools-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.app-settings .danger-zone{margin-top:18px;padding-top:14px;border-top:1px solid #e1e9ef}
+.install-tips{font-size:12px;color:#456479;margin-top:5px}
+.install-tips summary{cursor:pointer}
+.install-tips p{margin:6px 0 0}
+.app-status{font-size:12px;color:#527185;margin:5px 0 12px}
+@media(max-width:420px){main{padding-left:10px!important;padding-right:10px!important}.card{padding:15px!important}.install-panel{padding:10px 12px}.tabs a{font-size:14px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}button{transition:none}}
