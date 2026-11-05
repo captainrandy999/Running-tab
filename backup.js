@@ -4,6 +4,7 @@
 const $=id=>document.getElementById(id);
 const M='running-tab-simple-v1',T='running-tab-todo-v1',notice=$('backupStatus');
 if(!$('downloadBackup')||!$('restoreBackup'))return;
+if(window.location.hash==='#dataTools'){const details=$('settingsDetail');if(details)details.open=true;}
 function say(msg,err=false){if(!notice)return;notice.textContent=msg;notice.style.color=err?'#9b3741':'#14745b';}
 function parseList(key){const raw=localStorage.getItem(key);if(!raw)return [];const list=JSON.parse(raw);if(!Array.isArray(list))throw new Error('Stored data is not a list');return list;}
 function safeMoney(r){return r&&typeof r.id==='string'&&typeof r.person==='string'&&['to_me','i_owe'].includes(r.direction)&&(r.cents===null||(Number.isSafeInteger(r.cents)&&r.cents>0))&&typeof r.reason==='string'&&typeof r.date==='string';}
