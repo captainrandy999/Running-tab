@@ -176,9 +176,9 @@ function deadlineLabel(t){
 }
 function interpret(input){
  let s=String(input||'').trim().replace(/\s+/g,' ').replace(/[.!?]+$/,'').trim();
- const isGenericReminder=/^(?:add|set|make|create)\s+(?:(?:a|the)\s+)?reminder\b/i.test(s);
+ const isGenericReminder=/^(?:(?:add|set|make|create)\s+(?:(?:a|the)\s+)?reminder\b|remind\s+me\b)/i.test(s);
  if(!s)return {error:'Type or say a reminder first.'};
- s=s.replace(/^(?:remind\s+me(?:\s+to)?|i\s+need\s+to|i\s+have\s+to|don'?t\s+forget\s+to|(?:add|set|make|create)\s+(?:(?:a|the)\s+)?reminder(?:\s+to)?)\s*/i,'').trim();
+ s=s.replace(/^(?:remind\s+me(?:\s+to\b)?|i\s+need\s+to|i\s+have\s+to|don'?t\s+forget\s+to|(?:add|set|make|create)\s+(?:(?:a|the)\s+)?reminder(?:\s+to\b)?)\s*/i,'').trim();
  let dueType='none',due='',unrecognized=false;
  function use(match,details){if(!match)return false;dueType=details.type;due=details.value;s=s.slice(0,match.index).trim();return true;}
  let m;
