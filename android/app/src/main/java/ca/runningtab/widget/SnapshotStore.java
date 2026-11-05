@@ -37,6 +37,14 @@ final class SnapshotStore {
         RunningTabWidget.refreshAll(context);
     }
 
+    static boolean dark(Context context, int widgetId) {
+        return prefs(context).getBoolean("dark_" + widgetId, false);
+    }
+
+    static void toggleDark(Context context, int widgetId) {
+        prefs(context).edit().putBoolean("dark_" + widgetId, !dark(context, widgetId)).apply();
+    }
+
     static String tab(Context context, int widgetId) {
         String saved = prefs(context).getString("tab_" + widgetId, MONEY);
         return MONEY.equals(saved) || TODO.equals(saved) || SHOPPING.equals(saved) ? saved : MONEY;
@@ -48,6 +56,6 @@ final class SnapshotStore {
     }
 
     static void forgetTab(Context context, int widgetId) {
-        prefs(context).edit().remove("tab_" + widgetId).apply();
+        prefs(context).edit().remove("tab_" + widgetId).remove("dark_" + widgetId).apply();
     }
 }
