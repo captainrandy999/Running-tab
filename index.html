@@ -13,6 +13,7 @@
 <script src="./install.js" defer></script>
 <script src="./backup.js" defer></script>
 <script src="./todo-panel.js" defer></script>
+<script src="./shopping-panel.js" defer></script>
 <script src="./view.js" defer></script>
 <style>
 :root {font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:#172a3c; background:#f4f7fa; color-scheme:light}
@@ -28,6 +29,7 @@
 <nav class="tabs" role="tablist" aria-label="Running Tab sections">
 <button type="button" role="tab" class="tab-switch active" data-view="money" id="tabMoney" aria-controls="moneyPanel" aria-selected="true">💰 Money</button>
 <button type="button" role="tab" class="tab-switch" data-view="todo" id="tabTodo" aria-controls="todoPanel" aria-selected="false">✓ To-Do</button>
+<button type="button" role="tab" class="tab-switch" data-view="shopping" id="tabShopping" aria-controls="shoppingPanel" aria-selected="false">🛒 Shopping</button>
 </nav>
 <section class="install-panel" id="installPanel" aria-label="Install Running Tab">
   <div><strong>Running Tab on your phone</strong><p>Install once and open it like a regular app.</p>
@@ -37,9 +39,9 @@
 </section>
  <section class="card" id="entry" aria-label="New entry">
    <h2>Tell Running Tab</h2>
-   <label class="label" for="words">Type or dictate a money entry or reminder</label>
+   <label class="label" for="words">Type or dictate an entry for Money, To-Do, or Shopping</label>
    <textarea id="words" placeholder="bitch better have my money..."></textarea>
-   <div class="hint">Try “Cody owes me $200 for materials” or “Remind me to call Cody by Saturday”. Use Dictate or your Samsung keyboard microphone.</div>
+   <div class="hint">Try “Cody owes me $200”, “Remind me to call Cody by Saturday”, or “I need to buy milk and eggs”.</div>
    <div class="actions"><button type="button" class="secondary" id="mic" aria-label="Dictate using the microphone" aria-pressed="false">🎤 Dictate</button><button type="button" class="primary" id="review">Review</button><button type="button" class="outline" id="clear">Clear field</button></div>
 <div class="hint" id="micStatus" role="status" aria-live="polite"></div>
    <div id="feedback" aria-live="polite"></div>
@@ -68,8 +70,16 @@
       </div>
       <div class="actions"><button type="submit" class="primary">Confirm &amp; save to To-Do</button><button type="button" class="secondary" id="todoCancel">Change sentence</button></div>
    </form>
+   <form id="shoppingReviewForm" class="hide">
+    <h2 style="margin:15px 0 8px">Review Shopping List</h2>
+    <div class="callout" id="shoppingSummary" aria-live="polite"></div>
+    <p class="info">Each line becomes a separate item. Edit, add, or remove lines before saving.</p>
+    <div class="field"><label class="label" for="shoppingItems">Shopping items (one per line)</label>
+     <textarea id="shoppingItems" rows="4" maxlength="3000" required placeholder="Milk&#10;Bread&#10;Eggs"></textarea></div>
+    <div class="actions"><button type="submit" class="primary">Confirm &amp; save to Shopping</button><button type="button" class="secondary" id="shoppingCancel">Change sentence</button></div>
+   </form>
  </section>
- <section id="viewViewport" class="view-viewport" aria-label="Money and To-Do lists">
+ <section id="viewViewport" class="view-viewport" aria-label="Money, To-Do, and Shopping lists">
   <div id="viewTrack" class="view-track">
    <section id="moneyPanel" class="view-panel" role="tabpanel" aria-labelledby="tabMoney">
  <div class="totals" aria-label="Running totals">
@@ -89,19 +99,30 @@
     </section>
     <div id="todoStatus" class="todo-status" role="status" aria-live="polite"></div>
    </section>
+   <section id="shoppingPanel" class="view-panel" role="tabpanel" aria-labelledby="tabShopping" aria-hidden="true" inert>
+    <section class="card">
+     <div class="list-head"><h2>Shopping list</h2><span class="tag" id="shopCount">0 to buy</span></div>
+     <div id="shopPending"><p class="task-empty">No shopping items yet.</p></div>
+     <details><summary id="shopDoneCount">Purchased (0)</summary>
+      <div id="shopCompleted"></div>
+      <button type="button" id="shopClearChecked" class="secondary small" hidden>Clear purchased items</button>
+     </details>
+    </section>
+    <div id="shopStatus" class="todo-status" role="status" aria-live="polite"></div>
+   </section>
   </div>
  </section>
  <section class="compact-data" id="dataTools">
   <details class="app-settings" id="settingsDetail">
    <summary>⚙ Data &amp; backup <span class="secondary-label">Export / restore</span></summary>
    <div class="data-content">
-    <p>Your Money and To-Do records stay on this phone. Download a backup occasionally so you can restore both lists.</p>
+    <p>Money, To-Do, and Shopping stay on this phone. Download a backup occasionally to restore all three lists.</p>
     <div class="tools-grid"><button type="button" id="downloadBackup" class="secondary">Download backup</button></div>
     <div class="field"><label class="label" for="restoreBackup">Restore backup (.json)</label><input id="restoreBackup" type="file" accept=".json,application/json"></div>
     <div id="backupStatus" class="app-status" role="status" aria-live="polite"></div>
     <div class="danger-zone">
      <p>Delete saved data from this phone (each list separately):</p>
-     <div class="tools-grid"><button type="button" class="danger small" id="reset">Delete Money</button><button type="button" class="danger small" id="todoReset">Delete To-Dos</button></div>
+     <div class="tools-grid"><button type="button" class="danger small" id="reset">Delete Money</button><button type="button" class="danger small" id="todoReset">Delete To-Dos</button><button type="button" class="danger small" id="shopReset">Delete Shopping</button></div>
     </div>
    </div>
   </details>
@@ -114,6 +135,7 @@
 const $=id=>document.getElementById(id);
 const STORE='running-tab-simple-v1';
 const TODO_STORE='running-tab-todo-v1';
+const SHOP_STORE='running-tab-shopping-v1';
 const TodoParser=(()=>{
 const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const days=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -217,7 +239,7 @@ function interpret(input){
 function feedback(s,kind=''){const el=$('feedback');el.className=s?'notice'+(kind==='bad'?' bad':''):'';el.textContent=s||'';}
 function fillSummary(){const p=$('person').value.trim()||'(person not specified)';const amount=$('amount').value.trim();const amt=amount && Number(amount)>0?money(Math.round(Number(amount)*100)):'Price TBD';const reason=$('reason').value.trim();$('summary').textContent=($('direction').value==='to_me'?p+' owes you ': 'You owe '+p+' ')+amt+(reason?'\nReason: '+reason:'');}
 function showForm(parsed){$('direction').value=parsed.direction;$('person').value=parsed.person;$('amount').value=parsed.cents===null?'':(parsed.cents/100).toFixed(2);$('reason').value=parsed.reason;$('date').value=parsed.date;$('reviewForm').classList.remove('hide');fillSummary();}
-function hideForm(){$('reviewForm').classList.add('hide');$('todoReviewForm').classList.add('hide');$('entryType').textContent='';}
+function hideForm(){$('reviewForm').classList.add('hide');$('todoReviewForm').classList.add('hide');$('shoppingReviewForm').classList.add('hide');$('entryType').textContent='';}
 function finishSuccessfulSave(){
  // Dismiss the Android keyboard without focusing any other control.
  const focused=document.activeElement;
@@ -235,9 +257,70 @@ function todoDueChange(){
  $('todoDayWrap').classList.toggle('hide',type!=='day');
  $('todoMonthWrap').classList.toggle('hide',type!=='month');todoSummary();
 }
+
+function isShopping(s){
+ const text=String(s||'').trim().replace(/^please\s+/i,'');
+ return /^(?:i\s+(?:need|have)\s+to\s+(?:buy|purchase|pick\s+up)\b|(?:buy|purchase|pick\s+up)\b|(?:add|put)\b.+\bshopping\s+list\b)/i.test(text);
+}
+function parseShopping(s){
+ let text=String(s||'').trim().replace(/^please\s+/i,'').replace(/[.!?]+$/,'').trim();
+ if(/^(?:add|put)\b/i.test(text)){
+  text=text.replace(/^(?:add|put)\s+/i,'')
+    .replace(/\s+(?:to|on)\s+(?:(?:my|the)\s+)?shopping\s+list\s*$/i,'');
+ }else{
+  text=text.replace(/^i\s+(?:need|have)\s+to\s+(?:buy|purchase|pick\s+up)\s+/i,'')
+    .replace(/^(?:buy|purchase|pick\s+up)\s+/i,'');
+ }
+ text=text.trim();
+ if(!text||/^(?:to|on)\s+(?:my\s+)?shopping\s+list$/i.test(text))return {error:'Tell me what you want to buy.'};
+ const rawItems=text.split(/\s*(?:,|;|\band\b|\bplus\b)\s*/i).map(x=>x.trim()).filter(Boolean);
+ if(!rawItems.length||rawItems.length>30)return {error:'Enter between 1 and 30 shopping items per entry.'};
+ if(rawItems.some(x=>x.length>160))return {error:'One shopping item is too long; please shorten it.'};
+ const keys=new Set(),items=[];
+ for(const item of rawItems){
+  const key=item.toLocaleLowerCase();
+  if(!keys.has(key)){items.push(item);keys.add(key);}
+ }
+ return {items};
+}
+function shoppingSummary(){
+ const items=$('shoppingItems').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+ $('shoppingSummary').textContent=items.length+' item'+(items.length===1?'':'s')+' to add:\n'+(items.length?items.map(x=>'• '+x).join('\n'):'(No items)');
+}
+$('shoppingItems').addEventListener('input',shoppingSummary);
+$('shoppingCancel').addEventListener('click',()=>{hideForm();feedback('');$('words').focus();});
+$('shoppingReviewForm').addEventListener('submit',event=>{
+ event.preventDefault();
+ const names=$('shoppingItems').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+ if(!names.length||names.length>30||names.some(x=>x.length>160)){feedback('Enter 1–30 shopping items, one per line (max 160 characters each).','bad');return;}
+ let items=[];
+ try{const saved=JSON.parse(localStorage.getItem(SHOP_STORE)||'[]');if(Array.isArray(saved))items=saved;}
+ catch(e){feedback('Could not read Shopping. Nothing saved.','bad');return;}
+ const keys=new Set(),namesUnique=names.filter(name=>{
+  const key=name.toLocaleLowerCase();if(keys.has(key))return false;keys.add(key);return true;
+ });
+ const now=new Date().toISOString();
+ const newItems=namesUnique.map(name=>({id:(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),name,done:false,created:now}));
+ try{localStorage.setItem(SHOP_STORE,JSON.stringify([...items,...newItems]));}
+ catch(e){feedback('Could not save shopping items in this browser.','bad');return;}
+ $('words').value='';hideForm();feedback('Added '+newItems.length+' item'+(newItems.length===1?'':'s')+' to Shopping.');
+ window.dispatchEvent(new Event('runningtab:shopping-changed'));
+ window.RunningTabView?.show('shopping');finishSuccessfulSave();
+});
 function isTodo(s){return /^(?:please\s+)?(?:remind\s+me(?:\s+to)?|i\s+need\s+to|i\s+have\s+to|don'?t\s+forget\s+to|remember\s+to|add\s+to\s+(?:my\s+)?(?:to-?do\s+)?list|call|buy|pick\s+up|send|finish|complete|book|schedule|pay|email|text|order|drop\s+off|submit|renew|check|return|fix|clean|meet|make|bring)\b/i.test(s);}
 $('review').addEventListener('click',()=>{
  const raw=$('words').value.trim();
+ if(isShopping(raw)){
+  const result=parseShopping(raw);
+  if(result.error){hideForm();feedback(result.error,'bad');return;}
+  hideForm();
+  $('shoppingItems').value=result.items.join('\n');
+  $('shoppingReviewForm').classList.remove('hide');
+  $('entryType').textContent='🛒 Shopping items';
+  shoppingSummary();
+  feedback('');
+  return;
+ }
  if(isTodo(raw)){
   const result=TodoParser.interpret(raw);
   if(result.error){hideForm();feedback(result.error,'bad');return;}
