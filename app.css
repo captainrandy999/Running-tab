@@ -238,3 +238,48 @@ padding:8px 10px;margin:0 auto 13px;border:1px solid #d5e1e9;border-radius:12px;
 color:#3d6373;font-size:12px}
 .web-sync-bar button{margin:0;min-height:34px;white-space:nowrap}
 .web-sync-bar .sync-error{color:#9b3741}
+
+
+/* Minimal bottom Admin drawer: all sync/account/backup/install utilities live here. */
+.admin-footer{margin:18px 2px 14px;border:1px solid #dbe5eb;border-radius:13px;background:#f9fbfc;box-shadow:none}
+.admin-footer .admin-drawer{margin:0;padding:0}
+.admin-footer .admin-drawer > .admin-toggle{display:flex;align-items:center;justify-content:space-between;gap:8px;min-height:46px;padding:11px 14px;cursor:pointer;list-style:none;color:#4d6678;font-size:13px;font-weight:700}
+.admin-footer .admin-drawer > .admin-toggle::-webkit-details-marker{display:none}
+.admin-footer .admin-drawer > .admin-toggle::after{content:"⌄";color:#78909e;font-size:17px;margin-left:4px;flex:none}
+.admin-footer .admin-drawer[open] > .admin-toggle::after{content:"⌃"}
+.admin-toggle-title{white-space:nowrap}
+.admin-footer .admin-sync-indicator{margin-left:auto;color:#718797;font-size:11px;font-weight:550;text-align:right;overflow-wrap:anywhere}
+.admin-footer .admin-sync-indicator.needs-attention{color:#9b3741;font-weight:700}
+.admin-panel-content{border-top:1px solid #e5ecef;padding:0 12px 13px}
+.admin-panel-section{padding:13px 0 11px;border-bottom:1px solid #e5ecef}
+.admin-panel-section[hidden]{display:none!important}
+.admin-footer .admin-heading{font-size:12px;font-weight:750;letter-spacing:.02em;color:#526e82;margin:0 0 7px}
+.admin-footer .web-sync-bar,.admin-footer .web-account-bar{max-width:none;margin:0;padding:8px 9px;border:0;border-radius:10px;background:#eef3f6;color:#415d70;font-size:12px;overflow-wrap:anywhere}
+.admin-footer .web-sync-bar{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.admin-footer .web-sync-bar[hidden]{display:none!important}
+.admin-footer .web-sync-bar span{min-width:0;flex:1 1 180px}
+.admin-footer .web-sync-bar button{flex:none;min-height:36px;padding:6px 11px}
+.admin-footer .web-account-bar{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.admin-footer #webAccountStatus{min-width:0;flex:1 1 200px;overflow-wrap:anywhere}
+.admin-footer .web-account-actions{margin-left:auto;flex-wrap:wrap}
+.admin-footer .web-account-actions button{min-height:36px;padding:6px 10px}
+.admin-footer .admin-subsection{margin:0;border-bottom:1px solid #e5ecef}
+.admin-footer .admin-subsection:last-child{border-bottom:0}
+.admin-footer .admin-subsection > summary{display:flex;list-style:none;align-items:center;gap:8px;justify-content:space-between;color:#4f6b7d;font-size:13px;font-weight:700;cursor:pointer;min-height:46px;padding:11px 2px}
+.admin-footer .admin-subsection > summary::-webkit-details-marker{display:none}
+.admin-footer .admin-subsection > summary::after{content:"⌄";margin-left:8px;color:#78909e;font-size:17px;font-weight:650;flex:none}
+.admin-footer .admin-subsection[open] > summary::after{content:"⌃"}
+.admin-footer .admin-subsection .secondary-label{margin-left:auto;font-size:11px;font-weight:500;color:#869aa7}
+.admin-footer .admin-subsection .data-content{padding:0 2px 14px}
+.admin-footer .admin-subsection .data-content > p{margin:0 0 10px}
+.admin-footer .admin-install > .install-panel{margin:0 0 12px;display:flex;background:#f2f6f8;border:1px solid #e0e8ed;border-radius:10px;padding:10px 11px}
+.admin-footer .admin-install .install-panel[hidden]{display:none!important}
+.admin-footer .admin-install .install-panel strong{font-size:13px}
+.admin-footer #backupStatus:not(:empty){padding:6px 0}
+.admin-footer #webGoogleSignOut[hidden],.admin-footer #webGoogleReconnect[hidden]{display:none!important}
+@media(max-width:440px){
+ .admin-footer{margin:13px 1px 10px}
+ .admin-panel-content{padding-left:10px;padding-right:10px}
+ .admin-footer .web-sync-bar button{min-height:38px}
+ .admin-footer .admin-subsection .tools-grid button{min-height:42px}
+}

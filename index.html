@@ -42,29 +42,13 @@
  </div>
 </section>
 <main id="runningTabApp">
-<div class="web-account-bar" id="webAccountBar" hidden>
- <span id="webAccountStatus" aria-live="polite">Google account</span>
- <div class="web-account-actions">
-  <button type="button" class="secondary small" id="webGoogleReconnect" hidden disabled>Reconnect Google</button>
-  <button type="button" class="secondary small" id="webGoogleSignOut">Sign out</button>
- </div>
-</div>
-<div class="web-sync-bar" aria-live="polite">
- <span id="webSyncStatus">Google Drive not synchronized yet</span>
- <button type="button" class="secondary small" id="webSyncNow">Sync now</button>
-</div>
- <header class="head"><div class="mark">$</div><div><h1>Running Tab</h1><div class="info">Money &amp; reminders, made simple</div></div></header>
+<header class="head"><div class="mark">$</div><div><h1>Running Tab</h1><div class="info">Money &amp; reminders, made simple</div></div></header>
 <nav class="tabs" role="tablist" aria-label="Running Tab sections">
 <button type="button" role="tab" class="tab-switch active" data-view="money" id="tabMoney" aria-controls="moneyPanel" aria-selected="true">💰 Money</button>
 <button type="button" role="tab" class="tab-switch" data-view="todo" id="tabTodo" aria-controls="todoPanel" aria-selected="false">✓ To-Do</button>
 <button type="button" role="tab" class="tab-switch" data-view="shopping" id="tabShopping" aria-controls="shoppingPanel" aria-selected="false">🛒 Shopping</button>
 </nav>
-<section class="install-panel" id="installPanel" aria-label="Install Running Tab">
-  <div><strong>Running Tab on your phone</strong><p>Install once and open it like a regular app.</p>
-  <details class="install-tips"><summary>How to install</summary><p>In Chrome, tap the ⋮ menu → Add to Home screen → Install. The wording may be “Install app”.</p></details>
-  <div id="installStatus" class="hint" role="status"></div></div>
-  <button id="installBtn" type="button" class="primary" hidden>Install app</button>
-</section>
+
  <section class="card" id="entry" aria-label="Quick entry">
    <textarea id="words" aria-label="Type or dictate a Money, To-Do, or Shopping entry" placeholder="bitch better have my money..."></textarea>
    <details class="prompt-guide">
@@ -172,11 +156,32 @@
    </section>
   </div>
  </section>
- <section class="compact-data" id="dataTools">
-  <details class="app-settings" id="settingsDetail">
-   <summary>⚙ Data &amp; backup <span class="secondary-label">Export / restore</span></summary>
-   <div class="data-content">
-    <p>Money, To-Do, and Shopping stay on this phone. Download a backup occasionally to restore all three lists.</p>
+ 
+ <section class="compact-data admin-footer" id="dataTools" aria-label="Admin, sync and backups">
+  <details class="app-settings admin-drawer" id="adminSection">
+   <summary class="admin-toggle"><span class="admin-toggle-title">⚙️ Admin</span><span id="adminSummaryStatus" class="admin-sync-indicator" aria-live="polite">Local data</span></summary>
+   <div class="admin-panel-content">
+    <section class="admin-panel-section" id="adminCloudSection" aria-label="Google Drive synchronization">
+     <h2 class="admin-heading">Google Drive</h2>
+<div class="web-sync-bar" aria-live="polite">
+ <span id="webSyncStatus">Google Drive not synchronized yet</span>
+ <button type="button" class="secondary small" id="webSyncNow">Sync now</button>
+</div>
+    </section>
+    <section class="admin-panel-section" id="adminAccountSection" aria-label="Google account">
+     <h2 class="admin-heading">Account</h2>
+<div class="web-account-bar" id="webAccountBar" hidden>
+ <span id="webAccountStatus" aria-live="polite">Google account</span>
+ <div class="web-account-actions">
+  <button type="button" class="secondary small" id="webGoogleReconnect" hidden disabled>Reconnect Google</button>
+  <button type="button" class="secondary small" id="webGoogleSignOut">Sign out</button>
+ </div>
+</div>
+    </section>
+    <details class="admin-subsection" id="settingsDetail">
+     <summary>Backup &amp; restore <span class="secondary-label">JSON export / import</span></summary>
+<div class="data-content">
+    <p>Lists save on this device first. Keep a separate JSON backup in case you need to restore your entries.</p>
     <div class="tools-grid"><button type="button" id="downloadBackup" class="secondary">Download backup</button><button type="button" id="copyBackup" class="secondary">Copy backup text</button></div>
     <details id="backupTextPanel" hidden>
      <summary>Backup text (manual copy)</summary>
@@ -197,10 +202,58 @@
      <div class="tools-grid"><button type="button" class="danger small" id="reset">Delete Money</button><button type="button" class="danger small" id="todoReset">Delete To-Dos</button><button type="button" class="danger small" id="shopReset">Delete Shopping</button></div>
     </div>
    </div>
+    </details>
+    <details class="admin-subsection admin-install" id="installDetail">
+     <summary>Install options</summary>
+<section class="install-panel" id="installPanel" aria-label="Install Running Tab">
+  <div><strong>Running Tab on your phone</strong><p>Install once and open it like a regular app.</p>
+  <details class="install-tips"><summary>How to install</summary><p>In Chrome, tap the ⋮ menu → Add to Home screen → Install. The wording may be “Install app”.</p></details>
+  <div id="installStatus" class="hint" role="status"></div></div>
+  <button id="installBtn" type="button" class="primary" hidden>Install app</button>
+</section>
+    </details>
+   </div>
   </details>
  </section>
-<div class="foot">Running Tab · Your information stays on this device. Microphone transcription may use an online speech service.</div>
+<div class="foot">Running Tab · Saves locally first · Drive sync when connected · Voice transcription may use an online service.</div>
 </main>
+<script>
+/* Keep the Admin drawer small, with only a short sync indicator when closed. */
+(()=>{
+ 'use strict';
+ const get=id=>document.getElementById(id);
+ const drawer=get('adminSection'),label=get('adminSummaryStatus');
+ const cloud=get('adminCloudSection'),account=get('adminAccountSection');
+ const syncBar=document.querySelector('.admin-panel-content .web-sync-bar');
+ const accountBar=get('webAccountBar');
+ const sync=get('webSyncStatus'),accountText=get('webAccountStatus');
+ if(!drawer||!label||!sync||!syncBar||!accountBar)return;
+ function update(){
+  cloud.hidden=syncBar.hidden;
+  account.hidden=accountBar.hidden;
+  const status=(sync.textContent||'').trim();
+  let text='On-device',problem=false;
+  if(!cloud.hidden){
+   if(/sync paused|error|denied|conflict|failed/i.test(status)){text='Check sync';problem=true;}
+   else if(/syncing|retrying/i.test(status))text='Syncing…';
+   else if(/Synced with Google Drive/i.test(status))text='Synced';
+   else if(/offline/i.test(status))text='Offline';
+   else if(/disconnected|not synchronized|not connected|reconnect/i.test(status))text='Reconnect to sync';
+   else if(/reconnect/i.test(accountText?.textContent||''))text='Reconnect to sync';
+   else text='Drive ready';
+  }
+  label.textContent=text;
+  label.classList.toggle('needs-attention',problem);
+ }
+ const observer=new MutationObserver(update);
+ for(const el of [sync,syncBar,accountBar,accountText]){
+  if(el)observer.observe(el,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['hidden','class']});
+ }
+ window.addEventListener('online',update);
+ window.addEventListener('offline',update);
+ update();
+})();
+</script>
 <script>
 (()=>{
 'use strict';

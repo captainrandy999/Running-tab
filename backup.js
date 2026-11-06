@@ -5,7 +5,10 @@
  const KEYS={money:'running-tab-simple-v1',todos:'running-tab-todo-v1',shopping:'running-tab-shopping-v1'};
  const message=$('backupStatus');
  if(!$('downloadBackup')||!$('restoreBackup'))return;
- if(location.hash==='#dataTools'&&$('settingsDetail'))$('settingsDetail').open=true;
+ if(location.hash==='#dataTools'){
+  if($('adminSection'))$('adminSection').open=true;
+  if($('settingsDetail'))$('settingsDetail').open=true;
+ }
  const say=(value,error=false)=>{if(message){message.textContent=value;message.style.color=error?'#9b3741':'#14745b';}};
  const validMoney=x=>x&&typeof x.id==='string'&&typeof x.person==='string'&&['to_me','i_owe'].includes(x.direction)
    &&(x.cents===null||(Number.isSafeInteger(x.cents)&&x.cents>0))
