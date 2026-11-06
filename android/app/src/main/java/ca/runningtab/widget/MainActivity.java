@@ -1,6 +1,7 @@
 package ca.runningtab.widget;
 
 import android.app.Activity;
+import android.content.IntentSender;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
@@ -15,6 +16,14 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import com.google.android.gms.auth.api.identity.AuthorizationRequest;
+import com.google.android.gms.auth.api.identity.AuthorizationResult;
+import com.google.android.gms.auth.api.identity.Identity;
+import com.google.android.gms.auth.api.identity.RevokeAccessRequest;
+import com.google.android.gms.common.api.Scope;
+import com.google.android.gms.common.api.ApiException;
+import java.util.Arrays;
+import java.util.List;
 import android.widget.Toast;
 import org.json.JSONObject;
 import java.util.ArrayList;
@@ -31,6 +40,12 @@ public class MainActivity extends Activity {
     private static final int SPEECH_PICKER = 2002;
     private static final int BACKUP_PICKER = 2003;
     private static final int RESTORE_PICKER = 2004;
+    private static final int GOOGLE_AUTH_PICKER = 2005;
+    private static final String GOOGLE_AUTH_PREF = "google_drive_connected";
+    private static final List<Scope> GOOGLE_SCOPES = Arrays.asList(
+        new Scope("openid"), new Scope("email"),
+        new Scope("https://www.googleapis.com/auth/drive.appdata")
+    );
     private static final int MAX_BACKUP_BYTES = 15000000;
     private static final String APP_URL = "https://captainrandy999.github.io/Running-tab/index.html";
 
@@ -38,6 +53,8 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> fileCallback;
     private boolean loaded = false;
     private boolean dictateOnLoad = false;
+    private boolean googleAuthBusy = false;
+    private boolean googleConsentPending = false;
     private String backupToSave = null;
     private String backupName = null;
 
@@ -75,6 +92,9 @@ public class MainActivity extends Activity {
                 if (!isTrusted(Uri.parse(url))) return;
                 loaded = true;
                 injectBridge();
+                if (getPreferences(MODE_PRIVATE).getBoolean(GOOGLE_AUTH_PREF, false)) {
+                    web.postDelayed(() -> authorizeGoogle(false), 350);
+                }
                 if (dictateOnLoad) {
                     dictateOnLoad = false;
                     web.postDelayed(MainActivity.this::startDictation, 400);
@@ -144,7 +164,11 @@ public class MainActivity extends Activity {
 
     @Override protected void onResume() {
         super.onResume();
-        if (loaded && web != null) web.evaluateJavascript("window.__rtWidgetSnapshot?.();", null);
+        if (loaded && web != null) {
+            web.evaluateJavascript("window.__rtWidgetSnapshot?.();", null);
+            if (getPreferences(MODE_PRIVATE).getBoolean(GOOGLE_AUTH_PREF, false))
+                web.postDelayed(() -> authorizeGoogle(false), 400);
+        }
     }
 
     private final class BrowserBridge {
@@ -159,6 +183,15 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public void importBackup() {
             runOnUiThread(MainActivity.this::beginBackupImport);
+        }
+        @JavascriptInterface public void connectGoogle() {
+            runOnUiThread(() -> authorizeGoogle(true));
+        }
+        @JavascriptInterface public void refreshGoogle() {
+            runOnUiThread(() -> authorizeGoogle(false));
+        }
+        @JavascriptInterface public void disconnectGoogle() {
+            runOnUiThread(MainActivity.this::disconnectGoogle);
         }
     }
 
@@ -364,6 +397,97 @@ public class MainActivity extends Activity {
         Toast.makeText(this, "Restore failed: " + message, Toast.LENGTH_LONG).show();
     }
 
+    // Native account selection, authorization, and consent happen in Play
+    // Services, outside the embedded browser. No token is stored on disk.
+    private void authorizeGoogle(boolean userInitiated) {
+        if (web == null || !loaded || !isTrusted(Uri.parse(web.getUrl()))) return;
+        if (googleAuthBusy || googleConsentPending) return;
+        if (!userInitiated && !getPreferences(MODE_PRIVATE)
+                .getBoolean(GOOGLE_AUTH_PREF, false)) return;
+        googleAuthBusy = true;
+        notifyGoogleStatus("Connecting to Google Drive…");
+        try {
+            AuthorizationRequest request = AuthorizationRequest.builder()
+                .setRequestedScopes(GOOGLE_SCOPES)
+                .build();
+            Identity.getAuthorizationClient(this).authorize(request)
+                .addOnSuccessListener(auth -> {
+                    googleAuthBusy = false;
+                    if (auth.hasResolution()) {
+                        if (!userInitiated) {
+                            notifyGoogleStatus("Google permission needs renewal. Tap Connect Google.");
+                            return;
+                        }
+                        try {
+                            googleConsentPending = true;
+                            startIntentSenderForResult(
+                                auth.getPendingIntent().getIntentSender(),
+                                GOOGLE_AUTH_PICKER, null, 0, 0, 0);
+                        } catch (IntentSender.SendIntentException e) {
+                            googleConsentPending = false;
+                            notifyGoogleStatus("Could not open Google consent. Try again.");
+                        }
+                    } else {
+                        acceptGoogleAuthorization(auth);
+                    }
+                })
+                .addOnFailureListener(error -> {
+                    googleAuthBusy = false;
+                    notifyGoogleStatus("Google sign-in unavailable: "
+                        + (error.getMessage() == null ? "Try again online." : error.getMessage()));
+                });
+        } catch (Exception e) {
+            googleAuthBusy = false;
+            notifyGoogleStatus("Google authorization could not start: " + e.getMessage());
+        }
+    }
+
+    private void acceptGoogleAuthorization(AuthorizationResult result) {
+        String token = result == null ? null : result.getAccessToken();
+        List<String> scopes = result == null ? null : result.getGrantedScopes();
+        if (token == null || token.isEmpty() || scopes == null
+                || !scopes.contains("https://www.googleapis.com/auth/drive.appdata")
+                || !scopes.contains("openid")
+                || !scopes.contains("email")) {
+            notifyGoogleStatus("Google did not grant all needed permissions. Tap Connect Google.");
+            return;
+        }
+        getPreferences(MODE_PRIVATE).edit().putBoolean(GOOGLE_AUTH_PREF, true).apply();
+        if (web != null && isTrusted(Uri.parse(web.getUrl()))) {
+            web.evaluateJavascript(
+                "window.RunningTabNativeAuth?.onToken(" + JSONObject.quote(token) + ");", null);
+        }
+    }
+
+    private void notifyGoogleStatus(String message) {
+        if (web != null && isTrusted(Uri.parse(web.getUrl()))) {
+            web.evaluateJavascript("window.RunningTabNativeAuth?.onStatus("
+                    + JSONObject.quote(message) + ");", null);
+        }
+    }
+
+    private void disconnectGoogle() {
+        // Disconnect never erases locally saved entries or sync baselines.
+        getPreferences(MODE_PRIVATE).edit().putBoolean(GOOGLE_AUTH_PREF, false).apply();
+        googleAuthBusy = false;
+        googleConsentPending = false;
+        if (web != null && isTrusted(Uri.parse(web.getUrl()))) {
+            web.evaluateJavascript(
+                "window.RunningTabNativeAuth?.onDisconnected('Google disconnected; local data kept.');",
+                null);
+        }
+        try {
+            RevokeAccessRequest revoke = RevokeAccessRequest.builder()
+                .setScopes(GOOGLE_SCOPES)
+                .build();
+            Identity.getAuthorizationClient(this).revokeAccess(revoke)
+                .addOnFailureListener(error ->
+                    notifyGoogleStatus("Disconnected locally. Google permission revocation may need retry."));
+        } catch (Exception e) {
+            notifyGoogleStatus("Disconnected locally. Google permission revocation may need retry.");
+        }
+    }
+
     private void startDictation() {
         try {
             Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -383,6 +507,19 @@ public class MainActivity extends Activity {
             finishBackupExport(resultCode, result);
         } else if (requestCode == RESTORE_PICKER) {
             finishBackupImport(resultCode, result);
+        } else if (requestCode == GOOGLE_AUTH_PICKER) {
+            googleConsentPending = false;
+            if (resultCode == RESULT_OK && result != null) {
+                try {
+                    AuthorizationResult authorization =
+                        Identity.getAuthorizationClient(this).getAuthorizationResultFromIntent(result);
+                    acceptGoogleAuthorization(authorization);
+                } catch (ApiException error) {
+                    notifyGoogleStatus("Google authorization failed: " + error.getStatusCode());
+                }
+            } else {
+                notifyGoogleStatus("Google permission not granted. Local data remains available.");
+            }
         } else if (requestCode == FILE_PICKER) {
             if (fileCallback != null) {
                 Uri[] picked = resultCode == RESULT_OK && result != null && result.getData() != null

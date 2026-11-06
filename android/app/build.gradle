@@ -8,8 +8,8 @@ android {
         applicationId 'ca.runningtab.widget'
         minSdk 26
         targetSdk 34
-        versionCode 6
-        versionName '1.5'
+        versionCode 7
+        versionName '1.6'
     }
     // This test-build key is generated once in CI, cached, and fingerprint-pinned.
     // Missing or changed keys must abort CI rather than silently rotate the signer.
@@ -30,4 +30,8 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+}
+
+dependencies {
+    implementation 'com.google.android.gms:play-services-auth:22.0.0'
 }

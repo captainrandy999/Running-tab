@@ -71,3 +71,11 @@ This is test-build signing, not a permanent production signing setup: GitHub cac
 Android's **Restore JSON backup file** button now uses `ACTION_OPEN_DOCUMENT` and reads the selected `.json` through Android's `ContentResolver`, instead of relying on the embedded WebView's file picker and `File.text()`. Backup data is validated, transferred to the web interface in ordered chunks, and shown in an explicit confirmation dialog before replacing any local entries. No broad storage permission is requested: Android's file picker grants access to the one selected file. The same JSON format remains compatible with existing backups, and the copy/paste fallback still works.
 
 **Front-loaded deadlines:** `In 2 days, remind me to follow up with Henry about payment` now creates an editable To-Do with a due date two days from the local date. Old trailing-deadline speech examples continue to work.
+
+## v1.6 — Android Google Drive authorization
+
+The Android APK now uses Play Services `AuthorizationClient` to request `openid`, `email`, and `drive.appdata` scopes outside WebView. The native chooser handles approval; the short-lived token is delivered to the verified Running Tab webpage without saving it on disk. The existing Drive sync code then shares the same private Google Drive file with Chrome. Local lists and the home-screen widget continue working without internet.
+
+Before using Connect Google, create an OAuth client of type **Android** in the existing Running Tab Google Cloud project. The package is `ca.runningtab.widget`; obtain the required **SHA-1 fingerprint** from the GitHub Actions Android build log marked `ANDROID_OAUTH_SHA1`. This SHA-1 corresponds to the pinned Android signer, not a computer's unrelated debug key. Do not put any OAuth secret in the app.
+
+The native app attempts silent reconnection on later opens after the user approves it once; a disconnect revokes access while leaving local entries intact. Android v1.6 uses versionCode 7 and unchanged stable signing identity. The original v1.5 APK is separately preserved at `running-tab-v1.5-stable`. Before installing, verify a JSON backup. Install **over** v1.5, never uninstall to update.

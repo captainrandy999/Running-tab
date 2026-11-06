@@ -68,6 +68,9 @@ jobs:
               exit 1
             fi
             echo "Verified stable preview certificate fingerprint: $FINGERPRINT"
+            SHA1="$(keytool -list -v -keystore "$KEYSTORE" -storepass android -alias running-tab | sed -n 's/^[[:space:]]*SHA1: //p' | head -n 1)"
+            if [ -z "$SHA1" ]; then echo "::error::Cannot read Android OAuth SHA-1"; exit 1; fi
+            echo "ANDROID_OAUTH_SHA1=$SHA1"
           else
             echo "::notice::INITIAL_PREVIEW_SIGNING_FINGERPRINT=$FINGERPRINT"
             echo "::warning::Pin this fingerprint in android/preview-signing.sha256 before publishing any later builds."
