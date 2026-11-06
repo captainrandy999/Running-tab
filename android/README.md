@@ -65,3 +65,9 @@ The new workflow explicitly generates and uses `~/.android/running-tab-preview.k
 This is test-build signing, not a permanent production signing setup: GitHub caches may expire or be evicted. For indefinite updates, move the private keystore into a repository Actions secret or a secure release-signing setup without publishing the private key. The cert fingerprint is public and safe to commit; **never commit the private .keystore**.
 
 **One-time migration warning:** v1.4 intentionally uses a stable new certificate that differs from previously shipped debug-signed APKs. Android may require one final uninstall. Before doing that, use **Copy backup text** in the still-installed app, paste it into Samsung Notes, verify the note contains your JSON, and then restore it in v1.4 after installation. Future update builds will reuse this same identity or fail safely rather than rotating silently.
+
+## Native Restore backup (v1.5)
+
+Android's **Restore JSON backup file** button now uses `ACTION_OPEN_DOCUMENT` and reads the selected `.json` through Android's `ContentResolver`, instead of relying on the embedded WebView's file picker and `File.text()`. Backup data is validated, transferred to the web interface in ordered chunks, and shown in an explicit confirmation dialog before replacing any local entries. No broad storage permission is requested: Android's file picker grants access to the one selected file. The same JSON format remains compatible with existing backups, and the copy/paste fallback still works.
+
+**Front-loaded deadlines:** `In 2 days, remind me to follow up with Henry about payment` now creates an editable To-Do with a due date two days from the local date. Old trailing-deadline speech examples continue to work.

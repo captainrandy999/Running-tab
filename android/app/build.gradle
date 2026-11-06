@@ -8,8 +8,8 @@ android {
         applicationId 'ca.runningtab.widget'
         minSdk 26
         targetSdk 34
-        versionCode 5
-        versionName '1.4'
+        versionCode 6
+        versionName '1.5'
     }
     // This test-build key is generated once in CI, cached, and fingerprint-pinned.
     // Missing or changed keys must abort CI rather than silently rotate the signer.

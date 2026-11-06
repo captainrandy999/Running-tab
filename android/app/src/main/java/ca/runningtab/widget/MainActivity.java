@@ -20,6 +20,8 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.io.OutputStream;
+import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 
 public class MainActivity extends Activity {
@@ -28,6 +30,8 @@ public class MainActivity extends Activity {
     private static final int FILE_PICKER = 2001;
     private static final int SPEECH_PICKER = 2002;
     private static final int BACKUP_PICKER = 2003;
+    private static final int RESTORE_PICKER = 2004;
+    private static final int MAX_BACKUP_BYTES = 15000000;
     private static final String APP_URL = "https://captainrandy999.github.io/Running-tab/index.html";
 
     private WebView web;
@@ -152,6 +156,9 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public void exportBackup(String json, String filename) {
             runOnUiThread(() -> beginBackupExport(json, filename));
+        }
+        @JavascriptInterface public void importBackup() {
+            runOnUiThread(MainActivity.this::beginBackupImport);
         }
     }
 
@@ -279,6 +286,84 @@ public class MainActivity extends Activity {
                 Toast.LENGTH_LONG).show();
     }
 
+    // Read the chosen JSON with Android's Storage Access Framework. This avoids
+    // WebView's file-input/provider restrictions and needs no broad storage access.
+    private void beginBackupImport() {
+        try {
+            Intent pick = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            pick.addCategory(Intent.CATEGORY_OPENABLE);
+            // Samsung and Drive providers may report JSON as application/octet-stream.
+            pick.setType("*/*");
+            startActivityForResult(pick, RESTORE_PICKER);
+        } catch (Exception ex) {
+            notifyImportError("Could not open the Android document picker.");
+        }
+    }
+
+    private void finishBackupImport(int resultCode, Intent data) {
+        if (resultCode != RESULT_OK || data == null || data.getData() == null) {
+            notifyImportError("File selection cancelled; no entries changed.");
+            return;
+        }
+        final Uri uri = data.getData();
+        // Cloud-provider reads can be slow; never block the main Android UI thread.
+        new Thread(() -> {
+            try (InputStream stream = getContentResolver().openInputStream(uri);
+                 ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+                if (stream == null) throw new IllegalStateException("Cannot open selected file.");
+                byte[] buffer = new byte[8192];
+                int n;
+                while ((n = stream.read(buffer)) != -1) {
+                    if (output.size() + n > MAX_BACKUP_BYTES)
+                        throw new IllegalArgumentException("File is too large (15 MB maximum).");
+                    output.write(buffer, 0, n);
+                }
+                byte[] bytes = output.toByteArray();
+                if (bytes.length >= 2 && bytes[0] == 0x50 && bytes[1] == 0x4b)
+                    throw new IllegalArgumentException("That's an APK or ZIP, not a Running Tab JSON backup.");
+                String json = new String(bytes, StandardCharsets.UTF_8);
+                if (!json.isEmpty() && json.charAt(0) == '\uFEFF') json = json.substring(1);
+                JSONObject parsed;
+                try { parsed = new JSONObject(json); }
+                catch (Exception e) { throw new IllegalArgumentException("The selected file is not valid JSON."); }
+                if (!"running-tab-backup".equals(parsed.optString("format")))
+                    throw new IllegalArgumentException("This file isn't a Running Tab data backup.");
+                final String contents = json;
+                runOnUiThread(() -> sendImportToWeb(contents, 0, true));
+            } catch (Exception ex) {
+                String error = ex.getMessage() == null ? "Cannot read the selected backup." : ex.getMessage();
+                runOnUiThread(() -> notifyImportError(error));
+            }
+        }, "RunningTabRestore").start();
+    }
+
+    private void sendImportToWeb(String json, int offset, boolean begin) {
+        if (web == null) return;
+        if (begin) {
+            web.evaluateJavascript("window.RunningTabBackup?.onNativeImportBegin();",
+                    ignored -> sendImportToWeb(json, offset, false));
+            return;
+        }
+        if (offset >= json.length()) {
+            web.evaluateJavascript("window.RunningTabBackup?.onNativeImportEnd();", null);
+            return;
+        }
+        // Bridge the data in ordered, acknowledged chunks to avoid WebView's
+        // JavaScript/IPC payload limits for lengthy notes and many entries.
+        int end = Math.min(offset + 16384, json.length());
+        String js = "window.RunningTabBackup?.onNativeImportChunk("
+                + JSONObject.quote(json.substring(offset, end)) + ");";
+        web.evaluateJavascript(js, ignored -> sendImportToWeb(json, end, false));
+    }
+
+    private void notifyImportError(String message) {
+        if (web != null) {
+            web.evaluateJavascript("window.RunningTabBackup?.onNativeImportError("
+                    + JSONObject.quote(message) + ");", null);
+        }
+        Toast.makeText(this, "Restore failed: " + message, Toast.LENGTH_LONG).show();
+    }
+
     private void startDictation() {
         try {
             Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -296,6 +381,8 @@ public class MainActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, result);
         if (requestCode == BACKUP_PICKER) {
             finishBackupExport(resultCode, result);
+        } else if (requestCode == RESTORE_PICKER) {
+            finishBackupImport(resultCode, result);
         } else if (requestCode == FILE_PICKER) {
             if (fileCallback != null) {
                 Uri[] picked = resultCode == RESULT_OK && result != null && result.getData() != null
