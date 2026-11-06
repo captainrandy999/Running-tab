@@ -189,6 +189,7 @@ public class MainActivity extends Activity {
              if(mic){
                mic.disabled=false;
                mic.textContent='🎤 Dictate';
+               window.RunningTabFlow?.updateNextAction();
                const status=document.getElementById('micStatus');
                if(status)status.textContent='';
                mic.addEventListener('click',function(e){
