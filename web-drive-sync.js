@@ -163,19 +163,25 @@
   });
  }
  function refreshUI(value){
+  const applied=[];
   silent=true;
   try{
    for(const name of NAMES){
     const next=JSON.stringify(value[name]);
-    if(localStorage.getItem(KEYS[name])!==next)localStorage.setItem(KEYS[name],next);
+    // Avoid rerendering an open note or entry editor when Drive reports no
+    // actual change for that list (e.g., a sync of the Shopping list).
+    if(localStorage.getItem(KEYS[name])!==next){
+     localStorage.setItem(KEYS[name],next);
+     applied.push(name);
+    }
    }
   }finally{silent=false;}
   // The cloud list key is plural ("todos") but the To-Do panel and Android
   // widget intentionally subscribe to the singular "runningtab:todo-changed".
-  for(const name of NAMES)window.dispatchEvent(new Event(
+  for(const name of applied)window.dispatchEvent(new Event(
    'runningtab:'+(name==='todos'?'todo':name)+'-changed'
   ));
-  window.RunningTabView?.adjust?.();
+  if(applied.length)window.RunningTabView?.adjust?.();
  }
  function waiting(){
   const user=account();

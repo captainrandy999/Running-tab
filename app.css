@@ -283,3 +283,67 @@ color:#3d6373;font-size:12px}
  .admin-footer .web-sync-bar button{min-height:38px}
  .admin-footer .admin-subsection .tools-grid button{min-height:42px}
 }
+
+
+/* Money navigation: friendly grouped cards and editable per-transaction notes. */
+.money-person{border-color:#d9e6ec!important;overflow:hidden}
+.money-person > .money-person-summary{background:#fbfdfe;transition:background .15s ease}
+.money-person[open] > .money-person-summary{background:#f0f5f8;border-bottom:1px solid #dde7ed}
+.money-person--receivable[open] > .money-person-summary{box-shadow:inset 4px 0 0 #4aa889}
+.money-person--payable[open] > .money-person-summary{box-shadow:inset 4px 0 0 #d8918c}
+.money-person .money-person-open-cue{font-size:11px;color:#7990a1}
+.money-person .money-person-breakdown{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:0 0 12px}
+.money-person .money-person-breakdown > span{font-size:11px;border-radius:999px;padding:5px 9px;font-weight:700}
+.money-breakdown-positive{background:#eaf6f0;color:#23775c}
+.money-breakdown-negative{background:#fbeeed;color:#a14e50}
+.money-breakdown-pending{background:#fff6e8;color:#925e2b}
+.money-record-list{display:grid;gap:9px}
+.money-record{margin:0;border:1px solid #dce7eb;border-left:4px solid #cbd7dd;border-radius:12px;background:#fff;overflow:hidden}
+.money-record--receivable{border-color:#cfe6d9;border-left-color:#42a77c;background:#f1faf5}
+.money-record--payable{border-color:#efd9d7;border-left-color:#d48e85;background:#fff5f4}
+.money-person .money-record > .money-record-summary{
+ display:flex;align-items:center;justify-content:space-between;gap:8px;
+ list-style:none;cursor:pointer;padding:12px 11px;background:transparent;
+}
+.money-person .money-record > .money-record-summary::-webkit-details-marker{display:none}
+.money-record[open] > .money-record-summary{border-bottom:1px solid #d6e7e2}
+.money-record--payable[open] > .money-record-summary{border-bottom-color:#eedfdc}
+.money-record-main{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0;flex:1}
+.money-record-direction{font-size:11px;font-weight:800;letter-spacing:.01em}
+.money-record--receivable .money-record-direction{color:#297658}
+.money-record--payable .money-record-direction{color:#a44e4b}
+.money-record-title{font-size:14px;font-weight:750;color:#20394b;overflow-wrap:anywhere}
+.money-record-date{font-size:11px;color:#657f8b;overflow-wrap:anywhere}
+.money-record-right{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex-shrink:0}
+.money-record-amount{font-size:16px;font-weight:850;white-space:nowrap;font-variant-numeric:tabular-nums}
+.money-record--receivable .money-record-amount{color:#176e50}
+.money-record--payable .money-record-amount{color:#a24b4d}
+.money-record-chevron{font-size:16px;font-weight:700;color:#7b919d}
+.money-record[open] .money-record-chevron{transform:rotate(180deg)}
+.money-record-content{padding:11px 12px 12px;background:#ffffffd9}
+.money-record-note-label{font-size:11px;letter-spacing:.03em;text-transform:uppercase;font-weight:800;color:#567383;margin-bottom:4px}
+.money-record-note{white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.5;color:#334d60}
+.money-record-note--empty{color:#82939d;font-style:italic}
+.money-record-actions,.money-record-form-actions{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:11px}
+.money-record-actions button,.money-record-form-actions button{min-height:38px;padding:7px 10px;font-size:12px;margin:0}
+.money-record-actions button.danger{margin-left:auto;background:#fff!important}
+.money-record-edit{border-top:1px solid #e0e8ed;margin-top:4px;padding-top:12px}
+.money-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.money-editor-grid .label{margin:0;min-width:0}
+.money-editor-grid input,.money-editor-grid select,.money-editor-grid textarea{width:100%;margin-top:5px;min-height:42px;font-size:16px}
+.money-editor-grid textarea{min-height:100px!important}
+.money-editor-grid .money-editor-full{grid-column:1/-1}
+.money-record-form-error{color:#a13946;font-size:12px;font-weight:700;margin-top:8px}
+.money-record-form-error:empty{display:none}
+.money-record-feedback{color:#226d55;font-size:12px;font-weight:700;margin-top:9px}
+.money-record-read[hidden],.money-record-actions[hidden],.money-record-edit[hidden]{display:none!important}
+.money-record:focus-within{outline:1px solid #d4e3e9}
+@media(max-width:470px){
+ .money-person .detail{padding:0 10px 11px}
+ .money-person .money-record > .money-record-summary{padding:10px 9px}
+ .money-editor-grid{grid-template-columns:1fr}
+ .money-editor-grid .money-editor-full{grid-column:auto}
+ .money-record-right{gap:4px}
+ .money-record-amount{font-size:15px}
+ .money-record-actions button{padding:7px 9px}
+}

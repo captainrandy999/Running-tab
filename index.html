@@ -667,22 +667,155 @@ $('reviewForm').addEventListener('submit',e=>{
  const next=[...records,rec];try{localStorage.setItem(STORE,JSON.stringify(next));}catch(e){feedback('Could not save to this browser. Check storage permissions.','bad');return;}
  records=next;$('words').value='';hideForm();render();feedback('Saved. Ready for another entry.');window.RunningTabView?.show('money');finishSuccessfulSave();
 });
-function render(){
- const people=new Map();let to=0,owe=0;
- for(const r of records){if(!people.has(caseKey(r.person)))people.set(caseKey(r.person),{name:r.person,to:0,owe:0,tbd:0,entries:[]});const p=people.get(caseKey(r.person));p.entries.push(r);if(r.cents===null)p.tbd++;else if(r.direction==='to_me'){p.to+=r.cents;to+=r.cents;}else{p.owe+=r.cents;owe+=r.cents;}}
- $('owedToMe').textContent=money(to);$('iOwe').textContent=money(owe);
- const sorted=[...people.values()].sort((a,b)=>a.name.localeCompare(b.name));
- $('people').innerHTML=sorted.map(p=>`<option value="${safe(p.name)}"></option>`).join('');
- $('personList').innerHTML=sorted.length?sorted.map(p=>{
- const net=p.to-p.owe;const label=net>0?'Owes you '+money(net):net<0?'You owe '+money(-net):'Settled';
- const rows=p.entries.slice().reverse().map(r=>`<div class="entry"><div><div class="entry-name">${r.direction==='to_me'?'They owe you':'You owe them'}</div><div class="entry-notes">${safe(r.reason||'No reason entered')} · ${safe(r.date||'')}</div></div><div class="entry-right"><strong class="${r.direction==='to_me'?'pos':'neg'}">${r.cents===null?'<span class="tag">Price TBD</span>':money(r.cents)}</strong><button type="button" class="danger small" data-delete="${safe(r.id)}" aria-label="Delete entry">Delete</button></div></div>`).join('');
- return `<details class="person"><summary><div><div class="who">${safe(p.name)}</div><div class="info">${p.entries.length} ${p.entries.length===1?'entry':'entries'}${p.tbd?' · '+p.tbd+' price TBD':''}</div></div><div class="right"><div class="amount ${net>0?'pos':net<0?'neg':''}">${label}</div><div class="info">Tap to see entries ▾</div></div></summary><div class="detail"><div class="meta">Owes you ${money(p.to)} · You owe ${money(p.owe)}${p.tbd?' · '+p.tbd+' unpriced':''}</div>${rows}</div></details>`;
- }).join(''):'<p class="info">No entries yet. Add your first one above.</p>';
- $('personList').querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',()=>{
- const r=records.find(x=>x.id===b.dataset.delete);if(!r||!confirm('Delete this entry for '+r.person+'?'))return;
- const next=records.filter(x=>x.id!==r.id);try{localStorage.setItem(STORE,JSON.stringify(next));}catch(e){feedback('Could not save deletion.','bad');return;}records=next;render();feedback('Entry deleted.');
- }));
+function renderMoneyRecord(r,options={}){
+ const id=safe(r.id),owed=r.direction==='to_me';
+ const cls=owed?'receivable':'payable';
+ const body=typeof r.body==='string'?r.body:'';
+ const hasNote=body.trim().length>0;
+ const title=String(r.reason||'').trim()||'No description yet';
+ const amount=r.cents===null?'<span class="tag">Price TBD</span>':money(r.cents);
+ const opened=options.open?' open':'';
+ const label=owed?'They owe you':'You owe them';
+ const selectedDirection='<option value="to_me"'+(owed?' selected':'')+'>They owe me</option>'
+    +'<option value="i_owe"'+(!owed?' selected':'')+'>I owe them</option>';
+ const editor=
+  '<form class="money-record-edit" data-money-form hidden>'
+  +'<div class="money-editor-grid">'
+  +'<label class="label">Person or company<input name="person" type="text" maxlength="100" required value="'+safe(r.person)+'"></label>'
+  +'<label class="label">Who owes whom?<select name="direction">'+selectedDirection+'</select></label>'
+  +'<label class="label">Amount ($ CAD)<input name="amount" type="text" inputmode="decimal" maxlength="14" placeholder="Blank = price TBD" value="'+(r.cents===null?'':(r.cents/100).toFixed(2))+'"></label>'
+  +'<label class="label">Date<input name="date" type="date" required value="'+safe(r.date||'')+'"></label>'
+  +'<label class="label money-editor-full">Description<input name="reason" type="text" maxlength="400" value="'+safe(r.reason||'')+'" placeholder="What was this for?"></label>'
+  +'<label class="label money-editor-full">Additional note<textarea name="body" maxlength="12000" rows="4" placeholder="Add context, follow-up details, payment information…">'+safe(body)+'</textarea></label>'
+  +'</div><div class="money-record-form-error" role="alert" aria-live="polite"></div>'
+  +'<div class="money-record-form-actions"><button type="submit" class="primary small">Save changes</button>'
+  +'<button type="button" class="secondary small" data-money-cancel>Cancel</button></div></form>';
+ return '<details class="money-record money-record--'+cls+'" data-money-id="'+id+'"'+opened+'>'
+  +'<summary class="money-record-summary">'
+  +'<span class="money-record-main"><span class="money-record-direction">'+label+'</span>'
+  +'<span class="money-record-title">'+safe(title)+'</span>'
+  +'<span class="money-record-date">'+safe(r.date||'No date')+(hasNote?' · 📝 Note':'')+'</span></span>'
+  +'<span class="money-record-right"><strong class="money-record-amount">'+amount+'</strong>'
+  +'<span class="money-record-chevron" aria-hidden="true">⌄</span></span></summary>'
+  +'<div class="money-record-content"><div class="money-record-read">'
+  +'<div class="money-record-note-label">Additional note</div>'
+  +'<div class="money-record-note'+(hasNote?'':' money-record-note--empty')+'">'+(hasNote?safe(body):'No note added yet.')+'</div>'
+  +'</div><div class="money-record-actions">'
+  +'<button type="button" class="secondary small" data-money-edit="note">'+(hasNote?'Edit note':'Add note')+'</button>'
+  +'<button type="button" class="secondary small" data-money-edit="details">Edit entry</button>'
+  +'<button type="button" class="danger small" data-money-delete>Delete</button></div>'
+  +editor
+  +(options.message?'<div class="money-record-feedback" role="status">'+safe(options.message)+'</div>':'')
+  +'</div></details>';
 }
+function render(options={}){
+ const openPeople=new Set([...document.querySelectorAll('#personList > details.person[open]')]
+  .map(el=>el.dataset.personKey));
+ if(options.focusPerson)openPeople.add(caseKey(options.focusPerson));
+ const people=new Map();let to=0,owe=0;
+ for(const r of records){
+  const k=caseKey(r.person);
+  if(!people.has(k))people.set(k,{name:r.person,to:0,owe:0,tbd:0,entries:[]});
+  const p=people.get(k);p.entries.push(r);
+  if(r.cents===null)p.tbd++;
+  else if(r.direction==='to_me'){p.to+=r.cents;to+=r.cents;}
+  else{p.owe+=r.cents;owe+=r.cents;}
+ }
+ $('owedToMe').textContent=money(to);
+ $('iOwe').textContent=money(owe);
+ const sorted=[...people.values()].sort((a,b)=>a.name.localeCompare(b.name));
+ $('people').innerHTML=sorted.map(p=>'<option value="'+safe(p.name)+'"></option>').join('');
+ $('personList').innerHTML=sorted.length?sorted.map(p=>{
+  const net=p.to-p.owe;
+  const lbl=net>0?'Owes you '+money(net):net<0?'You owe '+money(-net):'Settled';
+  const tint=net>0?'receivable':net<0?'payable':'settled';
+  const key=caseKey(p.name);
+  const groupOpen=openPeople.has(key)||p.entries.some(x=>x.id===options.expandRecordId);
+  const rows=p.entries.slice().reverse().map(r=>renderMoneyRecord(r,{
+   open:options.expandRecordId===r.id,
+   message:options.expandRecordId===r.id?options.message:''
+  })).join('');
+  return '<details class="person money-person money-person--'+tint+'" data-person-key="'+safe(key)+'"'+(groupOpen?' open':'')+'>'
+   +'<summary class="money-person-summary"><div><div class="who">'+safe(p.name)+'</div>'
+   +'<div class="info">'+p.entries.length+' '+(p.entries.length===1?'entry':'entries')
+   +(p.tbd?' · '+p.tbd+' price TBD':'')+'</div></div>'
+   +'<div class="right"><div class="amount '+(net>0?'pos':net<0?'neg':'')+'">'+lbl+'</div>'
+   +'<div class="info money-person-open-cue">'+(groupOpen?'Tap to collapse':'Tap to see entries')+'</div></div></summary>'
+   +'<div class="detail"><div class="meta money-person-breakdown">'
+   +'<span class="money-breakdown-positive">Owed to you '+money(p.to)+'</span>'
+   +'<span class="money-breakdown-negative">You owe '+money(p.owe)+'</span>'
+   +(p.tbd?'<span class="money-breakdown-pending">'+p.tbd+' unpriced</span>':'')
+   +'</div><div class="money-record-list">'+rows+'</div></div></details>';
+ }).join(''):'<p class="info">No entries yet. Add your first one above.</p>';
+ window.RunningTabView?.adjust?.();
+}
+function moneyFormOpen(record,button){
+ const form=record.querySelector('[data-money-form]');
+ if(!form)return;
+ record.querySelector('.money-record-read').hidden=true;
+ record.querySelector('.money-record-actions').hidden=true;
+ form.hidden=false;
+ record.querySelector('.money-record-feedback')?.remove();
+ const field=button.dataset.moneyEdit==='note'?'[name="body"]':'[name="reason"]';
+ form.querySelector(field)?.focus();
+ window.RunningTabView?.adjust?.();
+}
+function moneyFormClose(record){
+ const form=record.querySelector('[data-money-form]');
+ if(!form)return;
+ form.reset();form.hidden=true;
+ record.querySelector('.money-record-read').hidden=false;
+ record.querySelector('.money-record-actions').hidden=false;
+ form.querySelector('.money-record-form-error').textContent='';
+ window.RunningTabView?.adjust?.();
+}
+$('personList').addEventListener('click',event=>{
+ const edit=event.target.closest('[data-money-edit]');
+ if(edit){const row=edit.closest('.money-record');if(row)moneyFormOpen(row,edit);return;}
+ const cancel=event.target.closest('[data-money-cancel]');
+ if(cancel){const row=cancel.closest('.money-record');if(row)moneyFormClose(row);return;}
+ const del=event.target.closest('[data-money-delete]');
+ if(!del)return;
+ const row=del.closest('.money-record');
+ const rec=records.find(x=>x.id===row?.dataset.moneyId);
+ if(!rec||!confirm('Delete this '+(rec.cents===null?'unpriced':money(rec.cents))+' entry for '+rec.person+'?'))return;
+ const next=records.filter(x=>x.id!==rec.id);
+ try{localStorage.setItem(STORE,JSON.stringify(next));}
+ catch(e){feedback('Could not save deletion.','bad');return;}
+ records=next;render();feedback('Entry deleted.');
+});
+$('personList').addEventListener('submit',event=>{
+ const form=event.target.closest('[data-money-form]');
+ if(!form)return;
+ event.preventDefault();
+ const row=form.closest('.money-record');
+ const original=records.find(x=>x.id===row?.dataset.moneyId);
+ if(!original){feedback('Could not locate this entry. No changes saved.','bad');return;}
+ const field=n=>form.querySelector('[name="'+n+'"]');
+ const person=normalizeName(field('person').value),direction=field('direction').value;
+ const amount=field('amount').value.trim(),reason=field('reason').value.trim();
+ const date=field('date').value,body=field('body').value.trim();
+ const error=form.querySelector('.money-record-form-error');
+ function reject(message){error.textContent=message;return;}
+ if(!person||person.length>100)return reject('Enter a person or company (100 characters maximum).');
+ if(!['to_me','i_owe'].includes(direction))return reject('Choose who owes whom.');
+ if(reason.length>400)return reject('Keep the description under 400 characters.');
+ if(body.length>12000)return reject('Keep your note under 12,000 characters.');
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return reject('Select a valid date.');
+ if(amount&&!/^\d+(?:\.\d{1,2})?$/.test(amount))return reject('Use dollars and up to two decimal places.');
+ const cents=amount===''?null:Math.round(Number(amount)*100);
+ if(cents!==null&&(!Number.isSafeInteger(cents)||cents<=0||cents>10000000000))
+  return reject('Enter an amount greater than $0, up to $100 million, or leave it blank.');
+ // The ID and original creation date stay unchanged. This remains the same
+ // transaction for three-way cloud merges and all existing JSON backups.
+ const updated={...original,person,direction,cents,reason,date,body,updatedAt:new Date().toISOString()};
+ const next=records.map(r=>r.id===original.id?updated:r);
+ try{localStorage.setItem(STORE,JSON.stringify(next));}
+ catch(e){return reject('Could not save this edit on your device. Please try again.');}
+ records=next;
+ render({expandRecordId:original.id,focusPerson:person,message:'Changes saved.'});
+});
+
 $('reset').addEventListener('click',()=>{if(!records.length)return;if(!confirm('Permanently delete ALL money entries stored on this phone? This cannot be undone.'))return;try{localStorage.removeItem(STORE);}catch(e){feedback('Could not clear local storage.','bad');return;}records=[];render();hideForm();$('words').value='';feedback('Test entries cleared.');});
 window.addEventListener('runningtab:money-changed',()=>{
  try{
