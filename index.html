@@ -48,6 +48,7 @@
      <div><b>To-Do:</b> “Add a reminder tomorrow” or “Remind me in 7 days”</div>
      <div><b>Shopping:</b> “I need to buy milk and eggs”</div>
      <div><b>Shopping:</b> “Add bread and coffee to my shopping list”</div>
+     <div><b>Notes:</b> “Take a note that the shed roof needs new flashing”</div>
     </div>
    </details>
    <div class="actions entry-actions"><button type="button" class="secondary" id="mic" aria-label="Dictate using the microphone" aria-pressed="false">🎤 Dictate</button><button type="button" class="primary" id="review">Review</button><button type="button" class="outline" id="clear">Clear field</button></div>
@@ -68,11 +69,13 @@
       
    </form>
    <form id="todoReviewForm" class="hide">
-      <h2 style="margin:15px 0 8px">Review To-Do</h2>
+      <h2 id="todoReviewHeading" style="margin:15px 0 8px">Review To-Do</h2>
       <div class="callout" id="todoSummary" aria-live="polite"></div>
-      <div class="info">Check the reminder and date. You can edit them below before saving.</div>
-      <div class="actions review-actions"><button type="submit" class="primary">Confirm &amp; save to To-Do</button><button type="button" class="secondary" id="todoCancel">Change sentence</button></div>
-      <div class="field"><label class="label" for="todoTitle">Task</label><input id="todoTitle" type="text" maxlength="300" required></div>
+      <div class="info" id="todoReviewHelp">Check the reminder and date. You can edit them below before saving.</div>
+      <div class="actions review-actions"><button type="submit" class="primary" id="todoSaveButton">Confirm &amp; save to To-Do</button><button type="button" class="secondary" id="todoCancel">Change sentence</button></div>
+      <input type="hidden" id="todoKind" value="todo">
+      <div class="field"><label class="label" id="todoTitleLabel" for="todoTitle">Task</label><input id="todoTitle" type="text" maxlength="300" required></div>
+      <div class="field hide" id="noteBodyField"><label class="label" for="noteBody">Note (full dictated text)</label><textarea id="noteBody" rows="5" maxlength="12000"></textarea></div>
       <div class="field calendar-field">
        <label class="label" for="todoDateButton">Due date</label>
        <input id="todoDueType" type="hidden" value="none">
@@ -336,12 +339,54 @@ function finishSuccessfulSave(){
 
 function todoSummary(){
  const type=$('todoDueType').value,due=type==='day'?$('todoDueDay').value:type==='month'?$('todoDueMonth').value:'';
- $('todoSummary').textContent=($('todoTitle').value.trim()||'(task missing)')+'\nDeadline: '+(type==='none'?'No date':due?TodoParser.deadlineLabel({dueType:type,due}):'Choose a date');
+ const kind=$('todoKind').value;
+ const title=$('todoTitle').value.trim()||(kind==='note'?'(topic missing)':'(task missing)');
+ const deadline='Deadline: '+(type==='none'?'No date':due?TodoParser.deadlineLabel({dueType:type,due}):'Choose a date');
+ $('todoSummary').textContent=kind==='note'
+  ? '📝 '+title+'\n'+($('noteBody').value.trim()||'(note text missing)')+'\n'+deadline
+  : title+'\n'+deadline;
+}
+function setTodoKind(kind){
+ const note=kind==='note';
+ $('todoKind').value=note?'note':'todo';
+ $('todoReviewHeading').textContent=note?'Review Note':'Review To-Do';
+ $('todoReviewHelp').textContent=note?'Check the suggested topic and full note. Edit either before saving.':'Check the reminder and date. You can edit them below before saving.';
+ $('todoTitleLabel').textContent=note?'Suggested topic':'Task';
+ $('noteBodyField').classList.toggle('hide',!note);
+ $('noteBody').required=note;
+ $('todoSaveButton').textContent=note?'Confirm & save note':'Confirm & save to To-Do';
+ todoSummary();
 }
 function todoDueChange(){
  const type=$('todoDueType').value;
  todoSummary();window.RunningTabCalendar?.sync();
 }
+
+const NoteParser=(()=>{
+ const pattern=/^(?:please\s+)?(?:take\s+(?:a\s+)?note|make\s+(?:a\s+)?note|write\s+(?:a\s+)?note|note)\b(?:\s+(?:that|about|on|regarding))?\s*[:,;-]?\s*/i;
+ function isNote(input){return pattern.test(String(input||'').trim());}
+ function interpret(input){
+  const raw=String(input||'').trim();
+  const match=raw.match(pattern);
+  if(!match)return {error:'Start with “take a note that…” or “note…”'};
+  const body=raw.slice(match[0].length).trim();
+  if(!body)return {error:'Tell me what you want the note to say.'};
+  if(body.length>12000)return {error:'The note is too long (12,000 characters maximum).'};
+  // On-device heading suggestion; full note remains exactly as dictated and editable.
+  let subject=body.replace(/^(?:that|about|regarding)\s+/i,'')
+   .replace(/^(?:i\s+(?:noticed|think|want|should|have)\s+that|i\s+need\s+to|we\s+(?:need|want|have)\s+to|remember\s+that)\s+/i,'');
+  const leading=subject.match(/^(.+?)(?=\s+(?:is|are|was|were|has|have|had|needs?|should|must|will|might|because|but|so\s+that)\b|[,.!?;:]|$)/i);
+  if(leading&&leading[1].trim().split(/\s+/).length>=2)subject=leading[1].trim();
+  else subject=subject.split(/[.!?;\n]/)[0].trim();
+  const words=subject.split(/\s+/).filter(Boolean);
+  let title=words.slice(0,8).join(' ').replace(/[,;:.!?]+$/,'');
+  if(title.length>70)title=title.slice(0,70).replace(/\s+\S*$/,'');
+  if(!title)title='New note';
+  title=title[0].toUpperCase()+title.slice(1);
+  return {title,body};
+ }
+ return {isNote,interpret};
+})();
 
 function isShopping(s){
  const text=String(s||'').trim().replace(/^please\s+/i,'');
@@ -395,6 +440,21 @@ $('shoppingReviewForm').addEventListener('submit',event=>{
 function isTodo(s){return /^(?:please\s+)?(?:remind\s+me(?:\s+to)?|(?:add|set|make|create)\s+(?:(?:a|the)\s+)?reminder\b|i\s+need\s+to|i\s+have\s+to|don'?t\s+forget\s+to|remember\s+to|add\s+to\s+(?:my\s+)?(?:to-?do\s+)?list|call|buy|pick\s+up|send|finish|complete|book|schedule|pay|email|text|order|drop\s+off|submit|renew|check|return|fix|clean|meet|make|bring)\b/i.test(s);}
 $('review').addEventListener('click',()=>{
  const raw=$('words').value.trim();
+ if(NoteParser.isNote(raw)){
+  const note=NoteParser.interpret(raw);
+  if(note.error){hideForm();feedback(note.error,'bad');return;}
+  hideForm();
+  $('todoTitle').value=note.title;
+  $('noteBody').value=note.body;
+  $('todoDueType').value='none';$('todoDueDay').value='';$('todoDueMonth').value='';
+  setTodoKind('note');
+  $('todoReviewForm').classList.remove('hide');
+  $('entryType').textContent='📝 Note in To-Do';
+  feedback('');
+  todoDueChange();
+  bringReviewIntoView('todoReviewForm');
+  return;
+ }
  if(isShopping(raw)){
   const result=parseShopping(raw);
   if(result.error){hideForm();feedback(result.error,'bad');return;}
@@ -410,7 +470,7 @@ $('review').addEventListener('click',()=>{
  if(isTodo(raw)){
   const result=TodoParser.interpret(raw);
   if(result.error){hideForm();feedback(result.error,'bad');return;}
-  hideForm();$('todoTitle').value=result.title;$('todoDueType').value=result.dueType;
+  hideForm();setTodoKind('todo');$('todoTitle').value=result.title;$('todoDueType').value=result.dueType;
   $('todoDueDay').value=result.dueType==='day'?result.due:'';
   $('todoDueMonth').value=result.dueType==='month'?result.due:'';
   $('todoReviewForm').classList.remove('hide');$('entryType').textContent='✓ To-Do entry';todoDueChange();
@@ -426,20 +486,23 @@ $('review').addEventListener('click',()=>{
 });
 $('todoCancel').addEventListener('click',()=>{hideForm();feedback('');$('words').focus();});
 $('todoDueType').addEventListener('change',todoDueChange);
-for(const id of ['todoTitle','todoDueDay','todoDueMonth'])$(id).addEventListener('input',todoSummary);
+for(const id of ['todoTitle','todoDueDay','todoDueMonth','noteBody'])$(id).addEventListener('input',todoSummary);
 $('todoReviewForm').addEventListener('submit',event=>{
  event.preventDefault();
- const title=$('todoTitle').value.trim(),type=$('todoDueType').value;
+ const title=$('todoTitle').value.trim(),type=$('todoDueType').value,kind=$('todoKind').value;
+ const body=kind==='note'?$('noteBody').value.trim():'';
  const due=type==='day'?$('todoDueDay').value:type==='month'?$('todoDueMonth').value:'';
- if(!title||title.length>300){feedback('Enter a short task.','bad');return;}
+ if(!title||title.length>300){feedback('Enter a short '+(kind==='note'?'topic':'task')+'.','bad');return;}
+ if(kind==='note'&&(!body||body.length>12000)){feedback('Enter your note (12,000 characters maximum).','bad');return;}
  if(type!=='none'&&!due){feedback('Choose a deadline or select No date.','bad');return;}
  let tasks=[];
  try{const saved=JSON.parse(localStorage.getItem(TODO_STORE)||'[]');if(Array.isArray(saved))tasks=saved;}
- catch(e){feedback('Could not read To-Do records. No task saved.','bad');return;}
+ catch(e){feedback('Could not read To-Do records. No item saved.','bad');return;}
  const task={id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random()),title,dueType:type,due,done:false,created:new Date().toISOString()};
+ if(kind==='note'){task.kind='note';task.body=body;}
  try{localStorage.setItem(TODO_STORE,JSON.stringify([...tasks,task]));}
- catch(e){feedback('Could not save this reminder in your browser.','bad');return;}
- $('words').value='';hideForm();feedback('Saved to To-Do.');window.dispatchEvent(new Event('runningtab:todo-changed'));window.RunningTabView?.show('todo');finishSuccessfulSave();
+ catch(e){feedback('Could not save this item in your browser.','bad');return;}
+ $('words').value='';hideForm();feedback(kind==='note'?'Note saved to To-Do.':'Saved to To-Do.');window.dispatchEvent(new Event('runningtab:todo-changed'));window.RunningTabView?.show('todo');finishSuccessfulSave();
 });
 
 $('clear').addEventListener('click',()=>{

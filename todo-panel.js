@@ -17,7 +17,14 @@ function status(message,bad=false){const el=$('todoStatus');if(!el)return;el.tex
 function persist(next){try{localStorage.setItem(STORE,JSON.stringify(next));tasks=next;return true;}catch(e){status('Could not save the change on this device.',true);return false;}}
 function sortKey(t){return t.dueType==='none'?'9999-12-31':t.dueType==='month'?t.due+'-32':t.due;}
 function rows(items){
- return items.map(t=>'<div class="task'+(t.done?' done':'')+'"><input type="checkbox" data-toggle="'+esc(t.id)+'" '+(t.done?'checked':'')+' aria-label="Mark '+esc(t.title)+(t.done?' not done':' complete')+'"><div class="task-main"><div class="task-name">'+esc(t.title)+'</div><div class="task-meta">'+esc(label(t))+'</div></div><button type="button" class="danger small" data-remove="'+esc(t.id)+'">Delete</button></div>').join('');
+ return items.map(t=>{
+  const note=t.kind==='note'&&typeof t.body==='string';
+  const title=esc(t.title);
+  const content=note
+   ? '<details class="note-details"><summary class="task-name">'+title+'</summary><div class="note-body">'+esc(t.body)+'</div></details><div class="task-meta">📝 Note · '+esc(label(t))+'</div>'
+   : '<div class="task-name">'+title+'</div><div class="task-meta">'+esc(label(t))+'</div>';
+  return '<div class="task'+(t.done?' done':'')+(note?' note-task':'')+'"><input type="checkbox" data-toggle="'+esc(t.id)+'" '+(t.done?'checked':'')+' aria-label="Mark '+title+(t.done?' not done':' complete')+'"><div class="task-main">'+content+'</div><button type="button" class="danger small" data-remove="'+esc(t.id)+'">Delete</button></div>';
+ }).join('');
 }
 function render(){
  const open=tasks.filter(t=>!t.done).sort((a,b)=>sortKey(a).localeCompare(sortKey(b))||String(a.created).localeCompare(String(b.created)));
@@ -35,7 +42,7 @@ function render(){
   $(root).querySelectorAll('[data-remove]').forEach(el=>el.addEventListener('click',()=>{
     const task=tasks.find(t=>t.id===el.dataset.remove);
     if(!task||!confirm('Delete "'+task.title+'"?'))return;
-    if(persist(tasks.filter(t=>t.id!==task.id))){render();status('Reminder deleted.');}
+    if(persist(tasks.filter(t=>t.id!==task.id))){render();status(task.kind==='note'?'Note deleted.':'Reminder deleted.');}
   }));
  }
 }
