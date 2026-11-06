@@ -229,12 +229,8 @@ public class MainActivity extends Activity {
             ArrayList<String> words = result.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             if (words != null && !words.isEmpty() && web != null) {
                 String safe = JSONObject.quote(words.get(0));
-                web.evaluateJavascript("(function(){const box=document.getElementById('words');"+
-                        "if(!box)return;box.value=[box.value.trim()," + safe + "].filter(Boolean).join(' ');"+
-                        "box.dispatchEvent(new Event('input',{bubbles:true}));"+
-                        "const status=document.getElementById('micStatus');"+
-                        "if(status)status.textContent='Ready. Tap Review to check the entry.';"+
-                        "window.scrollTo({top:0,behavior:'smooth'});})();", null);
+                web.evaluateJavascript(
+                        "window.RunningTabFlow?.acceptDictation(" + safe + ");", null);
             }
         }
     }

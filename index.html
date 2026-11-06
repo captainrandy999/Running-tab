@@ -288,7 +288,31 @@ function feedback(s,kind=''){const el=$('feedback');el.className=s?'notice'+(kin
 function fillSummary(){const p=$('person').value.trim()||'(person not specified)';const amount=$('amount').value.trim();const amt=amount && Number(amount)>0?money(Math.round(Number(amount)*100)):'Price TBD';const reason=$('reason').value.trim();$('summary').textContent=($('direction').value==='to_me'?p+' owes you ': 'You owe '+p+' ')+amt+(reason?'\nReason: '+reason:'');}
 function showForm(parsed){$('direction').value=parsed.direction;$('person').value=parsed.person;$('amount').value=parsed.cents===null?'':(parsed.cents/100).toFixed(2);$('reason').value=parsed.reason;$('date').value=parsed.date;$('reviewForm').classList.remove('hide');fillSummary();}
 function hideForm(){$('reviewForm').classList.add('hide');$('todoReviewForm').classList.add('hide');$('shoppingReviewForm').classList.add('hide');window.RunningTabCalendar?.close();$('entryType').textContent='';}
+function updateNextAction(){
+ const forms=['reviewForm','todoReviewForm','shoppingReviewForm'];
+ const activeForm=forms.map(id=>$(id)).find(form=>!form.classList.contains('hide'));
+ const next=activeForm?.querySelector('button[type="submit"]')
+  || ($('words').value.trim() ? $('review') : $('mic'));
+ for(const button of document.querySelectorAll('#entry .entry-actions button,#entry .review-actions button')){
+  const isNext=button===next&&!button.disabled;
+  button.classList.toggle('next-action',isNext);
+  if(isNext)button.setAttribute('data-next-step','true');
+  else button.removeAttribute('data-next-step');
+ }
+}
+// The native Android speech recognizer and browser microphone share one review workflow.
+function acceptDictation(transcript){
+ const words=String(transcript||'').trim();
+ if(!words)return false;
+ $('words').value=[$('words').value.trim(),words].filter(Boolean).join(' ');
+ $('words').dispatchEvent(new Event('input',{bubbles:true}));
+ $('review').click();
+ return true;
+}
+window.RunningTabFlow={acceptDictation,updateNextAction};
+
 function bringReviewIntoView(formId){
+ updateNextAction();
  const form=$(formId);
  const focused=document.activeElement;
  if(focused&&typeof focused.blur==='function')focused.blur();
@@ -302,6 +326,7 @@ function bringReviewIntoView(formId){
  }));
 }
 function finishSuccessfulSave(){
+ updateNextAction();
  // Dismiss the Android keyboard without focusing any other control.
  const focused=document.activeElement;
  if(focused&&typeof focused.blur==='function')focused.blur();
@@ -425,9 +450,10 @@ $('clear').addEventListener('click',()=>{
  $('words').blur();
  const focused=document.activeElement;
  if(focused&&typeof focused.blur==='function')focused.blur();
+ updateNextAction();
 });
 $('cancel').addEventListener('click',()=>{hideForm();feedback('');$('words').focus();});
-$('words').addEventListener('input',()=>{hideForm();feedback('');});
+$('words').addEventListener('input',()=>{hideForm();feedback('');updateNextAction();});
 for(const n of ['direction','person','amount','reason'])$(n).addEventListener('input',fillSummary);
 $('reviewForm').addEventListener('submit',e=>{
  e.preventDefault();let person=normalizeName($('person').value);const match=records.find(x=>caseKey(x.person)===caseKey(person));if(match)person=match.person;
@@ -456,27 +482,32 @@ function render(){
 }
 $('reset').addEventListener('click',()=>{if(!records.length)return;if(!confirm('Permanently delete ALL money entries stored on this phone? This cannot be undone.'))return;try{localStorage.removeItem(STORE);}catch(e){feedback('Could not clear local storage.','bad');return;}records=[];render();hideForm();$('words').value='';feedback('Test entries cleared.');});
 render();
+updateNextAction();
 })();
 </script>
 
 <script>
-/* Optional dictation. No financial transaction is saved until Review / Confirm. */
+/* Optional built-in dictation. Completing speech opens Review, never saves automatically. */
 (()=>{
 'use strict';
 const input=document.getElementById('words');
 const button=document.getElementById('mic');
 const status=document.getElementById('micStatus');
 const API=window.SpeechRecognition||window.webkitSpeechRecognition;
-let rec=null,active=false,starting=false,prefix='',recognized='';
+let rec=null,active=false,starting=false,prefix='',recognized='',failed=false,canceled=false;
 function tell(message){status.textContent=message;}
-function idle(){active=false;starting=false;button.textContent='🎤 Dictate';button.setAttribute('aria-pressed','false');}
+function idle(){active=false;starting=false;button.textContent='🎤 Dictate';button.setAttribute('aria-pressed','false');window.RunningTabFlow?.updateNextAction();}
 function stop(){if((active||starting)&&rec){try{rec.stop();}catch(e){}}}
-if(!API){button.disabled=true;tell('This browser does not offer built-in speech recognition. You can still use your Samsung keyboard microphone.');return;}
-button.addEventListener('click',()=>{
- if(active||starting){stop();return;}
- if(!window.isSecureContext){tell('Open the HTTPS GitHub Pages link in Chrome to use this microphone button.');return;}
- try{
-   rec=new API();starting=true;recognized='';prefix=input.value.trim();
+if(!API){
+ button.disabled=true;
+ tell('This browser does not offer built-in speech recognition. You can still use your Samsung keyboard microphone.');
+ window.RunningTabFlow?.updateNextAction();
+}else{
+ button.addEventListener('click',()=>{
+  if(active||starting){stop();return;}
+  if(!window.isSecureContext){tell('Open the HTTPS GitHub Pages link in Chrome to use this microphone button.');return;}
+  try{
+   rec=new API();starting=true;recognized='';failed=false;canceled=false;prefix=input.value.trim();
    rec.lang='en-CA';rec.continuous=false;rec.interimResults=true;rec.maxAlternatives=1;
    rec.onstart=()=>{active=true;starting=false;button.textContent='■ Stop';button.setAttribute('aria-pressed','true');tell('Listening… speak your entry.');};
    rec.onresult=e=>{
@@ -485,14 +516,30 @@ button.addEventListener('click',()=>{
      recognized=result.trim();
      input.value=[prefix,recognized].filter(Boolean).join(' ');
      input.dispatchEvent(new Event('input',{bubbles:true}));
-     tell(e.results[e.results.length-1].isFinal?'Ready. Tap Review to check the words.':'Listening…');
+     tell(e.results[e.results.length-1].isFinal?'Interpreting your entry…':'Listening…');
    };
-   rec.onerror=e=>{const msg={'not-allowed':'Microphone access denied. Allow microphone permission for this site in Chrome.','service-not-allowed':'Speech recognition is blocked. Use your keyboard microphone instead.','network':'Speech recognition may need an internet connection.','no-speech':'No speech detected. Try again.','audio-capture':'No microphone is available.'};tell(msg[e.error]||'Speech recognition error: '+e.error);};
-   rec.onend=()=>{idle();if(status.textContent==='Listening… speak your entry.')tell('Ready. Tap Review.');};
+   rec.onerror=e=>{
+     failed=true;
+     const msg={'not-allowed':'Microphone access denied. Allow microphone permission for this site in Chrome.','service-not-allowed':'Speech recognition is blocked. Use your keyboard microphone instead.','network':'Speech recognition may need an internet connection.','no-speech':'No speech detected. Try again.','audio-capture':'No microphone is available.'};
+     tell(msg[e.error]||'Speech recognition error: '+e.error);
+   };
+   rec.onend=()=>{
+     const shouldReview=!failed&&!canceled&&recognized.trim().length>0;
+     idle();
+     if(shouldReview){
+       tell('Dictation complete. Review the details and confirm to save.');
+       document.getElementById('review').click();
+     }else if(!failed&&!canceled){
+       tell('No words captured. Tap Dictate to try again.');
+     }
+   };
    rec.start();
- }catch(e){idle();tell('Could not start speech recognition. Try the Samsung keyboard microphone.');}
+  }catch(e){idle();tell('Could not start speech recognition. Try the Samsung keyboard microphone.');}
+ });
+}
+document.getElementById('clear').addEventListener('click',()=>{
+ canceled=true;recognized='';stop();tell('');
 });
-document.getElementById('clear').addEventListener('click',()=>{stop();tell('');});
 if('serviceWorker' in navigator && location.protocol==='https:')navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
 })();
 </script>

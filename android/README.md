@@ -37,3 +37,9 @@ Requires JDK 17, Android SDK Platform 35, Gradle 8.9 and Android Gradle Plugin 8
 Android home-screen widgets cannot embed a live WebView. Therefore this widget is a native **summary/list representation** of the Running Tab interface, not an exact live webpage. The list is scrollable; its rows are read-only. Tap the moon icon (☾) in the widget header to enable night mode; tap the sun icon (☀) to switch back. The choice is remembered for each widget and also changes the list-row colors. Button and tab taps are deliberate. The app must open for edits, confirmation, dictation and full Money transaction details.
 
 The preview APK is intended for personal testing, not Play Store deployment.
+
+## Automatic speech review and suggested red action
+
+Running Tab's built-in **Dictate** button automatically opens the translated Review form when speech recognition finishes; you then review and tap **Confirm & save**. The Android native speech popup uses the same behavior as of v1.2, including when launched from the widget.
+
+The **next recommended button** is highlighted in red: Dictate when empty, Review for entered text, or Confirm & save once details are on screen. Typing in the text box is still supported. Samsung's separate keyboard microphone does not send a reliable "finished speaking" event to websites, so it may still require tapping Review.

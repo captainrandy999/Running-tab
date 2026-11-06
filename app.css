@@ -161,3 +161,17 @@ label.label{font-size:13px;letter-spacing:.05px}
  #entry .entry-actions{gap:4px!important}
  #entry .entry-actions button{padding:8px 3px!important;font-size:12px}
 }
+
+
+/* Exactly one suggested next action is red: Dictate → Review → Confirm & Save. */
+#entry button.next-action,
+#entry button.primary.next-action,
+#entry .entry-actions button.next-action,
+#entry .review-actions button.next-action{
+ background:#c6263c!important;
+ border-color:#c6263c!important;
+ color:#fff!important;
+ box-shadow:0 3px 10px #c6263c36!important;
+}
+#entry button.next-action:active{background:#a51d31!important}
+#entry button.next-action:focus-visible{outline-color:#e68692}
