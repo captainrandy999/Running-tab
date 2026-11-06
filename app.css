@@ -231,3 +231,10 @@ html.web-auth-pending body{visibility:hidden!important}
 /* Any To-Do title expands to allow attaching/editing note details. */
 .todo-details .note-empty{padding:10px 0 3px;font-size:13px;color:#6b7e8b}
 .todo-details[open] .note-empty{border-top:1px solid #e2ebef;margin-top:9px}
+
+/* Account-specific Drive sync progress appears below the Google account controls. */
+.web-sync-bar{max-width:700px;display:flex;align-items:center;justify-content:space-between;gap:10px;
+padding:8px 10px;margin:0 auto 13px;border:1px solid #d5e1e9;border-radius:12px;background:#f4f8fa;
+color:#3d6373;font-size:12px}
+.web-sync-bar button{margin:0;min-height:34px;white-space:nowrap}
+.web-sync-bar .sync-error{color:#9b3741}

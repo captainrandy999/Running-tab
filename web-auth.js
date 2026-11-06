@@ -54,7 +54,7 @@
     authorized=true;
     gate.hidden=true;app.hidden=false;accountBar.hidden=false;
     accountStatus.textContent=(connected?'Connected to Google: ':'Offline/local access: ')
-      +identityLabel()+(connected?' · Cloud synchronization not enabled yet':' · Reconnect for future sync');
+      +identityLabel()+(connected?' · Google Drive sync enabled':' · Reconnect to synchronize');
     reconnectButton.hidden=!!connected;
     window.dispatchEvent(new CustomEvent('runningtab:google-auth-changed',{
       detail:{connected:!!connected,email:identityLabel()}
@@ -146,7 +146,7 @@
   signOutButton.addEventListener('click',signedOut);
   window.addEventListener('online',()=>{
     if(authorized&&!connectedToken()){
-      accountStatus.textContent='Online · Sign in again to connect Google Drive when synchronization is enabled.';
+      accountStatus.textContent='Online · Tap Reconnect Google to synchronize.';
       reconnectButton.hidden=false;
     }
   });

@@ -13,6 +13,7 @@
 <script src="./web-auth-config.js"></script>
 <script>if(!window.RunningTabWebAuthConfig?.clientId||window.RunningTabAndroid)document.documentElement.classList.remove('web-auth-pending');</script>
 <script src="./web-auth.js" defer></script>
+<script src="./web-drive-sync.js" defer></script>
 <script src="./install.js" defer></script>
 <script src="./backup.js" defer></script>
 <script src="./todo-panel.js" defer></script>
@@ -47,6 +48,10 @@
   <button type="button" class="secondary small" id="webGoogleReconnect" hidden disabled>Reconnect Google</button>
   <button type="button" class="secondary small" id="webGoogleSignOut">Sign out</button>
  </div>
+</div>
+<div class="web-sync-bar" aria-live="polite">
+ <span id="webSyncStatus">Google Drive not synchronized yet</span>
+ <button type="button" class="secondary small" id="webSyncNow">Sync now</button>
 </div>
  <header class="head"><div class="mark">$</div><div><h1>Running Tab</h1><div class="info">Money &amp; reminders, made simple</div></div></header>
 <nav class="tabs" role="tablist" aria-label="Running Tab sections">
@@ -626,6 +631,15 @@ function render(){
  }));
 }
 $('reset').addEventListener('click',()=>{if(!records.length)return;if(!confirm('Permanently delete ALL money entries stored on this phone? This cannot be undone.'))return;try{localStorage.removeItem(STORE);}catch(e){feedback('Could not clear local storage.','bad');return;}records=[];render();hideForm();$('words').value='';feedback('Test entries cleared.');});
+window.addEventListener('runningtab:money-changed',()=>{
+ try{
+  const latest=JSON.parse(localStorage.getItem(STORE)||'[]');
+  if(Array.isArray(latest)){
+   records=latest.filter(r=>r&&typeof r.person==='string'&&['to_me','i_owe'].includes(r.direction));
+   render();
+  }
+ }catch(e){feedback('Could not refresh Money from Google Drive.','bad');}
+});
 render();
 updateNextAction();
 })();

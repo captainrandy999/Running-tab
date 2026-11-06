@@ -98,3 +98,13 @@ The Web OAuth 2.0 client ID in `web-auth-config.js` is for Google Cloud's Runnin
 ## Add details to an existing To-Do
 
 Tap any To-Do's title to expand it, choose **Add note** (or **Edit note**), type the details, and **Save changes**. The original task title remains the subject and the record stays a normal To-Do with its existing due date and completion state; no separate note record is created. Existing stand-alone Notes can still be edited. Both active and completed items support attached details, and Delete remains only in Completed.
+
+## Google Drive synchronization (browser/PWA only, offline-first)
+
+Once the Google Cloud Drive API is enabled and Google has authorized the `drive.appdata` scope, the browser version synchronizes Money, To-Dos, Notes and Shopping using `running-tab-cloud-v1.json` in its private Google Drive `appDataFolder`. The Drive app-data folder isn't visible in the normal Google Drive UI. A **Sync now** button and status display connection, offline state and sync errors.
+
+The app still **saves every change locally first**. When signed in, opened, or reconnected, it downloads the Drive file, uses a **three-way per-ID merge** against its last successful synchronized state, and uploads changes. This preserves local offline edits, remote additions and known deletions. When the same entry has incompatible changes on two devices, sync stops and keeps both copies as they are; make manual JSON backups and resolve the conflict before continuing. Version checks reduce risk of overwriting simultaneous modifications, but this is designed for one device at a time, not concurrent multi-user updates.
+
+**Rollout limitation:** Google Drive sync currently works in Google-authenticated **browser/PWA** Running Tab. The separate Android APK bypasses browser Google sign-in and still uses its own local data until we add a supported native Android OAuth flow. Existing APK entries are not silently uploaded or replaced; use the Chrome browser on the phone/tablet and your PC to test cross-device sync safely. Retain JSON backups.
+
+If opened offline after an authorized online visit, browser/PWA data remains accessible; changes wait locally and synchronize after connectivity and Google authorization return. Google tokens remain in memory and are never stored persistently.
