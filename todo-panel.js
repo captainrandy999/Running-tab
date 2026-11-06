@@ -16,14 +16,15 @@ function label(t){
 function status(message,bad=false){const el=$('todoStatus');if(!el)return;el.textContent=message;el.className=message?'notice'+(bad?' bad':''):'';}
 function persist(next){try{localStorage.setItem(STORE,JSON.stringify(next));tasks=next;return true;}catch(e){status('Could not save the change on this device.',true);return false;}}
 function sortKey(t){return t.dueType==='none'?'9999-12-31':t.dueType==='month'?t.due+'-32':t.due;}
-function rows(items){
+function rows(items,completed=false){
  return items.map(t=>{
   const note=t.kind==='note'&&typeof t.body==='string';
   const title=esc(t.title);
   const content=note
    ? '<details class="note-details"><summary class="task-name">'+title+'</summary><div class="note-body">'+esc(t.body)+'</div></details><div class="task-meta">📝 Note · '+esc(label(t))+'</div>'
    : '<div class="task-name">'+title+'</div><div class="task-meta">'+esc(label(t))+'</div>';
-  return '<div class="task'+(t.done?' done':'')+(note?' note-task':'')+'"><input type="checkbox" data-toggle="'+esc(t.id)+'" '+(t.done?'checked':'')+' aria-label="Mark '+title+(t.done?' not done':' complete')+'"><div class="task-main">'+content+'</div><button type="button" class="danger small" data-remove="'+esc(t.id)+'">Delete</button></div>';
+  const deleteButton=completed?'<button type="button" class="danger small" data-remove="'+esc(t.id)+'">Delete</button>':'';
+  return '<div class="task'+(t.done?' done':'')+(note?' note-task':'')+'"><input type="checkbox" data-toggle="'+esc(t.id)+'" '+(t.done?'checked':'')+' aria-label="Mark '+title+(t.done?' not done':' complete')+'"><div class="task-main">'+content+'</div>'+deleteButton+'</div>';
  }).join('');
 }
 function render(){
@@ -31,15 +32,15 @@ function render(){
  const done=tasks.filter(t=>t.done).sort((a,b)=>String(b.completedAt||'').localeCompare(String(a.completedAt||'')));
  $('count').textContent=open.length+' remaining';
  $('doneCount').textContent='Completed ('+done.length+')';
- $('pending').innerHTML=open.length?rows(open):'<p class="empty">Nothing outstanding.</p>';
- $('completed').innerHTML=done.length?rows(done):'<p class="info">No completed items.</p>';
+ $('pending').innerHTML=open.length?rows(open,false):'<p class="empty">Nothing outstanding.</p>';
+ $('completed').innerHTML=done.length?rows(done,true):'<p class="info">No completed items.</p>';
  for(const root of ['pending','completed']){
   $(root).querySelectorAll('[data-toggle]').forEach(el=>el.addEventListener('change',()=>{
     const next=tasks.map(t=>t.id===el.dataset.toggle?{...t,done:el.checked,completedAt:el.checked?new Date().toISOString():null}:t);
     if(persist(next)){render();status(el.checked?'Completed.':'Moved back to the To-Do list.');}
     else el.checked=!el.checked;
   }));
-  $(root).querySelectorAll('[data-remove]').forEach(el=>el.addEventListener('click',()=>{
+  if(root==='completed')$(root).querySelectorAll('[data-remove]').forEach(el=>el.addEventListener('click',()=>{
     const task=tasks.find(t=>t.id===el.dataset.remove);
     if(!task||!confirm('Delete "'+task.title+'"?'))return;
     if(persist(tasks.filter(t=>t.id!==task.id))){render();status(task.kind==='note'?'Note deleted.':'Reminder deleted.');}

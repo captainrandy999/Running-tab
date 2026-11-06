@@ -49,6 +49,8 @@
      <div><b>Shopping:</b> “I need to buy milk and eggs”</div>
      <div><b>Shopping:</b> “Add bread and coffee to my shopping list”</div>
      <div><b>Notes:</b> “Take a note that the shed roof needs new flashing”</div>
+     <div><b>Named notes:</b> “Make a note called Roof Inspection that the shingles need replacing”</div>
+     <div><b>Named notes:</b> “Record a note called Supplies, pick up more 2×4 lumber”</div>
     </div>
    </details>
    <div class="actions entry-actions"><button type="button" class="secondary" id="mic" aria-label="Dictate using the microphone" aria-pressed="false">🎤 Dictate</button><button type="button" class="primary" id="review">Review</button><button type="button" class="outline" id="clear">Clear field</button></div>
@@ -374,12 +376,36 @@ function todoDueChange(){
 }
 
 const NoteParser=(()=>{
- const pattern=/^(?:please\s+)?(?:take\s+(?:a\s+)?note|make\s+(?:a\s+)?note|write\s+(?:a\s+)?note|note)\b(?:\s+(?:that|about|on|regarding))?\s*[:,;-]?\s*/i;
+ const pattern=/^(?:please\s+)?(?:(?:take|make|write|record|create)\s+(?:a\s+)?note|note)\b(?:\s+(?:that|about|on|regarding))?\s*[:,;-]?\s*/i;
+ const namedPattern=/^(?:please\s+)?(?:(?:take|make|write|record|create)\s+(?:a\s+)?note|note)\s+(?:called|named|titled)\s+/i;
  function isNote(input){return pattern.test(String(input||'').trim());}
+ function parseNamedNote(text){
+  // Explicit spoken delimiters let us distinguish the name from the note body.
+  // Punctuation, "that", "saying", and "and say" are common in dictation.
+  const split=text.match(/^([\s\S]+?)(?:\s*[,;:]\s*|\s*[.?!]\s+|\s+[—–-]\s+|\s+(?:that|saying|which\s+says|and\s+(?:say|write|record)|with\s+(?:the\s+)?(?:text|contents?)\s*(?:that|of)?)\s+)([\s\S]+)$/i);
+  let title,body;
+  if(split){title=split[1].trim();body=split[2].trim();}
+  else if(/^note\s+\S/i.test(text)){title='Note';body=text.replace(/^note\s+/i,'').trim();}
+  else {
+   // Spoken dictation can omit punctuation; offer an editable best guess.
+   const words=text.split(/\s+/).filter(Boolean);
+   if(words.length<5)return {error:'To name a note, say “make a note called Roof Inspection that the shingles need replacing.”'};
+   title=words.slice(0,3).join(' ');
+   body=words.slice(3).join(' ');
+  }
+  title=title.replace(/^[“"' ]+|[”"' ,;:.!?]+$/g,'').trim();
+  if(!title)return {error:'The note needs a title.'};
+  if(title.length>300)return {error:'The note title is too long.'};
+  if(!body)return {error:'Tell me what to put inside the note.'};
+  if(body.length>12000)return {error:'The note is too long (12,000 characters maximum).'};
+  return {title:title[0].toUpperCase()+title.slice(1),body};
+ }
  function interpret(input){
   const raw=String(input||'').trim();
   const match=raw.match(pattern);
   if(!match)return {error:'Start with “take a note that…” or “note…”'};
+  const named=raw.match(namedPattern);
+  if(named)return parseNamedNote(raw.slice(named[0].length).trim());
   const body=raw.slice(match[0].length).trim();
   if(!body)return {error:'Tell me what you want the note to say.'};
   if(body.length>12000)return {error:'The note is too long (12,000 characters maximum).'};

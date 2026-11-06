@@ -57,3 +57,9 @@ A native Android wrapper and **read-only, scrollable home-screen widget** are in
 ## Dictated notes
 
 Say `take a note that …`, `make a note that …`, or `note …`. Running Tab recognizes a Note instead of a reminder, suggests a short topic from the dictated content, then opens the existing editable review. Only **Confirm & save note** saves the entry. In To-Do, a note uses the same completion checkbox as a reminder, and its topic expands to show the full note. An optional date can be chosen. Notes share the existing To-Do storage and backup, keeping older records intact.
+
+## Task completion, deletion and named-note dictation
+
+Active To-Do entries and notes **do not show Delete**. Check the checkbox to move an entry into the collapsible **Completed** section; only there can it be deleted, or unchecked to restore it to active.
+
+In addition to the automatic note-topic command, say **“make a note called Roof Inspection that the shingles need replacing”** or **“record a note called Supplies, buy more 2x4 lumber.”** The specified name becomes the note title and the remaining words go into its body. Named notes still open the editable Review screen and require manual confirmation before saving.
