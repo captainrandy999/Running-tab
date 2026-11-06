@@ -18,20 +18,25 @@ function persist(next){try{localStorage.setItem(STORE,JSON.stringify(next));task
 function sortKey(t){return t.dueType==='none'?'9999-12-31':t.dueType==='month'?t.due+'-32':t.due;}
 function rows(items,completed=false,expandedNoteId=null){
  return items.map(t=>{
-  const note=t.kind==='note'&&typeof t.body==='string';
+  const isNote=t.kind==='note';
+  const hasBody=typeof t.body==='string'&&t.body.trim().length>0;
+  const body=hasBody?t.body:'';
   const title=esc(t.title);
-  const content=note
-   ? '<details class="note-details"'+(expandedNoteId===t.id?' open':'')+'><summary class="task-name">'+title+'</summary>'
-     +'<div class="note-body" data-note-body>'+esc(t.body)+'</div>'
-     +'<button type="button" class="secondary small note-edit-trigger" data-edit-note="'+esc(t.id)+'">Edit note</button>'
-     +'<form class="note-edit-form" data-note-edit-form="'+esc(t.id)+'" hidden>'
-     +'<label>Note text<textarea maxlength="12000" required data-note-editor aria-label="Edit text for '+title+'">'+esc(t.body)+'</textarea></label>'
-     +'<div class="note-edit-actions"><button type="submit" class="primary small">Save changes</button>'
-     +'<button type="button" class="secondary small" data-cancel-note="'+esc(t.id)+'">Cancel</button></div></form>'
-     +'</details><div class="task-meta">📝 Note · '+esc(label(t))+'</div>'
-   : '<div class="task-name">'+title+'</div><div class="task-meta">'+esc(label(t))+'</div>';
+  // All entries expand. A normal To-Do retains its title and remains a To-Do
+  // when a note is attached, instead of becoming a separate Note.
+  const content=
+   '<details class="note-details todo-details"'+(expandedNoteId===t.id?' open':'')+'>'
+   +'<summary class="task-name">'+title+'</summary>'
+   +(hasBody?'<div class="note-body" data-note-body>'+esc(body)+'</div>'
+      :'<div class="note-empty" data-note-body>No details added yet.</div>')
+   +'<button type="button" class="secondary small note-edit-trigger" data-edit-note="'+esc(t.id)+'">'+(hasBody?'Edit note':'Add note')+'</button>'
+   +'<form class="note-edit-form" data-note-edit-form="'+esc(t.id)+'" hidden>'
+   +'<label>Note details<textarea maxlength="12000" data-note-editor aria-label="Edit note for '+title+'" placeholder="Add details, follow-up information, or updates…">'+esc(body)+'</textarea></label>'
+   +'<div class="note-edit-actions"><button type="submit" class="primary small">Save changes</button>'
+   +'<button type="button" class="secondary small" data-cancel-note="'+esc(t.id)+'">Cancel</button></div></form>'
+   +'</details><div class="task-meta">'+(isNote?'📝 Note · ':'')+esc(label(t))+'</div>';
   const deleteButton=completed?'<button type="button" class="danger small" data-remove="'+esc(t.id)+'">Delete</button>':'';
-  return '<div class="task'+(t.done?' done':'')+(note?' note-task':'')+'"><input type="checkbox" data-toggle="'+esc(t.id)+'" '+(t.done?'checked':'')+' aria-label="Mark '+title+(t.done?' not done':' complete')+'"><div class="task-main">'+content+'</div>'+deleteButton+'</div>';
+  return '<div class="task'+(t.done?' done':'')+' note-task'+(isNote?' saved-note':'')+'"><input type="checkbox" data-toggle="'+esc(t.id)+'" '+(t.done?'checked':'')+' aria-label="Mark '+title+(t.done?' not done':' complete')+'"><div class="task-main">'+content+'</div>'+deleteButton+'</div>';
  }).join('');
 }
 function render(expandedNoteId=null){
@@ -66,13 +71,16 @@ function render(expandedNoteId=null){
   $(root).querySelectorAll('[data-note-edit-form]').forEach(el=>el.addEventListener('submit',event=>{
     event.preventDefault();
     const id=el.dataset.noteEditForm;
-    const old=tasks.find(t=>t.id===id&&t.kind==='note');
-    if(!old){status('Could not find the note to update.',true);return;}
+    const old=tasks.find(t=>t.id===id);
+    if(!old){status('Could not find this entry to update.',true);return;}
     const body=el.querySelector('[data-note-editor]').value.trim();
-    if(!body||body.length>12000){status('Enter note text (12,000 characters maximum).',true);return;}
+    if(body.length>12000||(old.kind==='note'&&!body)){
+      status(old.kind==='note'?'Enter note text (12,000 characters maximum).':'Keep the note under 12,000 characters.',true);
+      return;
+    }
     if(persist(tasks.map(t=>t.id===id?{...t,body,updatedAt:new Date().toISOString()}:t))){
       render(id);
-      status('Note updated.');
+      status(body?'Note details saved.':'Note details cleared.');
       window.dispatchEvent(new Event('runningtab:todo-changed'));
     }
   }));

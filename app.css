@@ -227,3 +227,7 @@ html.web-auth-pending body{visibility:hidden!important}
 .web-account-bar{max-width:700px;display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;padding:8px 10px;margin:0 auto 13px;background:#eaf2f7;border-radius:12px;color:#35536a;font-size:12px}
 .web-account-actions{display:flex;align-items:center;gap:6px}
 .web-account-actions button{margin:0;min-height:32px}
+
+/* Any To-Do title expands to allow attaching/editing note details. */
+.todo-details .note-empty{padding:10px 0 3px;font-size:13px;color:#6b7e8b}
+.todo-details[open] .note-empty{border-top:1px solid #e2ebef;margin-top:9px}

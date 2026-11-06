@@ -94,3 +94,7 @@ The Web OAuth 2.0 client ID in `web-auth-config.js` is for Google Cloud's Runnin
 **Google Cloud setup:** In Google Auth Platform → Audience, keep External/Testing and add the intended account under Test users. In Google Auth Platform → Clients → Running Tab Web, ensure Authorized JavaScript origins includes `https://captainrandy999.github.io`. Enable Google Drive API to authorize the `drive.appdata` scope. The consent flow may ask for approval.
 
 **Important:** Google Drive data synchronization is NOT implemented yet. This change gates the browser interface and grants a short-lived token for future Drive operations, but all existing entries still live on each device. An approved account on a different device won't see those entries until the synchronization layer is added. Local trusted offline access is permitted for 30 days after a successful login. Sign out removes the trusted offline marker, but not local data.
+
+## Add details to an existing To-Do
+
+Tap any To-Do's title to expand it, choose **Add note** (or **Edit note**), type the details, and **Save changes**. The original task title remains the subject and the record stays a normal To-Do with its existing due date and completion state; no separate note record is created. Existing stand-alone Notes can still be edited. Both active and completed items support attached details, and Delete remains only in Completed.
