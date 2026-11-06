@@ -120,3 +120,7 @@ After Android OAuth registration, install the new APK **over the existing instal
 The access token is held only in process memory. Google Play Services may silently return an authorized token on later app opens; if consent is needed, tap Connect Google. Disconnect revokes Android app access and stops syncing, without deleting local entries or Drive backups. For safety, take a JSON backup before the first cross-device merge. The Google Cloud OAuth Testing policy may periodically require reconnection.
 
 **Deployment/testing:** A successful GitHub Actions APK build proves the source compiles. The actual Android Google consent screen and API connectivity must still be tested on the user's Samsung after registering the Android OAuth client.
+
+## Cloud To-Do refresh fix
+
+The Drive JSON field is `todos`, but the To-Do UI and Android widget listen to `runningtab:todo-changed` (singular). Previously the sync engine fired `runningtab:todos-changed` after applying downloaded entries. As a result, downloaded reminders could be saved on the device without immediately appearing in the To-Do interface. The shared sync engine now fires the correct event without changing stored records, Google Drive data, the APK signing identity, or the v1.5 rollback.

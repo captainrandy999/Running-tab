@@ -170,7 +170,11 @@
     if(localStorage.getItem(KEYS[name])!==next)localStorage.setItem(KEYS[name],next);
    }
   }finally{silent=false;}
-  for(const name of NAMES)window.dispatchEvent(new Event('runningtab:'+name+'-changed'));
+  // The cloud list key is plural ("todos") but the To-Do panel and Android
+  // widget intentionally subscribe to the singular "runningtab:todo-changed".
+  for(const name of NAMES)window.dispatchEvent(new Event(
+   'runningtab:'+(name==='todos'?'todo':name)+'-changed'
+  ));
   window.RunningTabView?.adjust?.();
  }
  function waiting(){
