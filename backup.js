@@ -41,7 +41,17 @@
   const file=event.target.files?.[0];if(!file)return;
   try{
    if(file.size>15000000)throw Error('Backup file is too large.');
-   const d=JSON.parse(await file.text());
+   // APKs and GitHub build artifacts are ZIP files (PK), not Running Tab data.
+   const header=new Uint8Array(await file.slice(0,4).arrayBuffer());
+   if(header[0]===0x50&&header[1]===0x4b&&
+      ((header[2]===0x03&&header[3]===0x04)||
+       (header[2]===0x05&&header[3]===0x06)||
+       (header[2]===0x07&&header[3]===0x08))){
+    throw Error('This is a ZIP/APK archive, not a Running Tab data backup. Open Running Tab where your entries are stored, tap Data & backup → Download backup, then select the .json file.');
+   }
+   let d;
+   try{d=JSON.parse(await file.text());}
+   catch(e){throw Error('This file is not valid JSON. Select the running-tab-backup-YYYY-MM-DD.json file created by Download backup.');}
    if(!d||d.format!=='running-tab-backup'||![1,2].includes(d.version))throw Error('Not a supported Running Tab backup.');
    const money=validate('money',d.money),todos=validate('todos',d.todos);
    const shopping=d.version===2?validate('shopping',d.shopping):null;
