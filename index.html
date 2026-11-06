@@ -47,6 +47,7 @@
      <div><b>To-Do:</b> “Remind me to call Cody by Saturday”</div>
      <div><b>To-Do:</b> “Add a reminder tomorrow” or “Remind me in 7 days”</div>
      <div><b>To-Do:</b> “In 2 days, remind me to follow up with Henry about payment”</div>
+     <div><b>To-Do:</b> “Remind me in 3 days that I need to check the invoice”</div>
      <div><b>Shopping:</b> “I need to buy milk and eggs”</div>
      <div><b>Shopping:</b> “Add bread and coffee to my shopping list”</div>
      <div><b>Notes:</b> “Take a note that the shed roof needs new flashing”</div>
@@ -196,16 +197,22 @@ function deadlineLabel(t){
  const d=new Date(t.due+'T12:00:00');
  return Number.isNaN(d.getTime())?'Check date':d.toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
 }
-const startDate= /^(?:please\s+)?(?:in|after|within)\s+(\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|fourteen)\s+days?(?:\s+from\s+(?:now|today))?\s*[,;:]?\s+(?=(?:remind\s+me\b|remember\s+to\b|call\b|check\b|contact\b|follow\s+up\b|email\b|text\b|pay\b|send\b|book\b|finish\b|schedule\b|order\b|submit\b|renew\b|return\b|fix\b|clean\b))/i;
+// Recognize front-loaded due dates in both normal and speech-transcribed reminders.
+const startDate= /^(?:please\s+)?(?:in|after|within)\s+(\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|fourteen)\s+days?(?:\s+from\s+(?:now|today))?(?:\s*[,;:]\s*|\s+)(?=(?:remind\s+me\b|remember\s+to\b|that\b|to\b|i\b|we\b|call\b|check\b|contact\b|follow\s+up\b|email\b|text\b|pay\b|send\b|book\b|finish\b|schedule\b|order\b|submit\b|renew\b|return\b|fix\b|clean\b))/i;
 const numberNames={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,fourteen:14};
 function isPrefixedReminder(input){return startDate.test(String(input||'').trim());}
 function interpret(input){
  let s=String(input||'').trim().replace(/\s+/g,' ').replace(/[.!?]+$/,'').trim();
  let prefixDays=null;
+ // The recognizer may omit "Remind me". Both forms must produce the same date.
+ const lead=s.match(/^(?:please\s+)?remind\s+me\s+(?=(?:in|after|within)\s+(?:\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|fourteen)\s+days?\b)/i);
+ if(lead)s=s.slice(lead[0].length).trim();
  const prefix=s.match(startDate);
  if(prefix){
   prefixDays=Number(prefix[1])||numberNames[prefix[1].toLowerCase()]||null;
   s=s.slice(prefix[0].length).trim();
+  // E.g. "in 3 days that I need to check..." -> "Check..."
+  s=s.replace(/^that\s+/i,'').replace(/^(?:i|we)\s+(?:(?:need|have|want)\s+to|should)\s+/i,'').replace(/^to\s+/i,'').trim();
  }
  const isGenericReminder=/^(?:(?:add|set|make|create)\s+(?:(?:a|the)\s+)?reminder\b|remind\s+me\b)/i.test(s);
  if(!s)return {error:'Type or say a reminder first.'};

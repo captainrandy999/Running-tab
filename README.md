@@ -63,3 +63,9 @@ Say `take a note that …`, `make a note that …`, or `note …`. Running Tab r
 Active To-Do entries and notes **do not show Delete**. Check the checkbox to move an entry into the collapsible **Completed** section; only there can it be deleted, or unchecked to restore it to active.
 
 In addition to the automatic note-topic command, say **“make a note called Roof Inspection that the shingles need replacing”** or **“record a note called Supplies, buy more 2x4 lumber.”** The specified name becomes the note title and the remaining words go into its body. Named notes still open the editable Review screen and require manual confirmation before saving.
+
+## Edit saved note bodies and voice reminders with upfront dates
+
+Expand a saved To-Do Note, tap **Edit note**, update the full body, then **Save changes** (or **Cancel**). This works for active and completed notes. Editing preserves the title, due date, and completion checkbox. Changes sync to the widget and existing JSON backups.
+
+The date parser supports both **“Remind me in 3 days that I need to check the invoice”** and speech recognition's shortened **“In 3 days that I need to check the invoice”**, plus prior date styles. The editable Review step remains mandatory.

@@ -203,3 +203,13 @@ label.label{font-size:13px;letter-spacing:.05px}
 .note-task .note-details[open] .note-body{border-top:1px solid #e2ebef;margin-top:9px}
 #noteBodyField textarea{min-height:128px}
 #todoSummary{max-height:190px;overflow-y:auto;overscroll-behavior:contain}
+
+
+/* Saved notes can be edited inline, including completed notes. */
+.note-task .note-edit-trigger{margin-top:9px;min-height:33px;font-size:13px}
+.note-task .note-edit-trigger[hidden],.note-task .note-body[hidden],.note-edit-form[hidden]{display:none!important}
+.note-edit-form{padding-top:10px;display:block}
+.note-edit-form label{font-size:13px;font-weight:650;color:#415a6d}
+.note-edit-form textarea{display:block;width:100%;margin-top:6px;min-height:140px!important;resize:vertical;font-size:15px;line-height:1.5}
+.note-edit-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
+.note-edit-actions button{min-height:38px}
