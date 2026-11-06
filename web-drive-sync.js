@@ -1,10 +1,10 @@
-/* Browser-only Google Drive appDataFolder synchronization.
+/* Shared browser/PWA and authorized native Android appDataFolder synchronization.
    The three lists remain local-first, even if a cloud operation fails.
    Merge uses a three-way baseline to recognize edits and deletions.
    Google access tokens are never persisted. */
 (()=>{
  'use strict';
- if(window.RunningTabAndroid||!window.RunningTabWebAuth?.isEnabled)return;
+ if(!window.RunningTabWebAuth?.isEnabled)return;
  const label=document.getElementById('webSyncStatus');
  const button=document.getElementById('webSyncNow');
  const reconnect=document.getElementById('webGoogleReconnect');

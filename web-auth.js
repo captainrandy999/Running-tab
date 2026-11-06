@@ -131,6 +131,100 @@
     getAccount:()=>user?{...user}:null,
     isUnlocked:()=>authorized
   });
+  // Google blocks its browser sign-in flow inside Android WebViews. Android
+  // instead authorizes with Play Services, and sends an access token only to
+  // this trusted top-level Running Tab page (never localStorage).
+  if(isNative&&typeof window.RunningTabAndroid?.connectGoogle==='function'){
+    let nativeToken=null,nativeExpires=0,nativeAccount=null,generation=0;
+    const nativeLink=document.querySelector('.web-sync-bar');
+    accountBar.hidden=false;
+    reconnectButton.hidden=false;
+    reconnectButton.disabled=false;
+    reconnectButton.textContent='Connect Google';
+    signOutButton.hidden=true;
+    function labelNative(message){
+      accountStatus.textContent=message;
+    }
+    function identity(){return nativeAccount||getOwner();}
+    function connected(){
+      return nativeToken&&Date.now()<nativeExpires?nativeToken:null;
+    }
+    function dispatch(online){
+      window.dispatchEvent(new CustomEvent('runningtab:google-auth-changed',{
+        detail:{connected:!!online,email:identity()?.email||''}
+      }));
+    }
+    window.RunningTabWebAuth=Object.freeze({
+      isEnabled:true,
+      getAccessToken:connected,
+      getAccount:()=>identity()?{...identity()}:null,
+      isUnlocked:()=>true
+    });
+    window.RunningTabNativeAuth=Object.freeze({
+      onStatus:message=>{
+        const text=String(message||'');
+        if(!connected())labelNative(text||'Not connected to Google Drive · Local entries are safe');
+      },
+      onToken:async accessToken=>{
+        const nonce=++generation;
+        const value=String(accessToken||'');
+        if(!value){labelNative('No Google access token was returned. Tap Connect Google.');return;}
+        try{
+          const result=await fetch('https://openidconnect.googleapis.com/v1/userinfo',{
+            headers:{Authorization:'Bearer '+value},cache:'no-store'
+          });
+          if(!result.ok)throw Error('Google could not verify this account (HTTP '+result.status+').');
+          const p=await result.json();
+          if(nonce!==generation)return;
+          if(!p||!p.sub||!p.email||p.email_verified!==true)
+            throw Error('Google did not return a verified email address.');
+          const owner=getOwner();
+          if(owner?.sub&&owner.sub!==p.sub)
+            throw Error('This Android app has entries linked to a different Google account. Use the original account to avoid mixing records.');
+          localStorage.setItem(ownerKey,JSON.stringify({sub:p.sub,email:p.email}));
+          nativeAccount={sub:p.sub,email:p.email};
+          nativeToken=value;
+          nativeExpires=Date.now()+50*60*1000;
+          reconnectButton.textContent='Reconnect Google';
+          reconnectButton.hidden=true;
+          signOutButton.hidden=false;
+          labelNative('Connected to Google: '+p.email);
+          dispatch(true);
+        }catch(error){
+          if(nonce!==generation)return;
+          nativeToken=null;nativeExpires=0;
+          labelNative('Google Drive not connected: '+error.message);
+          reconnectButton.hidden=false;
+          dispatch(false);
+        }
+      },
+      onDisconnected:message=>{
+        generation++;nativeToken=null;nativeExpires=0;nativeAccount=null;
+        reconnectButton.hidden=false;
+        reconnectButton.textContent='Connect Google';
+        signOutButton.hidden=true;
+        labelNative(String(message||'Google Drive disconnected; entries remain on this device.'));
+        dispatch(false);
+      }
+    });
+    reconnectButton.addEventListener('click',()=>window.RunningTabAndroid.connectGoogle());
+    signOutButton.textContent='Disconnect';
+    signOutButton.addEventListener('click',()=>{
+      if(confirm('Disconnect Google Drive on this device? Your locally saved entries will remain, but syncing stops until you reconnect.')){
+        window.RunningTabAndroid.disconnectGoogle();
+      }
+    });
+    // Returning online should obtain a fresh Google token silently if the
+    // account was previously authorized; the user can continue working offline.
+    window.addEventListener('online',()=>window.RunningTabAndroid.refreshGoogle());
+    labelNative('Google Drive not connected · Entries saved on this device');
+    document.documentElement.classList.remove('web-auth-pending');
+    return;
+  }
+  if(isNative&&typeof window.RunningTabAndroid?.connectGoogle!=='function'){
+    // Old APKs cannot authorize Google. Avoid showing a nonworking Sync now.
+    document.querySelector('.web-sync-bar')?.setAttribute('hidden','');
+  }
   if(isNative||!configured||!gate||!app||!accountBar){
     document.documentElement.classList.remove('web-auth-pending');
     return;
