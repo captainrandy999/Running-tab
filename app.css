@@ -213,3 +213,17 @@ label.label{font-size:13px;letter-spacing:.05px}
 .note-edit-form textarea{display:block;width:100%;margin-top:6px;min-height:140px!important;resize:vertical;font-size:15px;line-height:1.5}
 .note-edit-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
 .note-edit-actions button{min-height:38px}
+
+/* Browser-only Google account gate. Activated only after a Web OAuth client ID is configured. */
+html.web-auth-pending body{visibility:hidden!important}
+#webAuthGate[hidden],#runningTabApp[hidden],#webAccountBar[hidden],#webOfflineContinue[hidden],#webGoogleReconnect[hidden]{display:none!important}
+.web-auth-gate{min-height:100dvh;display:grid;place-items:center;padding:20px;background:#f4f7fa}
+.web-auth-card{width:min(100%,420px);padding:28px 22px;background:#fff;border:1px solid #dce5ec;border-radius:20px;box-shadow:0 12px 35px #163b590d;text-align:center}
+.web-auth-card h1{margin:8px 0 0}
+.web-auth-card h2{margin:8px 0 12px}
+.web-auth-card p{color:#526e82;font-size:14px}
+.web-auth-card button{width:100%;margin-top:10px}
+.web-auth-mark{background:#163b59;color:#fff;width:52px;height:52px;border-radius:15px;margin:auto;display:grid;place-items:center;font-weight:900}
+.web-account-bar{max-width:700px;display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;padding:8px 10px;margin:0 auto 13px;background:#eaf2f7;border-radius:12px;color:#35536a;font-size:12px}
+.web-account-actions{display:flex;align-items:center;gap:6px}
+.web-account-actions button{margin:0;min-height:32px}

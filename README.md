@@ -69,3 +69,20 @@ In addition to the automatic note-topic command, say **“make a note called Roo
 Expand a saved To-Do Note, tap **Edit note**, update the full body, then **Save changes** (or **Cancel**). This works for active and completed notes. Editing preserves the title, due date, and completion checkbox. Changes sync to the widget and existing JSON backups.
 
 The date parser supports both **“Remind me in 3 days that I need to check the invoice”** and speech recognition's shortened **“In 3 days that I need to check the invoice”**, plus prior date styles. The editable Review step remains mandatory.
+
+## Web-only Google account login (staged, not yet active)
+
+The browser version has a **Google Identity Services OAuth login gate** prepared in `web-auth.js`. Its public client ID goes in `web-auth-config.js`. The gate remains **disabled** while the ID is empty, so users won't be locked out of any existing local records during setup. The native Android WebView is intentionally unchanged and does not attempt unsupported Google sign-in inside the WebView.
+
+**Configuration:**
+1. Create/select a Google Cloud project in [Google Auth Platform](https://console.cloud.google.com/auth/overview), select **External / Testing**, and add the intended Google account as an authorized **Test user** (Google enforces the test-user allowance).
+2. Enable **Google Drive API**.
+3. Create an OAuth **Web application** client with **Authorized JavaScript origin** exactly `https://captainrandy999.github.io` (no `/Running-tab` path).
+4. Put **only the public client ID** in `web-auth-config.js`; do not put an OAuth client secret, password, token, or API key in this public repository.
+5. After deployment, verify Google login and offline access on a test browser before relying on it.
+
+The browser requests scopes `openid email https://www.googleapis.com/auth/drive.appdata`; Google returns a short-lived access token. The app calls Google's authenticated userinfo endpoint to verify the selected Google account before unlocking the browser interface and associates that browser's local data with that account's Google subject ID. Google tokens are **memory only**; they are not persisted in local storage.
+
+After an online login, a locally saved trusted-device marker allows that same browser to reopen existing local data offline for 30 days. A sign-out removes that marker but not the records themselves. This trusted-device marker is a **convenience feature, not strong local-device encryption**: do not use it on a shared or untrusted computer.
+
+**Limitations:** The GitHub Pages source is public, so this gate cannot make the site's source code or locally cached storage private against somebody with browser/device access. Real Drive data privacy will rely on Google's user OAuth authorization and appDataFolder permissions. Google Cloud Testing limits authorization to configured test users. Cloud synchronization is a separate implementation step; signing in alone does NOT synchronize the entries, and the Android app still needs a separate supported account-flow for synchronization. Access tokens expire and reconnecting will require Google interaction without a backend.

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="web-auth-pending">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -10,6 +10,9 @@
 <meta name="description" content="Track money owed and To-Dos with one spoken or typed entry.">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<script src="./web-auth-config.js"></script>
+<script>if(!window.RunningTabWebAuthConfig?.clientId||window.RunningTabAndroid)document.documentElement.classList.remove('web-auth-pending');</script>
+<script src="./web-auth.js" defer></script>
 <script src="./install.js" defer></script>
 <script src="./backup.js" defer></script>
 <script src="./todo-panel.js" defer></script>
@@ -25,7 +28,26 @@
 <link rel="stylesheet" href="./app.css">
 </head>
 <body>
-<main>
+<section id="webAuthGate" class="web-auth-gate" hidden aria-label="Running Tab Google account sign-in">
+ <div class="web-auth-card">
+  <div class="web-auth-mark">RT</div>
+  <h1>Running Tab</h1>
+  <h2>Sign in with Google</h2>
+  <p>Only Google accounts permitted in your Running Tab Google Cloud project can connect. Your existing records stay on this device.</p>
+  <button type="button" class="primary" id="webGoogleSignIn" disabled>Continue with Google</button>
+  <button type="button" class="secondary" id="webOfflineContinue" hidden>Continue offline on this device</button>
+  <p class="hint">Offline access is available after you sign in successfully on this browser. Use only devices you trust.</p>
+  <div id="webAuthStatus" role="status" aria-live="polite" class="hint"></div>
+ </div>
+</section>
+<main id="runningTabApp">
+<div class="web-account-bar" id="webAccountBar" hidden>
+ <span id="webAccountStatus" aria-live="polite">Google account</span>
+ <div class="web-account-actions">
+  <button type="button" class="secondary small" id="webGoogleReconnect" hidden disabled>Reconnect Google</button>
+  <button type="button" class="secondary small" id="webGoogleSignOut">Sign out</button>
+ </div>
+</div>
  <header class="head"><div class="mark">$</div><div><h1>Running Tab</h1><div class="info">Money &amp; reminders, made simple</div></div></header>
 <nav class="tabs" role="tablist" aria-label="Running Tab sections">
 <button type="button" role="tab" class="tab-switch active" data-view="money" id="tabMoney" aria-controls="moneyPanel" aria-selected="true">💰 Money</button>
