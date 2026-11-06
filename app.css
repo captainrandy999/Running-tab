@@ -354,3 +354,136 @@ color:#3d6373;font-size:12px}
 .money-record-edit.money-note-only .money-editor-grid > label:not(.money-editor-note){display:none!important}
 .money-record-edit.money-note-only .money-editor-note{display:block}
 .money-record-edit.money-note-only .money-editor-note textarea{min-height:125px!important}
+
+
+/* Shared color language for Money, To-Do, Notes, and Shopping.
+   Soft filled cards + a slim leading stripe show status, not just color alone. */
+:root{
+ --rt-green-bg:#f1faf5;
+ --rt-green-edge:#42a77c;
+ --rt-green-text:#176e50;
+ --rt-rose-bg:#fff5f4;
+ --rt-rose-edge:#d48e85;
+ --rt-amber-bg:#fff9ef;
+ --rt-amber-edge:#d3a04c;
+ --rt-amber-text:#885b19;
+ --rt-violet-bg:#f7f4fe;
+ --rt-violet-edge:#a28bc9;
+ --rt-violet-text:#67508a;
+ --rt-blue-bg:#f1f8ff;
+ --rt-blue-edge:#6b9dc9;
+ --rt-blue-text:#2d6489;
+}
+#todoPanel .task.todo-item,
+#shoppingPanel .task.shop-item{
+ border:1px solid #dde7ed!important;
+ border-left:4px solid #cbd7dd!important;
+ border-radius:12px!important;
+ box-shadow:none!important;
+ padding:12px 11px;
+ gap:11px;
+ transition:border-color .15s ease,background-color .15s ease;
+}
+/* Open reminders carry gentle amber tones, Notes violet, completed items green. */
+#todoPanel .task.todo-item--open,
+#todoPanel .task.todo-item--today{
+ background:var(--rt-amber-bg)!important;
+ border-color:#eee0c4!important;
+ border-left-color:var(--rt-amber-edge)!important;
+}
+#todoPanel .task.todo-item--overdue{
+ background:var(--rt-rose-bg)!important;
+ border-color:#efd6d3!important;
+ border-left-color:var(--rt-rose-edge)!important;
+}
+#todoPanel .task.todo-item--note{
+ background:var(--rt-violet-bg)!important;
+ border-color:#e7def2!important;
+ border-left-color:var(--rt-violet-edge)!important;
+}
+#todoPanel .task.todo-item--complete,
+#shoppingPanel .task.shop-item--purchased{
+ background:var(--rt-green-bg)!important;
+ border-color:#cfe6d9!important;
+ border-left-color:var(--rt-green-edge)!important;
+}
+#shoppingPanel .task.shop-item--needed{
+ background:var(--rt-blue-bg)!important;
+ border-color:#d7e6f3!important;
+ border-left-color:var(--rt-blue-edge)!important;
+}
+#todoPanel .task.todo-item .task-name,
+#shoppingPanel .task.shop-item .task-name{
+ color:#263e4f;
+ line-height:1.45;
+}
+#todoPanel .task.todo-item.done .task-name,
+#shoppingPanel .task.shop-item.done .task-name{
+ color:#57776b;
+ text-decoration:line-through;
+ text-decoration-color:#92b1a4;
+ text-decoration-thickness:1px;
+}
+#todoPanel .task.todo-item .task-meta,
+#shoppingPanel .task.shop-item .task-meta{
+ display:flex;
+ flex-wrap:wrap;
+ align-items:center;
+ gap:7px;
+ margin-top:7px;
+ line-height:1.3;
+}
+.task-status-pill{
+ display:inline-flex;
+ align-items:center;
+ padding:4px 9px;
+ border-radius:999px;
+ font-size:11px;
+ font-weight:750;
+ letter-spacing:.01em;
+ white-space:nowrap;
+}
+.task-status-pill--open,.task-status-pill--today{
+ background:#f6e7c8;
+ color:var(--rt-amber-text);
+}
+.task-status-pill--overdue{background:#f5dcda;color:#a14e50}
+.task-status-pill--note{background:#e9e0f6;color:var(--rt-violet-text)}
+.task-status-pill--complete{background:#dcefe4;color:var(--rt-green-text)}
+.task-status-pill--needed{background:#dcebf8;color:var(--rt-blue-text)}
+.task-date-label{font-size:12px;color:#627888}
+#todoPanel .todo-item--note .task-date-label{color:#75678a}
+#todoPanel .todo-item--overdue .task-date-label{color:#98605b}
+#todoPanel .todo-item--open input[type="checkbox"],
+#todoPanel .todo-item--today input[type="checkbox"]{accent-color:#ad7a30}
+#todoPanel .todo-item--overdue input[type="checkbox"]{accent-color:#ad5d58}
+#todoPanel .todo-item--note input[type="checkbox"]{accent-color:#886bb1}
+#todoPanel .todo-item--complete input[type="checkbox"],
+#shoppingPanel .shop-item--purchased input[type="checkbox"]{accent-color:#35866a}
+#shoppingPanel .shop-item--needed input[type="checkbox"]{accent-color:#437da8}
+#todoPanel .todo-details[open],
+#shoppingPanel .shop-item:focus-within{outline-offset:2px}
+#todoPanel .todo-details[open] .note-body,
+#todoPanel .todo-details[open] .note-empty{border-top-color:#e1e7ea}
+#todoPanel .todo-item--note .note-edit-trigger{
+ background:#eae3f6!important;
+ color:var(--rt-violet-text)!important;
+}
+/* Quiet section labels echo the matching status palette. */
+#todoPanel #count{background:#faedcf;color:#80591c}
+#shoppingPanel #shopCount{background:#e0eef9;color:#285f85}
+#todoPanel #doneCount,#shoppingPanel #shopDoneCount{
+ color:#32765d;
+ font-weight:750;
+}
+#todoPanel #completed,#shoppingPanel #shopCompleted{
+ padding-top:10px;
+}
+#todoPanel #completed .task,#shoppingPanel #shopCompleted .task{margin-bottom:9px}
+.tabs #tabTodo.active{background:#815f2d!important;color:white!important}
+.tabs #tabShopping.active{background:#2b6788!important;color:white!important}
+.tabs #tabMoney.active{background:var(--navy)!important;color:white!important}
+@media(max-width:430px){
+ #todoPanel .task.todo-item,#shoppingPanel .task.shop-item{padding:11px 9px;gap:9px}
+ .task-status-pill{padding:4px 8px}
+}

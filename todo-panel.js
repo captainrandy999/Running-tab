@@ -16,12 +16,24 @@ function label(t){
 function status(message,bad=false){const el=$('todoStatus');if(!el)return;el.textContent=message;el.className=message?'notice'+(bad?' bad':''):'';}
 function persist(next){try{localStorage.setItem(STORE,JSON.stringify(next));tasks=next;return true;}catch(e){status('Could not save the change on this device.',true);return false;}}
 function sortKey(t){return t.dueType==='none'?'9999-12-31':t.dueType==='month'?t.due+'-32':t.due;}
+function taskAppearance(t){
+ if(t.done)return {tone:'complete',text:'Completed'};
+ if(t.kind==='note')return {tone:'note',text:'Note'};
+ if(t.dueType==='day'){
+  const now=new Date();
+  const today=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
+  if(t.due<today)return {tone:'overdue',text:'Overdue'};
+  if(t.due===today)return {tone:'today',text:'Due today'};
+ }
+ return {tone:'open',text:'To do'};
+}
 function rows(items,completed=false,expandedNoteId=null){
  return items.map(t=>{
   const isNote=t.kind==='note';
   const hasBody=typeof t.body==='string'&&t.body.trim().length>0;
   const body=hasBody?t.body:'';
   const title=esc(t.title);
+  const appearance=taskAppearance(t);
   // All entries expand. A normal To-Do retains its title and remains a To-Do
   // when a note is attached, instead of becoming a separate Note.
   const content=
@@ -34,9 +46,10 @@ function rows(items,completed=false,expandedNoteId=null){
    +'<label>Note details<textarea maxlength="12000" data-note-editor aria-label="Edit note for '+title+'" placeholder="Add details, follow-up information, or updates…">'+esc(body)+'</textarea></label>'
    +'<div class="note-edit-actions"><button type="submit" class="primary small">Save changes</button>'
    +'<button type="button" class="secondary small" data-cancel-note="'+esc(t.id)+'">Cancel</button></div></form>'
-   +'</details><div class="task-meta">'+(isNote?'📝 Note · ':'')+esc(label(t))+'</div>';
+   +'</details><div class="task-meta"><span class="task-status-pill task-status-pill--'+appearance.tone+'">'+appearance.text+'</span>'
+   +'<span class="task-date-label">'+esc(label(t))+'</span></div>';
   const deleteButton=completed?'<button type="button" class="danger small" data-remove="'+esc(t.id)+'">Delete</button>':'';
-  return '<div class="task'+(t.done?' done':'')+' note-task'+(isNote?' saved-note':'')+'"><input type="checkbox" data-toggle="'+esc(t.id)+'" '+(t.done?'checked':'')+' aria-label="Mark '+title+(t.done?' not done':' complete')+'"><div class="task-main">'+content+'</div>'+deleteButton+'</div>';
+  return '<div class="task todo-item todo-item--'+appearance.tone+(t.done?' done':'')+' note-task'+(isNote?' saved-note':'')+'"><input type="checkbox" data-toggle="'+esc(t.id)+'" '+(t.done?'checked':'')+' aria-label="Mark '+title+(t.done?' not done':' complete')+'"><div class="task-main">'+content+'</div>'+deleteButton+'</div>';
  }).join('');
 }
 function render(expandedNoteId=null){

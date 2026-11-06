@@ -22,10 +22,12 @@
   catch(e){status('Could not save shopping changes on this device.',true);return false;}
  }
  function row(item){
-  return '<div class="task shop-item'+(item.done?' done':'')+'">'+
+  return '<div class="task shop-item shop-item--'+(item.done?'purchased':'needed')+(item.done?' done':'')+'">'+
    '<input type="checkbox" data-shop-toggle="'+escape(item.id)+'" '+(item.done?'checked':'')+
    ' aria-label="'+escape(item.done?'Mark '+item.name+' needed again':'Mark '+item.name+' purchased')+'">'+
-   '<div class="task-main"><div class="task-name">'+escape(item.name)+'</div></div>'+
+   '<div class="task-main"><div class="task-name">'+escape(item.name)+'</div>'
+   +'<div class="task-meta"><span class="task-status-pill task-status-pill--'+(item.done?'complete':'needed')+'">'
+   +(item.done?'Purchased':'To buy')+'</span></div></div>'+
    '<button type="button" class="danger small" data-shop-delete="'+escape(item.id)+'" aria-label="Delete '+escape(item.name)+'">Delete</button></div>';
  }
  function render(){
