@@ -53,8 +53,10 @@
   function showApp(connected){
     authorized=true;
     gate.hidden=true;app.hidden=false;accountBar.hidden=false;
-    accountStatus.textContent=(connected?'Connected to Google: ':'Offline/local access: ')
-      +identityLabel()+(connected?' · Google Drive sync enabled':' · Reconnect to synchronize');
+    accountStatus.textContent=connected
+      ?'Connected to Google: '+identityLabel()+' · Google Drive sync enabled'
+      :(navigator.onLine===false?'Offline access: ':'Saved locally as: ')
+        +identityLabel()+' · Reconnect Google to synchronize';
     reconnectButton.hidden=!!connected;
     window.dispatchEvent(new CustomEvent('runningtab:google-auth-changed',{
       detail:{connected:!!connected,email:identityLabel()}
@@ -123,12 +125,16 @@
   function requestAccess(){
     if(!oauth){showError('Google sign-in is still loading. Try again in a moment.');return;}
     // Must be called synchronously from a user's click for popup permission.
-    oauth.requestAccessToken({prompt:'select_account'});
+    // A trusted device can ask Google to reuse its previously approved account.
+    // This is still user-initiated and never persists or fakes a Drive token.
+    oauth.requestAccessToken({prompt:getTrusted()?'':'select_account'});
   }
   window.RunningTabWebAuth=Object.freeze({
     isEnabled:configured&&!isNative,
     getAccessToken:connectedToken,
-    getAccount:()=>user?{...user}:null,
+    // A verified previous session can identify the local sync baseline, but
+    // only a live access token can access Google Drive.
+    getAccount:()=>user?{...user}:authorized&&trusted?{sub:trusted.sub,email:trusted.email}:null,
     isUnlocked:()=>authorized
   });
   // Google blocks its browser sign-in flow inside Android WebViews. Android
@@ -244,12 +250,17 @@
       reconnectButton.hidden=false;
     }
   });
-  showGate('Preparing Google sign-in…');
-  document.documentElement.classList.remove('web-auth-pending');
-  if(navigator.onLine===false&&trusted){
-    // Local entries stay usable when the same device is offline.
+  if(trusted){
+    // A successful Google login already trusted this browser for 30 days.
+    // Reopen local entries directly on subsequent visits, online or offline.
+    // Access to cloud data still requires a fresh, verified Google token.
     showApp(false);
+    document.documentElement.classList.remove('web-auth-pending');
+    if(navigator.onLine!==false)loadGIS();
   }else{
-    loadGIS();
+    showGate('Preparing Google sign-in…');
+    document.documentElement.classList.remove('web-auth-pending');
+    if(navigator.onLine!==false)loadGIS();
+    else showError('You need to sign in online once before this device can be used offline.');
   }
 })();
