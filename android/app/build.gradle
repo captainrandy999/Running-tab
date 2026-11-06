@@ -8,8 +8,23 @@ android {
         applicationId 'ca.runningtab.widget'
         minSdk 26
         targetSdk 34
-        versionCode 4
-        versionName '1.3'
+        versionCode 5
+        versionName '1.4'
+    }
+    // This test-build key is generated once in CI, cached, and fingerprint-pinned.
+    // Missing or changed keys must abort CI rather than silently rotate the signer.
+    signingConfigs {
+        preview {
+            storeFile file(System.getProperty('user.home') + '/.android/running-tab-preview.keystore')
+            storePassword 'android'
+            keyAlias 'running-tab'
+            keyPassword 'android'
+        }
+    }
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.preview
+        }
     }
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17

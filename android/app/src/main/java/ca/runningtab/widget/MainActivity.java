@@ -19,18 +19,23 @@ import android.widget.Toast;
 import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 
 public class MainActivity extends Activity {
     public static final String EXTRA_SECTION = "section";
     public static final String EXTRA_DICTATE = "dictate";
     private static final int FILE_PICKER = 2001;
     private static final int SPEECH_PICKER = 2002;
+    private static final int BACKUP_PICKER = 2003;
     private static final String APP_URL = "https://captainrandy999.github.io/Running-tab/index.html";
 
     private WebView web;
     private ValueCallback<Uri[]> fileCallback;
     private boolean loaded = false;
     private boolean dictateOnLoad = false;
+    private String backupToSave = null;
+    private String backupName = null;
 
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
@@ -145,6 +150,9 @@ public class MainActivity extends Activity {
         @JavascriptInterface public void dictate() {
             runOnUiThread(MainActivity.this::startDictation);
         }
+        @JavascriptInterface public void exportBackup(String json, String filename) {
+            runOnUiThread(() -> beginBackupExport(json, filename));
+        }
     }
 
     private void injectBridge() {
@@ -204,6 +212,73 @@ public class MainActivity extends Activity {
         web.evaluateJavascript(script, null);
     }
 
+    // Android WebView cannot reliably download blob: URLs. Instead use Android's
+    // document picker so the user chooses a file location and the app writes JSON.
+    private void beginBackupExport(String json, String filename) {
+        if (backupToSave != null) {
+            notifyBackup(false, "A backup save is already in progress.");
+            return;
+        }
+        if (json == null || json.isEmpty() || json.length() > 15000000) {
+            notifyBackup(false, "Backup is empty or too large.");
+            return;
+        }
+        try {
+            JSONObject parsed = new JSONObject(json);
+            if (!"running-tab-backup".equals(parsed.optString("format"))) {
+                notifyBackup(false, "Invalid Running Tab backup format.");
+                return;
+            }
+            backupToSave = json;
+            String cleanName = filename == null ? "running-tab-backup.json"
+                    : filename.replaceAll("[^A-Za-z0-9._-]", "_");
+            backupName = cleanName.endsWith(".json") ? cleanName : cleanName + ".json";
+            Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("application/json");
+            intent.putExtra(Intent.EXTRA_TITLE, backupName);
+            startActivityForResult(intent, BACKUP_PICKER);
+        } catch (Exception ex) {
+            backupToSave = null;
+            backupName = null;
+            notifyBackup(false, "Could not open the Android Save As picker.");
+        }
+    }
+
+    private void finishBackupExport(int resultCode, Intent data) {
+        String payload = backupToSave;
+        String name = backupName;
+        backupToSave = null;
+        backupName = null;
+        if (payload == null) return;
+        if (resultCode != RESULT_OK || data == null || data.getData() == null) {
+            notifyBackup(false, "Save cancelled. No backup file was created.");
+            return;
+        }
+        Uri uri = data.getData();
+        try {
+            byte[] bytes = payload.getBytes(StandardCharsets.UTF_8);
+            try (OutputStream output = getContentResolver().openOutputStream(uri, "wt")) {
+                if (output == null) throw new IllegalStateException("No output stream available");
+                output.write(bytes);
+                output.flush();
+            }
+            notifyBackup(true, name == null ? "JSON backup file" : name);
+        } catch (Exception ex) {
+            notifyBackup(false, "Android couldn't write the selected file: " + ex.getMessage());
+        }
+    }
+
+    private void notifyBackup(boolean success, String message) {
+        if (web != null) {
+            web.evaluateJavascript(
+                    "window.RunningTabBackup?.onNativeExportResult("
+                    + success + "," + JSONObject.quote(message) + ");", null);
+        }
+        Toast.makeText(this, success ? "Backup saved to selected folder." : message,
+                Toast.LENGTH_LONG).show();
+    }
+
     private void startDictation() {
         try {
             Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -219,7 +294,9 @@ public class MainActivity extends Activity {
 
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent result) {
         super.onActivityResult(requestCode, resultCode, result);
-        if (requestCode == FILE_PICKER) {
+        if (requestCode == BACKUP_PICKER) {
+            finishBackupExport(resultCode, result);
+        } else if (requestCode == FILE_PICKER) {
             if (fileCallback != null) {
                 Uri[] picked = resultCode == RESULT_OK && result != null && result.getData() != null
                         ? new Uri[]{result.getData()} : null;
@@ -242,6 +319,8 @@ public class MainActivity extends Activity {
     }
 
     @Override protected void onDestroy() {
+        backupToSave = null;
+        backupName = null;
         if (fileCallback != null) { fileCallback.onReceiveValue(null); fileCallback = null; }
         if (web != null) {
             web.removeJavascriptInterface("RunningTabAndroid");

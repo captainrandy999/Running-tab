@@ -49,3 +49,19 @@ The **next recommended button** is highlighted in red: Dictate when empty, Revie
 Say **“take a note that…”**, **“make a note that…”**, or **“note…”** using the same Dictate control. After speech ends, Running Tab suggests a short topic and shows the **complete note** for correction. Tap **Confirm & save note** to save it. Notes appear alongside reminders in To-Do as expandable/collapsible entries with ordinary completion checkboxes. You may set an optional due date during review. The widget displays the note's heading and a short preview; tap it to open the full note in the app.
 
 All existing reminders remain stored under the original `running-tab-todo-v1` key. Backups include notes automatically. Topic guessing is an on-device, first-phrase heuristic, so check the suggested topic before saving; it does not send dictated text to an external AI service.
+
+## Reliable Android backup and restore (v1.4)
+
+In the Android wrapper, **Data & backup → Download backup** now calls a native Android document picker. Choose a folder and tap Save; the app writes the real JSON file and confirms **only after the file is successfully written**. Cancelling or a failed write shows an error. The web-only version still requests a browser download and reminds you to verify the file in Downloads.
+
+**Copy backup text** is an independent fallback available without installing an APK: copy and save the complete text somewhere safe, such as Samsung Notes. **Restore a copied backup** accepts this JSON later and validates it before asking permission to replace lists.
+
+## Signing safety (v1.4)
+
+The old workflow cached `~/.android/debug.keystore`, but the build logs showed **no file existed at that path at cache-save time**. Every build could therefore use a different debug signature, and Android would refuse installing the update over an earlier version.
+
+The new workflow explicitly generates and uses `~/.android/running-tab-preview.keystore`, persists that same file via GitHub Actions cache, and verifies its certificate's SHA-256 fingerprint against `android/preview-signing.sha256`. After fingerprint pinning, **a missing cache or changed key fails the build instead of publishing a silently incompatible APK**.
+
+This is test-build signing, not a permanent production signing setup: GitHub caches may expire or be evicted. For indefinite updates, move the private keystore into a repository Actions secret or a secure release-signing setup without publishing the private key. The cert fingerprint is public and safe to commit; **never commit the private .keystore**.
+
+**One-time migration warning:** v1.4 intentionally uses a stable new certificate that differs from previously shipped debug-signed APKs. Android may require one final uninstall. Before doing that, use **Copy backup text** in the still-installed app, paste it into Samsung Notes, verify the note contains your JSON, and then restore it in v1.4 after installation. Future update builds will reuse this same identity or fail safely rather than rotating silently.

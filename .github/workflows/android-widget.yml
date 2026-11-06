@@ -32,11 +32,46 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Reuse local test signing key
+      # A stable signing identity is essential: Android refuses updates signed with
+      # a different key. Never publish a build if the pinned key is missing.
+      - name: Restore stable preview signing key
         uses: actions/cache@v4
         with:
-          path: ~/.android/debug.keystore
-          key: running-tab-widget-debug-signing-v1
+          path: ~/.android/running-tab-preview.keystore
+          key: running-tab-preview-signing-v1
+      - name: Prepare and verify preview signing key
+        shell: bash
+        run: |
+          set -euo pipefail
+          KEYSTORE="$HOME/.android/running-tab-preview.keystore"
+          PIN="android/preview-signing.sha256"
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$KEYSTORE" ]; then
+            if [ -f "$PIN" ]; then
+              echo "::error::Signing key cache missing! Refusing to rotate signing certificate and break Android updates."
+              echo "::error::Restore the key securely or provision it as an Actions secret; DO NOT publish another APK."
+              exit 1
+            fi
+            keytool -genkeypair -v -keystore "$KEYSTORE" \
+              -storepass android -keypass android -alias running-tab \
+              -keyalg RSA -keysize 3072 -validity 20000 \
+              -dname "CN=Running Tab Preview,O=Running Tab,C=CA" -noprompt
+          fi
+          FINGERPRINT="$(keytool -list -v -keystore "$KEYSTORE" \
+              -storepass android -alias running-tab \
+              | sed -n 's/^[[:space:]]*SHA256: //p' | head -n 1 | tr -d ':' | tr '[:lower:]' '[:upper:]')"
+          if [ -z "$FINGERPRINT" ]; then echo "::error::Cannot read signing fingerprint"; exit 1; fi
+          if [ -f "$PIN" ]; then
+            EXPECTED="$(tr -d '[:space:]' < "$PIN" | tr '[:lower:]' '[:upper:]')"
+            if [ "$FINGERPRINT" != "$EXPECTED" ]; then
+              echo "::error::Signing certificate mismatch! Refusing to publish an un-installable update."
+              exit 1
+            fi
+            echo "Verified stable preview certificate fingerprint: $FINGERPRINT"
+          else
+            echo "::notice::INITIAL_PREVIEW_SIGNING_FINGERPRINT=$FINGERPRINT"
+            echo "::warning::Pin this fingerprint in android/preview-signing.sha256 before publishing any later builds."
+          fi
       - name: Compile Android app and widget
         working-directory: android
         run: gradle :app:assembleDebug --stacktrace --no-daemon
