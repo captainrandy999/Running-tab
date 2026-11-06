@@ -686,7 +686,7 @@ function renderMoneyRecord(r,options={}){
   +'<label class="label">Amount ($ CAD)<input name="amount" type="text" inputmode="decimal" maxlength="14" placeholder="Blank = price TBD" value="'+(r.cents===null?'':(r.cents/100).toFixed(2))+'"></label>'
   +'<label class="label">Date<input name="date" type="date" required value="'+safe(r.date||'')+'"></label>'
   +'<label class="label money-editor-full">Description<input name="reason" type="text" maxlength="400" value="'+safe(r.reason||'')+'" placeholder="What was this for?"></label>'
-  +'<label class="label money-editor-full">Additional note<textarea name="body" maxlength="12000" rows="4" placeholder="Add context, follow-up details, payment information…">'+safe(body)+'</textarea></label>'
+  +'<label class="label money-editor-full money-editor-note">Additional note<textarea name="body" maxlength="12000" rows="4" placeholder="Add context, follow-up details, payment information…">'+safe(body)+'</textarea></label>'
   +'</div><div class="money-record-form-error" role="alert" aria-live="polite"></div>'
   +'<div class="money-record-form-actions"><button type="submit" class="primary small">Save changes</button>'
   +'<button type="button" class="secondary small" data-money-cancel>Cancel</button></div></form>';
@@ -754,16 +754,20 @@ function moneyFormOpen(record,button){
  if(!form)return;
  record.querySelector('.money-record-read').hidden=true;
  record.querySelector('.money-record-actions').hidden=true;
+ const noteOnly=button.dataset.moneyEdit==='note';
+ form.classList.toggle('money-note-only',noteOnly);
+ form.noValidate=noteOnly;
  form.hidden=false;
  record.querySelector('.money-record-feedback')?.remove();
- const field=button.dataset.moneyEdit==='note'?'[name="body"]':'[name="reason"]';
+ const field=noteOnly?'[name="body"]':'[name="reason"]';
  form.querySelector(field)?.focus();
  window.RunningTabView?.adjust?.();
 }
 function moneyFormClose(record){
  const form=record.querySelector('[data-money-form]');
  if(!form)return;
- form.reset();form.hidden=true;
+ form.reset();form.hidden=true;form.noValidate=false;
+ form.classList.remove('money-note-only');
  record.querySelector('.money-record-read').hidden=false;
  record.querySelector('.money-record-actions').hidden=false;
  form.querySelector('.money-record-form-error').textContent='';
@@ -795,25 +799,29 @@ $('personList').addEventListener('submit',event=>{
  const person=normalizeName(field('person').value),direction=field('direction').value;
  const amount=field('amount').value.trim(),reason=field('reason').value.trim();
  const date=field('date').value,body=field('body').value.trim();
+ const noteOnly=form.classList.contains('money-note-only');
  const error=form.querySelector('.money-record-form-error');
  function reject(message){error.textContent=message;return;}
- if(!person||person.length>100)return reject('Enter a person or company (100 characters maximum).');
- if(!['to_me','i_owe'].includes(direction))return reject('Choose who owes whom.');
- if(reason.length>400)return reject('Keep the description under 400 characters.');
  if(body.length>12000)return reject('Keep your note under 12,000 characters.');
- if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return reject('Select a valid date.');
- if(amount&&!/^\d+(?:\.\d{1,2})?$/.test(amount))return reject('Use dollars and up to two decimal places.');
- const cents=amount===''?null:Math.round(Number(amount)*100);
- if(cents!==null&&(!Number.isSafeInteger(cents)||cents<=0||cents>10000000000))
+ if(!noteOnly){
+  if(!person||person.length>100)return reject('Enter a person or company (100 characters maximum).');
+  if(!['to_me','i_owe'].includes(direction))return reject('Choose who owes whom.');
+  if(reason.length>400)return reject('Keep the description under 400 characters.');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date))return reject('Select a valid date.');
+  if(amount&&!/^\d+(?:\.\d{1,2})?$/.test(amount))return reject('Use dollars and up to two decimal places.');
+ }
+ const cents=noteOnly?original.cents:amount===''?null:Math.round(Number(amount)*100);
+ if(!noteOnly&&cents!==null&&(!Number.isSafeInteger(cents)||cents<=0||cents>10000000000))
   return reject('Enter an amount greater than $0, up to $100 million, or leave it blank.');
- // The ID and original creation date stay unchanged. This remains the same
- // transaction for three-way cloud merges and all existing JSON backups.
- const updated={...original,person,direction,cents,reason,date,body,updatedAt:new Date().toISOString()};
+ // Note-only saves must not touch the original amount, person or date.
+ // Full edits keep the original transaction ID and creation timestamp.
+ const updated=noteOnly?{...original,body,updatedAt:new Date().toISOString()}
+  :{...original,person,direction,cents,reason,date,body,updatedAt:new Date().toISOString()};
  const next=records.map(r=>r.id===original.id?updated:r);
  try{localStorage.setItem(STORE,JSON.stringify(next));}
  catch(e){return reject('Could not save this edit on your device. Please try again.');}
  records=next;
- render({expandRecordId:original.id,focusPerson:person,message:'Changes saved.'});
+ render({expandRecordId:original.id,focusPerson:updated.person,message:noteOnly?'Note saved.':'Entry updated.'});
 });
 
 $('reset').addEventListener('click',()=>{if(!records.length)return;if(!confirm('Permanently delete ALL money entries stored on this phone? This cannot be undone.'))return;try{localStorage.removeItem(STORE);}catch(e){feedback('Could not clear local storage.','bad');return;}records=[];render();hideForm();$('words').value='';feedback('Test entries cleared.');});

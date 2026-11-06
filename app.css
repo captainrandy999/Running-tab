@@ -347,3 +347,10 @@ color:#3d6373;font-size:12px}
  .money-record-amount{font-size:15px}
  .money-record-actions button{padding:7px 9px}
 }
+
+
+/* Add/Edit note opens only the note field; Edit entry reveals all fields. */
+.money-record-edit.money-note-only .money-editor-grid{display:block}
+.money-record-edit.money-note-only .money-editor-grid > label:not(.money-editor-note){display:none!important}
+.money-record-edit.money-note-only .money-editor-note{display:block}
+.money-record-edit.money-note-only .money-editor-note textarea{min-height:125px!important}
