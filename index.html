@@ -146,7 +146,18 @@
    <summary>⚙ Data &amp; backup <span class="secondary-label">Export / restore</span></summary>
    <div class="data-content">
     <p>Money, To-Do, and Shopping stay on this phone. Download a backup occasionally to restore all three lists.</p>
-    <div class="tools-grid"><button type="button" id="downloadBackup" class="secondary">Download backup</button></div>
+    <div class="tools-grid"><button type="button" id="downloadBackup" class="secondary">Download backup</button><button type="button" id="copyBackup" class="secondary">Copy backup text</button></div>
+    <details id="backupTextPanel" hidden>
+     <summary>Backup text (manual copy)</summary>
+     <p>Keep this text somewhere outside Running Tab, such as Samsung Notes or a secure document. Do not uninstall until your copy is safely stored.</p>
+     <textarea id="backupText" readonly rows="5" aria-label="Your backup data to copy"></textarea>
+    </details>
+    <details id="pasteRestorePanel">
+     <summary>Restore a copied backup</summary>
+     <p>Paste the complete JSON backup text here, then tap Restore. You will be asked to confirm before any entries are replaced.</p>
+     <textarea id="pastedBackup" rows="5" placeholder="Paste Running Tab JSON backup text" aria-label="Paste backup JSON"></textarea>
+     <div class="tools-grid"><button type="button" id="restorePastedBackup" class="secondary">Restore pasted backup</button></div>
+    </details>
     <div class="field"><label class="label" for="restoreBackup">Restore backup (.json)</label><input id="restoreBackup" type="file" accept=".json,application/json"></div>
     <div id="backupStatus" class="app-status" role="status" aria-live="polite"></div>
     <div class="danger-zone">
