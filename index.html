@@ -287,7 +287,7 @@ function interpret(input){
 function feedback(s,kind=''){const el=$('feedback');el.className=s?'notice'+(kind==='bad'?' bad':''):'';el.textContent=s||'';}
 function fillSummary(){const p=$('person').value.trim()||'(person not specified)';const amount=$('amount').value.trim();const amt=amount && Number(amount)>0?money(Math.round(Number(amount)*100)):'Price TBD';const reason=$('reason').value.trim();$('summary').textContent=($('direction').value==='to_me'?p+' owes you ': 'You owe '+p+' ')+amt+(reason?'\nReason: '+reason:'');}
 function showForm(parsed){$('direction').value=parsed.direction;$('person').value=parsed.person;$('amount').value=parsed.cents===null?'':(parsed.cents/100).toFixed(2);$('reason').value=parsed.reason;$('date').value=parsed.date;$('reviewForm').classList.remove('hide');fillSummary();}
-function hideForm(){$('reviewForm').classList.add('hide');$('todoReviewForm').classList.add('hide');$('shoppingReviewForm').classList.add('hide');window.RunningTabCalendar?.close();$('entryType').textContent='';}
+function hideForm(){$('reviewForm').classList.add('hide');$('todoReviewForm').classList.add('hide');$('shoppingReviewForm').classList.add('hide');window.RunningTabCalendar?.close();$('entryType').textContent='';updateNextAction();}
 function updateNextAction(){
  const forms=['reviewForm','todoReviewForm','shoppingReviewForm'];
  const activeForm=forms.map(id=>$(id)).find(form=>!form.classList.contains('hide'));
