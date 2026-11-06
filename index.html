@@ -46,6 +46,7 @@
      <div><b>Money:</b> “Cody owes me $200 for materials”</div>
      <div><b>To-Do:</b> “Remind me to call Cody by Saturday”</div>
      <div><b>To-Do:</b> “Add a reminder tomorrow” or “Remind me in 7 days”</div>
+     <div><b>To-Do:</b> “In 2 days, remind me to follow up with Henry about payment”</div>
      <div><b>Shopping:</b> “I need to buy milk and eggs”</div>
      <div><b>Shopping:</b> “Add bread and coffee to my shopping list”</div>
      <div><b>Notes:</b> “Take a note that the shed roof needs new flashing”</div>
@@ -160,7 +161,8 @@
      <textarea id="pastedBackup" rows="5" placeholder="Paste Running Tab JSON backup text" aria-label="Paste backup JSON"></textarea>
      <div class="tools-grid"><button type="button" id="restorePastedBackup" class="secondary">Restore pasted backup</button></div>
     </details>
-    <div class="field"><label class="label" for="restoreBackup">Restore backup (.json)</label><input id="restoreBackup" type="file" accept=".json,application/json"></div>
+    <div class="tools-grid"><button type="button" id="restoreNativeBackup" class="secondary" hidden>Restore JSON backup file</button></div>
+    <div class="field" id="restoreBrowserField"><label class="label" for="restoreBackup">Restore backup (.json)</label><input id="restoreBackup" type="file" accept=".json,application/json,text/plain,application/octet-stream"></div>
     <div id="backupStatus" class="app-status" role="status" aria-live="polite"></div>
     <div class="danger-zone">
      <p>Delete saved data from this phone (each list separately):</p>
@@ -194,17 +196,31 @@ function deadlineLabel(t){
  const d=new Date(t.due+'T12:00:00');
  return Number.isNaN(d.getTime())?'Check date':d.toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
 }
+const startDate= /^(?:please\s+)?(?:in|after|within)\s+(\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|fourteen)\s+days?(?:\s+from\s+(?:now|today))?\s*[,;:]?\s+(?=(?:remind\s+me\b|remember\s+to\b|call\b|check\b|contact\b|follow\s+up\b|email\b|text\b|pay\b|send\b|book\b|finish\b|schedule\b|order\b|submit\b|renew\b|return\b|fix\b|clean\b))/i;
+const numberNames={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,fourteen:14};
+function isPrefixedReminder(input){return startDate.test(String(input||'').trim());}
 function interpret(input){
  let s=String(input||'').trim().replace(/\s+/g,' ').replace(/[.!?]+$/,'').trim();
+ let prefixDays=null;
+ const prefix=s.match(startDate);
+ if(prefix){
+  prefixDays=Number(prefix[1])||numberNames[prefix[1].toLowerCase()]||null;
+  s=s.slice(prefix[0].length).trim();
+ }
  const isGenericReminder=/^(?:(?:add|set|make|create)\s+(?:(?:a|the)\s+)?reminder\b|remind\s+me\b)/i.test(s);
  if(!s)return {error:'Type or say a reminder first.'};
  s=s.replace(/^(?:remind\s+me(?:\s+to\b)?|i\s+need\s+to|i\s+have\s+to|don'?t\s+forget\s+to|(?:add|set|make|create)\s+(?:(?:a|the)\s+)?reminder(?:\s+to\b)?)\s*/i,'').trim();
  let dueType='none',due='',unrecognized=false;
+ if(prefixDays!==null){
+  if(prefixDays<1||prefixDays>365)return {error:'Set a due date between 1 and 365 days from now.'};
+  const date=now();date.setDate(date.getDate()+prefixDays);
+  dueType='day';due=iso(date);
+ }
  function use(match,details){if(!match)return false;dueType=details.type;due=details.value;s=s.slice(0,match.index).trim();return true;}
  let m;
  // Relative deadlines: tomorrow, next day, a week, or N days from now.
  // Match at the end only so task descriptions are not accidentally shortened.
- m=s.match(/(?:^|\s+)(?:(?:(?:by|on|for|in|after|due|within)\s+)?(?:tomorrow|the\s+next\s+day|next\s+day|today))$/i);
+ m=dueType==='none'?s.match(/(?:^|\s+)(?:(?:(?:by|on|for|in|after|due|within)\s+)?(?:tomorrow|the\s+next\s+day|next\s+day|today))$/i):null;
  if(m){
   const offset=/tomorrow|next\s+day/i.test(m[0])?1:0;
   const d=now();d.setDate(d.getDate()+offset);
@@ -249,7 +265,7 @@ function interpret(input){
  return {title:s[0].toUpperCase()+s.slice(1),dueType,due,unrecognized};
 }
 
-return {interpret,deadlineLabel};
+return {interpret,deadlineLabel,isPrefixedReminder};
 })();
 const money=n=>new Intl.NumberFormat('en-CA',{style:'currency',currency:'CAD'}).format(n/100);
 const today=()=>{const d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-');};
@@ -474,7 +490,7 @@ $('shoppingReviewForm').addEventListener('submit',event=>{
  window.dispatchEvent(new Event('runningtab:shopping-changed'));
  window.RunningTabView?.show('shopping');finishSuccessfulSave();
 });
-function isTodo(s){return /^(?:please\s+)?(?:remind\s+me(?:\s+to)?|(?:add|set|make|create)\s+(?:(?:a|the)\s+)?reminder\b|i\s+need\s+to|i\s+have\s+to|don'?t\s+forget\s+to|remember\s+to|add\s+to\s+(?:my\s+)?(?:to-?do\s+)?list|call|buy|pick\s+up|send|finish|complete|book|schedule|pay|email|text|order|drop\s+off|submit|renew|check|return|fix|clean|meet|make|bring)\b/i.test(s);}
+function isTodo(s){return TodoParser.isPrefixedReminder(s)||/^(?:please\s+)?(?:remind\s+me(?:\s+to)?|(?:add|set|make|create)\s+(?:(?:a|the)\s+)?reminder\b|i\s+need\s+to|i\s+have\s+to|don'?t\s+forget\s+to|remember\s+to|add\s+to\s+(?:my\s+)?(?:to-?do\s+)?list|call|buy|pick\s+up|send|finish|complete|book|schedule|pay|email|text|order|drop\s+off|submit|renew|check|return|fix|clean|meet|make|bring)\b/i.test(s);}
 $('review').addEventListener('click',()=>{
  const raw=$('words').value.trim();
  if(NoteParser.isNote(raw)){

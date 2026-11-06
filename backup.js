@@ -83,15 +83,60 @@
      : 'Backup text is shown below. Select all, copy, and save it in Samsung Notes or another document.',!copied);
   }catch(e){say('Could not copy backup: '+e.message,true);}
  });
+ let incomingParts=null, incomingLength=0;
  window.RunningTabBackup={
   onNativeExportResult:(ok,details)=>{
    say(ok?'Backup file saved successfully: '+details:'Backup not saved: '+details,!ok);
+  },
+  onNativeImportBegin:()=>{
+   incomingParts=[];
+   incomingLength=0;
+   say('Reading backup file from Android…');
+  },
+  onNativeImportChunk:part=>{
+   if(!incomingParts)return;
+   const chunk=String(part||'');
+   incomingLength+=chunk.length;
+   if(incomingLength>15000000){
+    incomingParts=null;
+    say('Restore failed: Backup is too large.',true);
+    return;
+   }
+   incomingParts.push(chunk);
+  },
+  onNativeImportEnd:async()=>{
+   if(!incomingParts)return;
+   const text=incomingParts.join('');
+   incomingParts=null;
+   incomingLength=0;
+   try{await restoreFromRaw(text);}
+   catch(e){say('Restore failed: '+e.message,true);}
+  },
+  onNativeImportError:reason=>{
+   incomingParts=null;
+   incomingLength=0;
+   say('Restore failed: '+reason,true);
   }
  };
+ // In the native app, read the selected JSON through Android itself rather
+ // than through WebView's file input and its provider-specific restrictions.
+ if(typeof window.RunningTabAndroid?.importBackup==='function'){
+  $('restoreNativeBackup').hidden=false;
+  $('restoreBrowserField').hidden=true;
+ }
+ $('restoreNativeBackup').addEventListener('click',()=>{
+  if(typeof window.RunningTabAndroid?.importBackup!=='function'){
+   say('Native restore is unavailable. Try Restore a copied backup.',true);
+   return;
+  }
+  say('Select your Running Tab .json backup in the Android file picker…');
+  try{window.RunningTabAndroid.importBackup();}
+  catch(e){say('Could not open the Android file picker: '+e.message,true);}
+ });
  async function restoreFromRaw(text){
   let d;
-  try{d=JSON.parse(text);}
-  catch(e){throw Error('This is not valid Running Tab JSON backup text.');}
+  try{d=JSON.parse(String(text||'').replace(/^\uFEFF/,'').trim());}
+  catch(e){throw Error('Not a valid JSON backup. Select a running-tab-backup-*.json file, not an APK or ZIP.');}
   return restorePayload(d);
  }
  function restorePayload(d){
