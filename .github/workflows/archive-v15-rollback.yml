@@ -1,0 +1,71 @@
+name: Archive stable Running Tab v1.5 APK (one time)
+on:
+  push:
+    paths:
+      - '.github/workflows/archive-v15-rollback.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out release notes and source
+        uses: actions/checkout@v4
+      - name: Preserve the exact existing APK under an independent release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_SHA256: 6fc6236c27445ea1c558adbc9a649617f7b0d7a8cc85f3c9cd4aa78844956564
+          ROLLBACK_TAG: running-tab-v1.5-stable
+          ORIGINAL_SOURCE_SHA: d25040a3b91d0d5e35f3798ca905b14b8821ffd9
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/running-tab-archive
+          cd /tmp/running-tab-archive
+          # Archive the exact published binary rather than rebuilding and rotating keys.
+          gh release download widget-preview --repo "$GITHUB_REPOSITORY" --pattern running-tab-widget.apk
+          printf '%s  %s\n' "$EXPECTED_SHA256" running-tab-widget.apk | sha256sum -c -
+          cp running-tab-widget.apk Running-Tab-v1.5-SAFE-BACKUP.apk
+          printf '%s  %s\n' "$EXPECTED_SHA256" Running-Tab-v1.5-SAFE-BACKUP.apk > Running-Tab-v1.5.sha256
+          cat > ROLLBACK-NOTES.txt <<'NOTES'
+          Running Tab Android v1.5 — SAFE ROLLBACK
+
+          This APK is an unchanged, checksum-verified archive of the Android v1.5
+          application that was published on 2026-11-06, before native Google Drive
+          authorization development.
+
+          SHA-256: 6fc6236c27445ea1c558adbc9a649617f7b0d7a8cc85f3c9cd4aa78844956564
+
+          Android application ID: ca.runningtab.widget
+          Stable source branch: stable-running-tab-v1.5
+          APK original source branch: android-v1.5-original-source
+
+          This APK is only the software. It does not contain saved Money, To-Do,
+          Notes, Shopping, or Google Drive data. Export/verify a separate JSON
+          backup before uninstalling, clearing storage, or downgrading.
+
+          Android normally refuses to install a lower versionCode over a newer
+          version. A rollback may require uninstalling a newer APK, which erases
+          local data, so preserve and verify JSON backup first. Do NOT uninstall
+          solely to test this archived binary.
+
+          The APK loads the live GitHub Pages site. Restore the stable source
+          branch as well if newer web code breaks older APK behavior.
+          NOTES
+          if gh release view "$ROLLBACK_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "::warning::Rollback release already exists; refusing to overwrite archive."
+            exit 0
+          fi
+          gh release create "$ROLLBACK_TAG" \
+            Running-Tab-v1.5-SAFE-BACKUP.apk \
+            Running-Tab-v1.5.sha256 \
+            ROLLBACK-NOTES.txt \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$ORIGINAL_SOURCE_SHA" \
+            --title "Running Tab v1.5 — Stable rollback APK (preserved)" \
+            --notes "Unchanged original Android v1.5 APK. Exact SHA-256 checksum verified before archiving. This is a permanent rollback copy, separate from the constantly updated preview download. Back up your personal data separately before any uninstall." \
+            --prerelease
+          gh release view "$ROLLBACK_TAG" --repo "$GITHUB_REPOSITORY"
