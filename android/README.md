@@ -43,3 +43,9 @@ The preview APK is intended for personal testing, not Play Store deployment.
 Running Tab's built-in **Dictate** button automatically opens the translated Review form when speech recognition finishes; you then review and tap **Confirm & save**. The Android native speech popup uses the same behavior as of v1.2, including when launched from the widget.
 
 The **next recommended button** is highlighted in red: Dictate when empty, Review for entered text, or Confirm & save once details are on screen. Typing in the text box is still supported. Samsung's separate keyboard microphone does not send a reliable "finished speaking" event to websites, so it may still require tapping Review.
+
+## Notes in To-Do (v1.3)
+
+Say **“take a note that…”**, **“make a note that…”**, or **“note…”** using the same Dictate control. After speech ends, Running Tab suggests a short topic and shows the **complete note** for correction. Tap **Confirm & save note** to save it. Notes appear alongside reminders in To-Do as expandable/collapsible entries with ordinary completion checkboxes. You may set an optional due date during review. The widget displays the note's heading and a short preview; tap it to open the full note in the app.
+
+All existing reminders remain stored under the original `running-tab-todo-v1` key. Backups include notes automatically. Topic guessing is an on-device, first-phrase heuristic, so check the suggested topic before saving; it does not send dictated text to an external AI service.

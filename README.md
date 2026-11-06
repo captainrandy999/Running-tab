@@ -53,3 +53,7 @@ A native Android wrapper and **read-only, scrollable home-screen widget** are in
 - [Latest build status](https://github.com/captainrandy999/Running-tab/actions/workflows/android-widget.yml).
 
 **Important:** The existing Chrome PWA and native Android app use separate browser storage. Export a backup from the old web app and restore it in the new Android app once. Afterward, use the new native app for edits so its widget automatically reflects changes.
+
+## Dictated notes
+
+Say `take a note that …`, `make a note that …`, or `note …`. Running Tab recognizes a Note instead of a reminder, suggests a short topic from the dictated content, then opens the existing editable review. Only **Confirm & save note** saves the entry. In To-Do, a note uses the same completion checkbox as a reminder, and its topic expands to show the full note. An optional date can be chosen. Notes share the existing To-Do storage and backup, keeping older records intact.
