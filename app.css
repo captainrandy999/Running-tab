@@ -487,3 +487,109 @@ color:#3d6373;font-size:12px}
  #todoPanel .task.todo-item,#shoppingPanel .task.shop-item{padding:11px 9px;gap:9px}
  .task-status-pill{padding:4px 8px}
 }
+
+/* App-wide manually selected night mode. Independent of the Android home widget. */
+.head-title{min-width:0;flex:1}
+.theme-toggle{margin-left:auto;flex:none;min-height:39px;padding:8px 11px;border-radius:12px;background:#e4eef4;color:#163b59;border:1px solid #cbdbe4;font-size:12px;font-weight:800;white-space:nowrap}
+html[data-theme="dark"]{
+ color-scheme:dark;
+ --navy:#2c668a;--ink:#e8f2f8;--teal:#4cbfa9;--soft:#1c3443;--line:#344c5d;
+ --rt-green-bg:#19392f;--rt-green-edge:#51ad89;--rt-green-text:#96e3bf;
+ --rt-rose-bg:#412a32;--rt-rose-edge:#d18b91;
+ --rt-amber-bg:#3c3425;--rt-amber-edge:#d6a65b;--rt-amber-text:#f0d19a;
+ --rt-violet-bg:#332b43;--rt-violet-edge:#a38acb;--rt-violet-text:#d4bff5;
+ --rt-blue-bg:#21364a;--rt-blue-edge:#76a9d2;--rt-blue-text:#b4ddfa;
+ background:#101d29;color:#e8f2f8;
+}
+html[data-theme="dark"] body{background:linear-gradient(160deg,#142b3b 0,#101d29 360px,#101d29 100%)!important;color:#e8f2f8}
+html[data-theme="dark"] .theme-toggle{background:#283f50;color:#f3e7be;border-color:#466075}
+html[data-theme="dark"] .card,html[data-theme="dark"] .stat,
+html[data-theme="dark"] .person,html[data-theme="dark"] .task,
+html[data-theme="dark"] .web-auth-card{background:#1b2c39!important;border-color:#345063!important;box-shadow:0 8px 22px #0002!important;color:#e8f2f8}
+html[data-theme="dark"] .tabs{background:#1b2b39!important;border-color:#355064!important;box-shadow:0 12px 30px #0007}
+html[data-theme="dark"] .tabs button.tab-switch:not(.active){color:#b6ccdb!important}
+html[data-theme="dark"] .head .info,html[data-theme="dark"] .info,html[data-theme="dark"] .hint,
+html[data-theme="dark"] .muted,html[data-theme="dark"] .label,html[data-theme="dark"] .stat .label,
+html[data-theme="dark"] .task-meta,html[data-theme="dark"] .task-date-label,
+html[data-theme="dark"] .entry-notes,html[data-theme="dark"] .entry .meta,
+html[data-theme="dark"] .foot,html[data-theme="dark"] .task-empty,
+html[data-theme="dark"] .note-edit-form label{color:#b5c9d8!important}
+html[data-theme="dark"] input,html[data-theme="dark"] select,html[data-theme="dark"] textarea{
+ background:#102230!important;color:#edf6fb!important;border-color:#466174!important;
+}
+html[data-theme="dark"] input::placeholder,html[data-theme="dark"] textarea::placeholder{color:#9aaebd}
+html[data-theme="dark"] input[type="checkbox"]{accent-color:#56b9a4}
+html[data-theme="dark"] button.secondary,html[data-theme="dark"] button.outline,
+html[data-theme="dark"] .calendar-trigger,html[data-theme="dark"] .calendar-arrow{
+ background:#2c4253!important;color:#e5f1f8!important;border-color:#4c6779!important;
+}
+html[data-theme="dark"] button.primary,html[data-theme="dark"] .tabs #tabMoney.active{
+ background:#28688a!important;color:#fff!important;
+}
+html[data-theme="dark"] button.danger{color:#ffc1c3!important;border-color:#89565f!important;background:transparent!important}
+html[data-theme="dark"] .callout,html[data-theme="dark"] .prompt-examples,
+html[data-theme="dark"] .compact-data,html[data-theme="dark"] .install-panel,
+html[data-theme="dark"] .app-settings,html[data-theme="dark"] .web-account-bar,
+html[data-theme="dark"] .web-sync-bar{
+ background:#20394a!important;border-color:#3c5a6b!important;color:#e6f1f7!important;
+}
+html[data-theme="dark"] .prompt-guide,html[data-theme="dark"] .prompt-guide summary,
+html[data-theme="dark"] .prompt-examples b,html[data-theme="dark"] .compact-data summary,
+html[data-theme="dark"] .app-settings p,html[data-theme="dark"] .install-panel p,
+html[data-theme="dark"] .web-auth-card p{color:#bed0dc!important}
+html[data-theme="dark"] .review-actions{background:#1b2c39;border-color:#3d5363}
+html[data-theme="dark"] .calendar-popup{background:#1b2d3d;border-color:#486274;box-shadow:0 9px 25px #0009}
+html[data-theme="dark"] .calendar-top strong,html[data-theme="dark"] .calendar-day{color:#e8f1f7}
+html[data-theme="dark"] .calendar-day{background:#293f50}
+html[data-theme="dark"] .calendar-weekday{color:#afc5d3}
+html[data-theme="dark"] .calendar-day.calendar-selected{background:#28688a!important;color:#fff}
+html[data-theme="dark"] .calendar-foot{border-color:#446073}
+html[data-theme="dark"] .person .meta,html[data-theme="dark"] .entry,
+html[data-theme="dark"] .note-task .note-details[open] .note-body,
+html[data-theme="dark"] .todo-details[open] .note-empty{border-color:#395264}
+html[data-theme="dark"] .money-person > .money-person-summary{background:#213647!important}
+html[data-theme="dark"] .money-person[open] > .money-person-summary{background:#284254!important;border-color:#415d70}
+html[data-theme="dark"] .money-person .money-record{background:#1c3340;border-color:#466475}
+html[data-theme="dark"] .money-record--receivable{background:#1a3a32!important;border-left-color:#52b48a!important}
+html[data-theme="dark"] .money-record--payable{background:#402d33!important;border-left-color:#d79096!important}
+html[data-theme="dark"] .money-record-content{background:#172936!important}
+html[data-theme="dark"] .money-record-title,html[data-theme="dark"] .money-record-note,
+html[data-theme="dark"] .note-task .note-body{color:#e1edf5!important}
+html[data-theme="dark"] .money-record-date,html[data-theme="dark"] .money-record-note-label,
+html[data-theme="dark"] .money-person .money-person-open-cue{color:#b1c8d6}
+html[data-theme="dark"] .money-record--receivable .money-record-amount,
+html[data-theme="dark"] .money-record--receivable .money-record-direction,
+html[data-theme="dark"] .pos{color:#8bdfb3}
+html[data-theme="dark"] .money-record--payable .money-record-amount,
+html[data-theme="dark"] .money-record--payable .money-record-direction,
+html[data-theme="dark"] .neg{color:#ffabb0}
+html[data-theme="dark"] #todoPanel .task.todo-item,html[data-theme="dark"] #shoppingPanel .task.shop-item{border-color:#476171!important}
+html[data-theme="dark"] #todoPanel .task.todo-item--open,
+html[data-theme="dark"] #todoPanel .task.todo-item--today{background:var(--rt-amber-bg)!important;border-left-color:var(--rt-amber-edge)!important}
+html[data-theme="dark"] #todoPanel .task.todo-item--overdue{background:var(--rt-rose-bg)!important;border-left-color:var(--rt-rose-edge)!important}
+html[data-theme="dark"] #todoPanel .task.todo-item--note{background:var(--rt-violet-bg)!important;border-left-color:var(--rt-violet-edge)!important}
+html[data-theme="dark"] #todoPanel .task.todo-item--complete,html[data-theme="dark"] #shoppingPanel .task.shop-item--purchased{background:var(--rt-green-bg)!important;border-left-color:var(--rt-green-edge)!important}
+html[data-theme="dark"] #shoppingPanel .task.shop-item--needed{background:var(--rt-blue-bg)!important;border-left-color:var(--rt-blue-edge)!important}
+html[data-theme="dark"] #todoPanel .task.todo-item .task-name,
+html[data-theme="dark"] #shoppingPanel .task.shop-item .task-name{color:#edf5fa!important}
+html[data-theme="dark"] #todoPanel .task.todo-item.done .task-name,
+html[data-theme="dark"] #shoppingPanel .task.shop-item.done .task-name{color:#b5cfbf!important}
+html[data-theme="dark"] .task-status-pill--open,html[data-theme="dark"] .task-status-pill--today{background:#5b4429;color:#ffe0a4}
+html[data-theme="dark"] .task-status-pill--overdue{background:#60363b;color:#ffc6cb}
+html[data-theme="dark"] .task-status-pill--note{background:#4b3c61;color:#e8d8fa}
+html[data-theme="dark"] .task-status-pill--complete{background:#245443;color:#c2f3dc}
+html[data-theme="dark"] .task-status-pill--needed{background:#284d6a;color:#c9e6fe}
+html[data-theme="dark"] .admin-footer{background:#192d3b;border-color:#3d5668}
+html[data-theme="dark"] .admin-footer .admin-drawer > .admin-toggle,
+html[data-theme="dark"] .admin-footer .admin-subsection > summary,
+html[data-theme="dark"] .admin-footer .admin-heading,
+html[data-theme="dark"] .admin-footer .admin-sync-indicator{color:#c4d8e5}
+html[data-theme="dark"] .admin-footer .admin-panel-content,
+html[data-theme="dark"] .admin-footer .admin-panel-section,
+html[data-theme="dark"] .admin-footer .admin-subsection{border-color:#385365}
+html[data-theme="dark"] .admin-footer .web-sync-bar,html[data-theme="dark"] .admin-footer .web-account-bar,
+html[data-theme="dark"] .admin-footer .admin-install > .install-panel{background:#22394a!important;color:#d5e6f1!important;border-color:#39576b!important}
+html[data-theme="dark"] .web-auth-gate{background:#101d29}
+html[data-theme="dark"] .notice{background:#1d4736;color:#b8edd0}
+html[data-theme="dark"] .notice.bad{background:#492a32;color:#ffd0d1}
+@media(max-width:360px){.theme-toggle{padding:7px 8px;font-size:11px}.head-title h1{font-size:23px!important}}
