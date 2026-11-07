@@ -147,3 +147,7 @@ Money's existing soft green / rose transaction cards establish the visual langua
 ## Tomorrow and day-after-tomorrow speech reminders
 
 The parser recognizes relative date phrases before or after the task, including `remind me tomorrow to...`, `remind me the day after tomorrow to...`, `remind me to call tomorrow`, and `remind me to call the day after tomorrow`. Punctuation from speech transcription is tolerated, and the full two-day phrase is parsed before the shorter one-day `tomorrow`. Other numeric, weekday, and month parsing is retained. Dates are populated on the To-Do review form. This web-asset-only update preserves all existing saved records, Google Drive sync data and Android APKs.
+
+## Night mode in the app
+
+Tap **🌙 Night** beside the Running Tab title to switch the entire app (including Money, To-Do, Shopping, forms, and calendars) to a dark interface. Tap **☀️ Day** to restore the light interface. The preference is saved locally on this device; it does not alter records or Google Drive synchronization. This is a web-asset change, so the Android app does not need a new APK. The separate home-screen widget retains its own night toggle.
