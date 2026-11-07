@@ -10,6 +10,7 @@
 <meta name="description" content="Track money owed and To-Dos with one spoken or typed entry.">
 <link rel="apple-touch-icon" href="./icon-192.png">
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("running-tab-ui-theme-v1")==="dark"?"dark":"light"}catch(e){document.documentElement.dataset.theme="light"}</script>
 <script src="./web-auth-config.js"></script>
 <script>if(!window.RunningTabWebAuthConfig?.clientId||window.RunningTabAndroid)document.documentElement.classList.remove('web-auth-pending');</script>
 <script src="./web-auth.js" defer></script>
@@ -42,7 +43,7 @@
  </div>
 </section>
 <main id="runningTabApp">
-<header class="head"><div class="mark">$</div><div><h1>Running Tab</h1><div class="info">Money &amp; reminders, made simple</div></div></header>
+<header class="head"><div class="mark">$</div><div class="head-title"><h1>Running Tab</h1><div class="info">Money &amp; reminders, made simple</div></div><button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch to night mode" aria-pressed="false">🌙 Night</button></header>
 <nav class="tabs" role="tablist" aria-label="Running Tab sections">
 <button type="button" role="tab" class="tab-switch active" data-view="money" id="tabMoney" aria-controls="moneyPanel" aria-selected="true">💰 Money</button>
 <button type="button" role="tab" class="tab-switch" data-view="todo" id="tabTodo" aria-controls="todoPanel" aria-selected="false">✓ To-Do</button>
@@ -56,7 +57,7 @@
     <div class="prompt-examples">
      <div><b>Money:</b> “Cody owes me $200 for materials”</div>
      <div><b>To-Do:</b> “Remind me to call Cody by Saturday”</div>
-     <div><b>To-Do:</b> “Add a reminder tomorrow” or “Remind me in 7 days”</div>
+     <div><b>To-Do:</b> “Remind me tomorrow to call Cody” or “Remind me the day after tomorrow to follow up”</div>
      <div><b>To-Do:</b> “In 2 days, remind me to follow up with Henry about payment”</div>
      <div><b>To-Do:</b> “Remind me in 3 days that I need to check the invoice”</div>
      <div><b>Shopping:</b> “I need to buy milk and eggs”</div>
@@ -912,6 +913,25 @@ document.getElementById('clear').addEventListener('click',()=>{
  canceled=true;recognized='';stop();tell('');
 });
 if('serviceWorker' in navigator && location.protocol==='https:')navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+})();
+</script>
+<script>
+(function(){
+ const key='running-tab-ui-theme-v1';
+ const button=document.getElementById('themeToggle');
+ if(!button)return;
+ function setTheme(theme,persist){
+  const dark=theme==='dark';
+  document.documentElement.dataset.theme=dark?'dark':'light';
+  button.textContent=dark?'☀️ Day':'🌙 Night';
+  button.setAttribute('aria-label',dark?'Switch to day mode':'Switch to night mode');
+  button.setAttribute('aria-pressed',String(dark));
+  const meta=document.querySelector('meta[name="theme-color"]');
+  if(meta)meta.setAttribute('content',dark?'#101d29':'#163b59');
+  if(persist){try{localStorage.setItem(key,dark?'dark':'light')}catch(e){}}
+ }
+ setTheme(document.documentElement.dataset.theme==='dark'?'dark':'light',false);
+ button.addEventListener('click',()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark',true));
 })();
 </script>
 </body>
