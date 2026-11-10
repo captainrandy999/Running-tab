@@ -162,3 +162,8 @@ The navigation bar directly below the main entry section holds Money, To-Do and 
 - **Money:** `Customer $75 for materials` (defaults to **They owe me**, editable on Review)
 
 The current tab changes the entry placeholder and its example. Full voice commands and explicit natural-language instructions continue to work even if another tab is selected. Nothing saves until the user confirms the Review form. Existing local records, optional Google Drive synchronization, and backup structure are unchanged. This is a web-asset update that does not require a new APK.
+
+
+## Transient confirmation messages
+
+Success confirmations, including **Entry deleted**, now automatically disappear after about 4 seconds. Validation errors remain until addressed. The menu stays directly below the complete shared entry card. The browser and Android WebView may need to be fully closed and reopened to load this update because the PWA uses an offline service-worker cache. Existing records and storage keys are unchanged.
