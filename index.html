@@ -53,14 +53,14 @@
 </div>
 
  <section class="card" id="entry" aria-label="Quick entry">
-   <textarea id="words" aria-label="Type or dictate an entry for the selected tab" placeholder="Cody $75 for materials"></textarea>
+   <textarea id="words" aria-label="Type or dictate an entry for the selected tab" placeholder="Customer $75 for materials"></textarea>
    <div class="quick-entry-tip" id="entryHint" aria-live="polite">Type directly for the selected tab; no command phrase needed.</div>
    <details class="prompt-guide">
     <summary>💡 How to say it</summary>
     <div class="prompt-examples">
-     <div><b>Money:</b> “Cody owes me $200 for materials”</div>
-     <div><b>To-Do:</b> “Remind me to call Cody by Saturday”</div>
-     <div><b>To-Do:</b> “Remind me tomorrow to call Cody” or “Remind me the day after tomorrow to follow up”</div>
+     <div><b>Money:</b> “Customer owes me $200 for materials”</div>
+     <div><b>To-Do:</b> “Remind me to call the supplier by Saturday”</div>
+     <div><b>To-Do:</b> “Remind me tomorrow to call the supplier” or “Remind me the day after tomorrow to follow up”</div>
      <div><b>To-Do:</b> “In 2 days, remind me to follow up with Henry about payment”</div>
      <div><b>To-Do:</b> “Remind me in 3 days that I need to check the invoice”</div>
      <div><b>Shopping:</b> “I need to buy milk and eggs”</div>
@@ -414,7 +414,7 @@ function interpret(input){
  else {
    const c=s.match(/^i\s+owe\s+(.+?)\s*$/i);
    if(c){return {error:'Please include an amount or “for a reason,” so I can identify the person correctly.'};}
-   return {error:'Try “Cody owes me $350 for materials” or “I owe Cody $200 for gas.”'};
+   return {error:'Try “Customer owes me $350 for materials” or “I owe Supplier $200 for gas.”'};
  }
  person=normalizeName(person).replace(/^(?:the\s+)?(?:person|company)\s+/i,'').trim();
  if(!person||person.length>100)return {error:'I could not identify the person or company. Please adjust your sentence.'};
@@ -625,7 +625,7 @@ function classifyEntry(raw){
  if(isTodo(raw))return 'todo';
  return 'money';
 }
-// Money keyboard shorthand: "Cody $75 materials". Review always permits corrections.
+// Money keyboard shorthand: "Customer $75 materials". Review always permits corrections.
 function parseMoneyShorthand(input){
  const s=String(input||'').trim().replace(/[.!?]+$/,'').trim();
  const m=s.match(/^(.+?)\s+(\$?\s*\d[\d,]*(?:\.\d{1,2})?)(?:\s+(.*))?$/);
@@ -635,8 +635,8 @@ function parseMoneyShorthand(input){
  return {direction:'to_me',person,cents:amount.cents,reason:(m[3]||'').replace(/^(?:for|because(?:\s+of)?|regarding|towards?)\s+/i,'').trim(),date:today()};
 }
 const entryExamples={
- money:{placeholder:'Cody $75 for materials',hint:'Money: e.g. Cody $75 for materials. Defaults to “They owe me”; check Review.'},
- todo:{placeholder:'Call Cody tomorrow',hint:'To-Do: e.g. Call Cody tomorrow. No “remind me” needed.'},
+ money:{placeholder:'Customer $75 for materials',hint:'Money: e.g. Customer $75 for materials. Defaults to “They owe me”; check Review.'},
+ todo:{placeholder:'Call the supplier tomorrow',hint:'To-Do: e.g. Call the supplier tomorrow. No “remind me” needed.'},
  shopping:{placeholder:'Milk, eggs, bread',hint:'Shopping: e.g. Milk, eggs, bread. No command needed.'}
 };
 function updateEntryCue(){
@@ -689,7 +689,7 @@ $('review').addEventListener('click',()=>{
  }
  let result=interpret(raw);
  if(result.error&&currentEntryTab()==='money'&&!isExplicitMoney(raw))result=parseMoneyShorthand(raw)||result;
- if(result.error){hideForm();feedback(result.error+' Tip: select To-Do for a plain reminder, or type “Cody $75 for materials” on Money.','bad');return;}
+ if(result.error){hideForm();feedback(result.error+' Tip: select To-Do for a plain reminder, or type “Customer $75 for materials” on Money.','bad');return;}
  const existing=records.find(x=>caseKey(x.person)===caseKey(result.person));
  if(existing)result.person=existing.person;
  hideForm();showForm(result);$('entryType').textContent='💰 Money entry';feedback('');bringReviewIntoView('reviewForm');
