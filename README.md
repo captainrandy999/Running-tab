@@ -14,9 +14,9 @@ Tap **🎤 Dictate**, use the Samsung keyboard microphone, or type an entry. The
 
 | Spoken entry | Saved in |
 | --- | --- |
-| “Cody owes me $250 for materials” | Money |
+| “Customer owes me $250 for materials” | Money |
 | “I owe Atlas $100 for supplies” | Money |
-| “Remind me to call Cody by Saturday” | To-Do |
+| “Remind me to call the supplier by Saturday” | To-Do |
 | “I need to renew insurance by June” | To-Do, June 1 |
 | “Remind me to submit receipts by the end of June” | To-Do, June 30 |
 | “I need to buy milk and eggs and bread” | Shopping: three separate items |
@@ -40,7 +40,7 @@ Reminders are checklists, not scheduled Android notifications. Clearing browser 
 
 ## Relative reminder dates and calendar
 
-You can dictate **“Add a reminder tomorrow”**, **“Remind me to call Cody in 7 days”**, **“Remind me to renew insurance a week from now”**, or **“Remind me to return equipment for 7 days”**. The app calculates the calendar date on your phone and asks you to review it before saving. A generic request such as “Add a reminder tomorrow” creates an editable reminder titled “Reminder”.
+You can dictate **“Add a reminder tomorrow”**, **“Remind me to call the supplier in 7 days”**, **“Remind me to renew insurance a week from now”**, or **“Remind me to return equipment for 7 days”**. The app calculates the calendar date on your phone and asks you to review it before saving. A generic request such as “Add a reminder tomorrow” creates an editable reminder titled “Reminder”.
 
 In the To-Do review, tap the **calendar date button** to open a month grid. Tap a numbered day directly or navigate months with the arrows. The same popup includes **No deadline** and **Whole month** alternatives. No stacked deadline dropdowns are needed.
 
@@ -157,8 +157,8 @@ Tap **🌙 Night** beside the Running Tab title to switch the entire app (includ
 
 The top bar holds Money, To-Do, Shopping and the Day/Night toggle; the old bottom-fixed navigation and app heading are gone. Choose a tab and type without voice-command phrasing:
 
-- **To-Do:** `Call Cody tomorrow` or `Pay invoice the day after tomorrow` (relative date parsed before saving)
+- **To-Do:** `Call the supplier tomorrow` or `Pay invoice the day after tomorrow` (relative date parsed before saving)
 - **Shopping:** `milk, eggs, bread` (multiple items)
-- **Money:** `Cody $75 for materials` (defaults to **They owe me**, editable on Review)
+- **Money:** `Customer $75 for materials` (defaults to **They owe me**, editable on Review)
 
 The current tab changes the entry placeholder and its example. Full voice commands and explicit natural-language instructions continue to work even if another tab is selected. Nothing saves until the user confirms the Review form. Existing local records, optional Google Drive synchronization, and backup structure are unchanged. This is a web-asset update that does not require a new APK.
