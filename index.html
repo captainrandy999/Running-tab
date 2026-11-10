@@ -447,6 +447,7 @@ function acceptDictation(transcript){
  if(!words)return false;
  $('words').value=[$('words').value.trim(),words].filter(Boolean).join(' ');
  $('words').dispatchEvent(new Event('input',{bubbles:true}));
+ $('words').dataset.entrySource='speech';
  $('review').click();
  return true;
 }
@@ -612,6 +613,11 @@ function classifyEntry(raw){
  if(isExplicitMoney(raw))return 'money';
  if(isExplicitTodo(raw))return 'todo';
  if(isExplicitShopping(raw))return 'shopping';
+ // Keep automatic recognition for built-in Dictate, regardless of selected tab.
+ if($('words').dataset.entrySource==='speech'){
+  if(isShopping(raw))return 'shopping';
+  if(isTodo(raw))return 'todo';
+ }
  if(currentEntryTab()==='todo')return 'todo';
  if(currentEntryTab()==='shopping')return 'shopping';
  // Keep the earlier natural-language speech behavior while Money is selected.
@@ -720,7 +726,7 @@ $('clear').addEventListener('click',()=>{
  updateNextAction();
 });
 $('cancel').addEventListener('click',()=>{hideForm();feedback('');$('words').focus();});
-$('words').addEventListener('input',()=>{hideForm();feedback('');updateNextAction();});
+$('words').addEventListener('input',()=>{$('words').dataset.entrySource='keyboard';hideForm();feedback('');updateNextAction();});
 for(const n of ['direction','person','amount','reason'])$(n).addEventListener('input',fillSummary);
 $('reviewForm').addEventListener('submit',e=>{
  e.preventDefault();let person=normalizeName($('person').value);const match=records.find(x=>caseKey(x.person)===caseKey(person));if(match)person=match.person;
@@ -933,6 +939,7 @@ if(!API){
      recognized=result.trim();
      input.value=[prefix,recognized].filter(Boolean).join(' ');
      input.dispatchEvent(new Event('input',{bubbles:true}));
+     input.dataset.entrySource='speech';
      tell(e.results[e.results.length-1].isFinal?'Interpreting your entry…':'Listening…');
    };
    rec.onerror=e=>{
