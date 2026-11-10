@@ -595,7 +595,7 @@ html[data-theme="dark"] .notice.bad{background:#492a32;color:#ffd0d1}
 @media(max-width:360px){.theme-toggle{padding:7px 8px;font-size:11px}.head-title h1{font-size:23px!important}}
 
 
-/* Navigation directly below the shared entry, above the selected list. */
+/* Navigation below the shared entry; appearance controls live in Settings. */
 main#runningTabApp{padding-top:10px!important;padding-bottom:calc(36px + env(safe-area-inset-bottom))!important}
 .top-nav{
  display:flex;align-items:stretch;gap:5px;padding:6px;background:#fffefa;
@@ -609,23 +609,23 @@ main#runningTabApp{padding-top:10px!important;padding-bottom:calc(36px + env(saf
  box-shadow:none!important;margin:0!important;
 }
 .top-nav .tabs button.tab-switch{min-height:43px;padding:10px 4px!important;font-size:clamp(11px,3.15vw,14px);white-space:nowrap}
-.top-nav .theme-toggle{
- flex:0 0 70px;width:70px;min-width:0;min-height:43px;margin:0;padding:7px 4px;
- background:#e4eef4;color:#163b59;border:1px solid #d2e0e8;border-radius:11px;
- font-size:12px;box-shadow:none;
-}
 .quick-entry-tip{font-size:12px;line-height:1.4;color:#577184;margin:7px 1px 2px}
 html[data-theme="dark"] .top-nav{background:#1b2b39;border-color:#355064;box-shadow:0 4px 18px #0003}
 html[data-theme="dark"] .top-nav .tabs{background:transparent!important;border:0!important;box-shadow:none!important}
-html[data-theme="dark"] .top-nav .theme-toggle{background:#293f53;color:#f3e7be;border-color:#4b6072}
 html[data-theme="dark"] .quick-entry-tip{color:#b7cedc}
 @media(max-width:360px){
  .top-nav{padding:4px;gap:3px}
  .top-nav .tabs{gap:2px!important}
  .top-nav .tabs button.tab-switch{font-size:11px;padding:9px 2px!important}
- .top-nav .theme-toggle{flex-basis:61px;width:61px;font-size:11px}
 }
 
 /* Keep the selector bar visually connected to the entry card. */
 #runningTabApp > #entry{margin-bottom:9px!important}
 #runningTabApp > .top-nav{margin-bottom:14px!important}
+
+/* Settings display mode: reuse the existing Night/Day persistence and handler. */
+.appearance-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:5px 0}
+.appearance-label{font-size:13px;font-weight:650;color:#415d70}
+.appearance-row .theme-toggle{margin:0;min-width:100px;min-height:39px;padding:8px 13px;font-size:13px;font-weight:750}
+html[data-theme="dark"] .appearance-label{color:#c4d8e5}
+html[data-theme="dark"] .appearance-row .theme-toggle{background:#293f53;color:#f3e7be;border:1px solid #4b6072}
