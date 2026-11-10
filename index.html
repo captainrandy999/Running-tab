@@ -126,7 +126,6 @@
 <button type="button" role="tab" class="tab-switch" data-view="todo" id="tabTodo" aria-controls="todoPanel" aria-selected="false">✓ To-Do</button>
 <button type="button" role="tab" class="tab-switch" data-view="shopping" id="tabShopping" aria-controls="shoppingPanel" aria-selected="false">🛒 Shopping</button>
 </nav>
-<button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch to night mode" aria-pressed="false">🌙 Night</button>
 </div>
  <section id="viewViewport" class="view-viewport" aria-label="Money, To-Do, and Shopping lists">
   <div id="viewTrack" class="view-track">
@@ -162,10 +161,14 @@
   </div>
  </section>
  
- <section class="compact-data admin-footer" id="dataTools" aria-label="Admin, sync and backups">
+ <section class="compact-data admin-footer" id="dataTools" aria-label="Settings, sync and backups">
   <details class="app-settings admin-drawer" id="adminSection">
-   <summary class="admin-toggle"><span class="admin-toggle-title">⚙️ Admin</span><span id="adminSummaryStatus" class="admin-sync-indicator" aria-live="polite">Local data</span></summary>
+   <summary class="admin-toggle"><span class="admin-toggle-title">⚙️ Settings</span><span id="adminSummaryStatus" class="admin-sync-indicator" aria-live="polite">Local data</span></summary>
    <div class="admin-panel-content">
+    <section class="admin-panel-section appearance-section" id="appearanceSection" aria-label="Appearance">
+     <h2 class="admin-heading">Appearance</h2>
+     <div class="appearance-row"><span class="appearance-label">Display mode</span><button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch to night mode" aria-pressed="false">🌙 Night</button></div>
+    </section>
     <section class="admin-panel-section" id="adminCloudSection" aria-label="Google Drive synchronization">
      <h2 class="admin-heading">Google Drive</h2>
 <div class="web-sync-bar" aria-live="polite">
