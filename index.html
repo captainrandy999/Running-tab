@@ -43,15 +43,18 @@
  </div>
 </section>
 <main id="runningTabApp">
-<header class="head"><div class="mark">$</div><div class="head-title"><h1>Running Tab</h1><div class="info">Money &amp; reminders, made simple</div></div><button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch to night mode" aria-pressed="false">🌙 Night</button></header>
+<div class="top-nav">
 <nav class="tabs" role="tablist" aria-label="Running Tab sections">
 <button type="button" role="tab" class="tab-switch active" data-view="money" id="tabMoney" aria-controls="moneyPanel" aria-selected="true">💰 Money</button>
 <button type="button" role="tab" class="tab-switch" data-view="todo" id="tabTodo" aria-controls="todoPanel" aria-selected="false">✓ To-Do</button>
 <button type="button" role="tab" class="tab-switch" data-view="shopping" id="tabShopping" aria-controls="shoppingPanel" aria-selected="false">🛒 Shopping</button>
 </nav>
+<button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch to night mode" aria-pressed="false">🌙 Night</button>
+</div>
 
  <section class="card" id="entry" aria-label="Quick entry">
-   <textarea id="words" aria-label="Type or dictate a Money, To-Do, or Shopping entry" placeholder="bitch better have my money..."></textarea>
+   <textarea id="words" aria-label="Type or dictate an entry for the selected tab" placeholder="Cody $75 for materials"></textarea>
+   <div class="quick-entry-tip" id="entryHint" aria-live="polite">Type directly for the selected tab; no command phrase needed.</div>
    <details class="prompt-guide">
     <summary>💡 How to say it</summary>
     <div class="prompt-examples">
@@ -597,9 +600,50 @@ $('shoppingReviewForm').addEventListener('submit',event=>{
  window.RunningTabView?.show('shopping');finishSuccessfulSave();
 });
 function isTodo(s){return TodoParser.isPrefixedReminder(s)||/^(?:please\s+)?(?:remind\s+me(?:\s+to)?|(?:add|set|make|create)\s+(?:(?:a|the)\s+)?reminder\b|i\s+need\s+to|i\s+have\s+to|don'?t\s+forget\s+to|remember\s+to|add\s+to\s+(?:my\s+)?(?:to-?do\s+)?list|call|buy|pick\s+up|send|finish|complete|book|schedule|pay|email|text|order|drop\s+off|submit|renew|check|return|fix|clean|meet|make|bring)\b/i.test(s);}
+// Plain keyboard text belongs to the selected tab; full speech commands work anywhere.
+function isExplicitMoney(s){return /^(?:.+?\s+owes?\s+me\b|i\s+owe\b)/i.test(String(s||'').trim());}
+function isExplicitTodo(s){
+ return TodoParser.isPrefixedReminder(s)||/^(?:please\s+)?(?:remind\s+me\b|(?:add|set|make|create)\s+(?:(?:a|the)\s+)?reminder\b|don'?t\s+forget\s+to\b|remember\s+to\b|add\s+to\s+(?:my\s+)?(?:to-?do\s+)?list\b)/i.test(String(s||'').trim());
+}
+function isExplicitShopping(s){return /^(?:please\s+)?(?:i\s+(?:need|have)\s+to\s+(?:buy|purchase|pick\s+up)\b|(?:add|put)\b.+\bshopping\s+list\b)/i.test(String(s||'').trim());}
+function currentEntryTab(){return window.RunningTabView?.current?.()||document.querySelector('.tab-switch.active')?.dataset.view||'money';}
+function classifyEntry(raw){
+ if(NoteParser.isNote(raw))return 'note';
+ if(isExplicitMoney(raw))return 'money';
+ if(isExplicitTodo(raw))return 'todo';
+ if(isExplicitShopping(raw))return 'shopping';
+ if(currentEntryTab()==='todo')return 'todo';
+ if(currentEntryTab()==='shopping')return 'shopping';
+ // Keep the earlier natural-language speech behavior while Money is selected.
+ if(isShopping(raw))return 'shopping';
+ if(isTodo(raw))return 'todo';
+ return 'money';
+}
+// Money keyboard shorthand: "Cody $75 materials". Review always permits corrections.
+function parseMoneyShorthand(input){
+ const s=String(input||'').trim().replace(/[.!?]+$/,'').trim();
+ const m=s.match(/^(.+?)\s+(\$?\s*\d[\d,]*(?:\.\d{1,2})?)(?:\s+(.*))?$/);
+ if(!m)return null;
+ const person=normalizeName(m[1]).trim(),amount=parseAmount(m[2]);
+ if(!person||person.length>100||amount.cents===null)return null;
+ return {direction:'to_me',person,cents:amount.cents,reason:(m[3]||'').replace(/^(?:for|because(?:\s+of)?|regarding|towards?)\s+/i,'').trim(),date:today()};
+}
+const entryExamples={
+ money:{placeholder:'Cody $75 for materials',hint:'Money: e.g. Cody $75 for materials. Defaults to “They owe me”; check Review.'},
+ todo:{placeholder:'Call Cody tomorrow',hint:'To-Do: e.g. Call Cody tomorrow. No “remind me” needed.'},
+ shopping:{placeholder:'Milk, eggs, bread',hint:'Shopping: e.g. Milk, eggs, bread. No command needed.'}
+};
+function updateEntryCue(){
+ const example=entryExamples[currentEntryTab()]||entryExamples.money;
+ $('words').placeholder=example.placeholder;
+ $('entryHint').textContent=example.hint;
+}
+window.addEventListener('runningtab:view-changed',updateEntryCue);
+updateEntryCue();
 $('review').addEventListener('click',()=>{
  const raw=$('words').value.trim();
- if(NoteParser.isNote(raw)){
+ const intent=classifyEntry(raw);
+ if(intent==='note'){
   const note=NoteParser.interpret(raw);
   if(note.error){hideForm();feedback(note.error,'bad');return;}
   hideForm();
@@ -614,7 +658,7 @@ $('review').addEventListener('click',()=>{
   bringReviewIntoView('todoReviewForm');
   return;
  }
- if(isShopping(raw)){
+ if(intent==='shopping'){
   const result=parseShopping(raw);
   if(result.error){hideForm();feedback(result.error,'bad');return;}
   hideForm();
@@ -626,7 +670,7 @@ $('review').addEventListener('click',()=>{
   bringReviewIntoView('shoppingReviewForm');
   return;
  }
- if(isTodo(raw)){
+ if(intent==='todo'){
   const result=TodoParser.interpret(raw);
   if(result.error){hideForm();feedback(result.error,'bad');return;}
   hideForm();setTodoKind('todo');$('todoTitle').value=result.title;$('todoDueType').value=result.dueType;
@@ -637,8 +681,9 @@ $('review').addEventListener('click',()=>{
   bringReviewIntoView('todoReviewForm');
   return;
  }
- const result=interpret(raw);
- if(result.error){hideForm();feedback(result.error+' For a reminder, start with “Remind me to…”','bad');return;}
+ let result=interpret(raw);
+ if(result.error&&currentEntryTab()==='money'&&!isExplicitMoney(raw))result=parseMoneyShorthand(raw)||result;
+ if(result.error){hideForm();feedback(result.error+' Tip: select To-Do for a plain reminder, or type “Cody $75 for materials” on Money.','bad');return;}
  const existing=records.find(x=>caseKey(x.person)===caseKey(result.person));
  if(existing)result.person=existing.person;
  hideForm();showForm(result);$('entryType').textContent='💰 Money entry';feedback('');bringReviewIntoView('reviewForm');
