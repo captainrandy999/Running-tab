@@ -6,7 +6,7 @@ An Android-installable web app for **Money**, **To-Do**, and **Shopping**.
 
 ## One box, three lists
 
-The Money, To-Do and Shopping tabs now sit at the top, above the shared entry box. The title and subtitle are removed for more usable space. Tap a tab or swipe over the list to choose the destination for ordinary typed text; explicit spoken commands remain supported from any tab.
+The Money, To-Do and Shopping tabs now sit immediately below the shared entry box, just above the active list. The title and subtitle remain removed for more usable space. Tap a tab or swipe over the list to choose the destination for ordinary typed text; explicit spoken commands remain supported from any tab.
 
 A small **“💡 How to say it”** disclosure beneath the main entry box shows examples when you need a reminder; it stays collapsed otherwise.
 
@@ -150,12 +150,12 @@ The parser recognizes relative date phrases before or after the task, including 
 
 ## Night mode in the app
 
-Tap **🌙 Night** beside the Running Tab title to switch the entire app (including Money, To-Do, Shopping, forms, and calendars) to a dark interface. Tap **☀️ Day** to restore the light interface. The preference is saved locally on this device; it does not alter records or Google Drive synchronization. This is a web-asset change, so the Android app does not need a new APK. The separate home-screen widget retains its own night toggle.
+Tap **🌙 Night** beside the navigation tabs to switch the entire app (including Money, To-Do, Shopping, forms, and calendars) to a dark interface. Tap **☀️ Day** to restore the light interface. The preference is saved locally on this device; it does not alter records or Google Drive synchronization. This is a web-asset change, so the Android app does not need a new APK. The separate home-screen widget retains its own night toggle.
 
 
-## Top tabs and direct keyboard input
+## Navigation below entry and direct keyboard input
 
-The top bar holds Money, To-Do, Shopping and the Day/Night toggle; the old bottom-fixed navigation and app heading are gone. Choose a tab and type without voice-command phrasing:
+The navigation bar directly below the main entry section holds Money, To-Do, Shopping and the Day/Night toggle; the old bottom-fixed navigation and app heading are gone. Choose a tab and type without voice-command phrasing:
 
 - **To-Do:** `Call the supplier tomorrow` or `Pay invoice the day after tomorrow` (relative date parsed before saving)
 - **Shopping:** `milk, eggs, bread` (multiple items)
