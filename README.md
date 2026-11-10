@@ -150,12 +150,12 @@ The parser recognizes relative date phrases before or after the task, including 
 
 ## Night mode in the app
 
-Tap **🌙 Night** beside the navigation tabs to switch the entire app (including Money, To-Do, Shopping, forms, and calendars) to a dark interface. Tap **☀️ Day** to restore the light interface. The preference is saved locally on this device; it does not alter records or Google Drive synchronization. This is a web-asset change, so the Android app does not need a new APK. The separate home-screen widget retains its own night toggle.
+Open **⚙️ Settings** and tap **🌙 Night** under **Appearance** to switch the entire app (including Money, To-Do, Shopping, forms, and calendars) to a dark interface. Tap **☀️ Day** to restore the light interface. The preference is saved locally on this device; it does not alter records or Google Drive synchronization. This is a web-asset change, so the Android app does not need a new APK. The separate home-screen widget retains its own night toggle.
 
 
 ## Navigation below entry and direct keyboard input
 
-The navigation bar directly below the main entry section holds Money, To-Do, Shopping and the Day/Night toggle; the old bottom-fixed navigation and app heading are gone. Choose a tab and type without voice-command phrasing:
+The navigation bar directly below the main entry section holds Money, To-Do and Shopping; the Day/Night toggle now lives in **Settings → Appearance**. The old Admin drawer is now called Settings, while the bottom-fixed navigation and app heading remain removed. Choose a tab and type without voice-command phrasing:
 
 - **To-Do:** `Call the supplier tomorrow` or `Pay invoice the day after tomorrow` (relative date parsed before saving)
 - **Shopping:** `milk, eggs, bread` (multiple items)
