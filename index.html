@@ -43,14 +43,7 @@
  </div>
 </section>
 <main id="runningTabApp">
-<div class="top-nav">
-<nav class="tabs" role="tablist" aria-label="Running Tab sections">
-<button type="button" role="tab" class="tab-switch active" data-view="money" id="tabMoney" aria-controls="moneyPanel" aria-selected="true">💰 Money</button>
-<button type="button" role="tab" class="tab-switch" data-view="todo" id="tabTodo" aria-controls="todoPanel" aria-selected="false">✓ To-Do</button>
-<button type="button" role="tab" class="tab-switch" data-view="shopping" id="tabShopping" aria-controls="shoppingPanel" aria-selected="false">🛒 Shopping</button>
-</nav>
-<button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch to night mode" aria-pressed="false">🌙 Night</button>
-</div>
+
 
  <section class="card" id="entry" aria-label="Quick entry">
    <textarea id="words" aria-label="Type or dictate an entry for the selected tab" placeholder="Customer $75 for materials"></textarea>
@@ -127,6 +120,14 @@
     
    </form>
  </section>
+ <div class="top-nav">
+<nav class="tabs" role="tablist" aria-label="Running Tab sections">
+<button type="button" role="tab" class="tab-switch active" data-view="money" id="tabMoney" aria-controls="moneyPanel" aria-selected="true">💰 Money</button>
+<button type="button" role="tab" class="tab-switch" data-view="todo" id="tabTodo" aria-controls="todoPanel" aria-selected="false">✓ To-Do</button>
+<button type="button" role="tab" class="tab-switch" data-view="shopping" id="tabShopping" aria-controls="shoppingPanel" aria-selected="false">🛒 Shopping</button>
+</nav>
+<button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch to night mode" aria-pressed="false">🌙 Night</button>
+</div>
  <section id="viewViewport" class="view-viewport" aria-label="Money, To-Do, and Shopping lists">
   <div id="viewTrack" class="view-track">
    <section id="moneyPanel" class="view-panel" role="tabpanel" aria-labelledby="tabMoney">
