@@ -595,7 +595,7 @@ html[data-theme="dark"] .notice.bad{background:#492a32;color:#ffd0d1}
 @media(max-width:360px){.theme-toggle{padding:7px 8px;font-size:11px}.head-title h1{font-size:23px!important}}
 
 
-/* Top navigation above the shared entry, replacing the fixed bottom menu. */
+/* Navigation directly below the shared entry, above the selected list. */
 main#runningTabApp{padding-top:10px!important;padding-bottom:calc(36px + env(safe-area-inset-bottom))!important}
 .top-nav{
  display:flex;align-items:stretch;gap:5px;padding:6px;background:#fffefa;
@@ -625,3 +625,7 @@ html[data-theme="dark"] .quick-entry-tip{color:#b7cedc}
  .top-nav .tabs button.tab-switch{font-size:11px;padding:9px 2px!important}
  .top-nav .theme-toggle{flex-basis:61px;width:61px;font-size:11px}
 }
+
+/* Keep the selector bar visually connected to the entry card. */
+#runningTabApp > #entry{margin-bottom:9px!important}
+#runningTabApp > .top-nav{margin-bottom:14px!important}
