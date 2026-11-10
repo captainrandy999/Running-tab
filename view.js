@@ -36,6 +36,7 @@ function show(name,opts={}){
   history.replaceState(null,'',location.pathname+location.search+(name==='money'?'':'#'+name));
  }
  adjust();
+ window.dispatchEvent(new CustomEvent('runningtab:view-changed',{detail:{view:name}}));
 }
 tabs.forEach(tab=>{
  tab.addEventListener('click',()=>show(tab.dataset.view));
@@ -72,7 +73,7 @@ window.addEventListener('hashchange',()=>{
  if(hash===''||hash==='money'||order.includes(hash))show(hash||'money',{updateUrl:false});
 });
 window.addEventListener('load',adjust);
-window.RunningTabView={show,adjust};
+window.RunningTabView={show,adjust,current:()=>active};
 const fromHash=location.hash.slice(1);
 show(order.includes(fromHash)?fromHash:'money',{updateUrl:false});
 })();
