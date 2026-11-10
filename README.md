@@ -6,7 +6,7 @@ An Android-installable web app for **Money**, **To-Do**, and **Shopping**.
 
 ## One box, three lists
 
-The header and entry box stay at the top of the page while the three independent lists slide horizontally below. Tap Money, To-Do, or Shopping in the bottom navigation, or swipe sideways over the list.
+The Money, To-Do and Shopping tabs now sit at the top, above the shared entry box. The title and subtitle are removed for more usable space. Tap a tab or swipe over the list to choose the destination for ordinary typed text; explicit spoken commands remain supported from any tab.
 
 A small **“💡 How to say it”** disclosure beneath the main entry box shows examples when you need a reminder; it stays collapsed otherwise.
 
@@ -151,3 +151,14 @@ The parser recognizes relative date phrases before or after the task, including 
 ## Night mode in the app
 
 Tap **🌙 Night** beside the Running Tab title to switch the entire app (including Money, To-Do, Shopping, forms, and calendars) to a dark interface. Tap **☀️ Day** to restore the light interface. The preference is saved locally on this device; it does not alter records or Google Drive synchronization. This is a web-asset change, so the Android app does not need a new APK. The separate home-screen widget retains its own night toggle.
+
+
+## Top tabs and direct keyboard input
+
+The top bar holds Money, To-Do, Shopping and the Day/Night toggle; the old bottom-fixed navigation and app heading are gone. Choose a tab and type without voice-command phrasing:
+
+- **To-Do:** `Call Cody tomorrow` or `Pay invoice the day after tomorrow` (relative date parsed before saving)
+- **Shopping:** `milk, eggs, bread` (multiple items)
+- **Money:** `Cody $75 for materials` (defaults to **They owe me**, editable on Review)
+
+The current tab changes the entry placeholder and its example. Full voice commands and explicit natural-language instructions continue to work even if another tab is selected. Nothing saves until the user confirms the Review form. Existing local records, optional Google Drive synchronization, and backup structure are unchanged. This is a web-asset update that does not require a new APK.
