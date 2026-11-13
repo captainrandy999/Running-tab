@@ -177,3 +177,7 @@ When reviewing a new To-Do, select a day, time (default 9:00 a.m.), and optional
 Native Android v1.7 schedules on-device alarms and displays a notification even when its WebView is not running. Use **Settings → Reminders & calendar → Enable phone notifications** and approve the Android permission (Android 13+). Marking a To-Do complete, deleting it, or editing its time cancels/replaces its alarm. Upcoming alarms are restored after phone restart and time/timezone changes. Alerts may be delayed by Android battery saving and inexact-alarm restrictions; no promise is made of an exact-to-the-minute notification. The Android system's permission can be changed under Settings → Apps → Running Tab → Notifications.
 
 **Important:** Phone alarms require the updated **Android v1.7 APK**, not just refreshed website files. The browser/PWA shows calendar options but does not pretend to provide reliable background notifications: use the calendar's notifications when running it in Chrome. This feature does not create a paid service or third-party reminder server.
+
+### Spoken reminder times
+
+The To-Do parser recognizes **“Remind me tomorrow at 3pm to call Cody,” “Call Cody at 3pm tomorrow,”** and **“Remind me at noon tomorrow to check the order.”** It extracts the time into the editable reminder time field while retaining the due date. Supported forms include 12-hour AM/PM, 24-hour HH:mm, noon, and midnight. Without a spoken time, the review defaults to 9:00 a.m. Phone alerts still require the updated Android APK and notification permission.
