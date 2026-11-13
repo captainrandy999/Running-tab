@@ -1,6 +1,9 @@
 package ca.runningtab.widget;
 
 import android.app.Activity;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.content.IntentSender;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
@@ -41,6 +44,7 @@ public class MainActivity extends Activity {
     private static final int BACKUP_PICKER = 2003;
     private static final int RESTORE_PICKER = 2004;
     private static final int GOOGLE_AUTH_PICKER = 2005;
+    private static final int ALERT_PERMISSION = 2006;
     private static final String GOOGLE_AUTH_PREF = "google_drive_connected";
     private static final List<Scope> GOOGLE_SCOPES = Arrays.asList(
         new Scope("openid"), new Scope("email"),
@@ -171,9 +175,40 @@ public class MainActivity extends Activity {
         }
     }
 
+    private void askForNotifications() {
+        if (Build.VERSION.SDK_INT >= 33 &&
+                checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, ALERT_PERMISSION);
+            return;
+        }
+        ReminderManager.restore(this);
+        alertPermissionChanged();
+    }
+
+    @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode != ALERT_PERMISSION) return;
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            ReminderManager.restore(this);
+            Toast.makeText(this, "Running Tab notifications enabled.", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Phone alerts are off. You can enable them in Android Settings → Apps → Running Tab → Notifications.", Toast.LENGTH_LONG).show();
+        }
+        alertPermissionChanged();
+    }
+
+    private void alertPermissionChanged() {
+        if (web != null && loaded) {
+            web.evaluateJavascript("window.RunningTabReminders?.onPermissionChanged();", null);
+        }
+    }
+
     private final class BrowserBridge {
         @JavascriptInterface public void snapshot(String money, String todo, String shopping) {
-            runOnUiThread(() -> SnapshotStore.save(MainActivity.this, money, todo, shopping));
+            runOnUiThread(() -> {
+                SnapshotStore.save(MainActivity.this, money, todo, shopping);
+                ReminderManager.sync(MainActivity.this, todo);
+            });
         }
         @JavascriptInterface public void dictate() {
             runOnUiThread(MainActivity.this::startDictation);
@@ -192,6 +227,15 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public void disconnectGoogle() {
             runOnUiThread(MainActivity.this::disconnectGoogle);
+        }
+        @JavascriptInterface public boolean notificationPermissionGranted() {
+            return ReminderManager.canNotify(MainActivity.this);
+        }
+        @JavascriptInterface public void enableNotifications() {
+            runOnUiThread(MainActivity.this::askForNotifications);
+        }
+        @JavascriptInterface public void addCalendarEvent(String title, String due, String time, String body) {
+            runOnUiThread(() -> ReminderManager.openCalendar(MainActivity.this, title, due, time, body));
         }
     }
 

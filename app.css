@@ -629,3 +629,16 @@ html[data-theme="dark"] .quick-entry-tip{color:#b7cedc}
 .appearance-row .theme-toggle{margin:0;min-width:100px;min-height:39px;padding:8px 13px;font-size:13px;font-weight:750}
 html[data-theme="dark"] .appearance-label{color:#c4d8e5}
 html[data-theme="dark"] .appearance-row .theme-toggle{background:#293f53;color:#f3e7be;border:1px solid #4b6072}
+
+/* To-Do date, calendar, and notification controls */
+#todoReminderOptions[hidden],.task-reminder-form[hidden]{display:none!important}
+#todoRemindTime{width:100%;max-width:180px;margin:4px 0 9px}
+.reminder-check{display:flex;align-items:center;gap:10px;font-weight:650;font-size:14px;min-height:38px}
+.reminder-check input[type="checkbox"]{width:20px;height:20px;min-height:auto;flex:none;accent-color:var(--teal)}
+.task-reminder-actions{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0 0}
+.task-reminder-actions .small{min-height:36px;padding:7px 10px;font-size:12px}
+.task-reminder-form{margin:11px 0 0;padding:12px;border:1px solid var(--line);background:var(--soft);border-radius:12px}
+.task-reminder-form>label{display:block;font-size:13px;font-weight:700;margin:7px 0}
+.task-reminder-form input[type="date"],.task-reminder-form input[type="time"]{display:block;width:100%;margin-top:4px;padding:8px;min-height:40px}
+.task-reminder-form .reminder-check{display:flex;margin:10px 0}
+#adminReminderSection .info{margin:6px 0 10px}

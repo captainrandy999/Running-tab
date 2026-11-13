@@ -21,6 +21,7 @@
 <script src="./shopping-panel.js" defer></script>
 <script src="./view.js" defer></script>
 <script src="./calendar.js" defer></script>
+<script src="./reminders.js" defer></script>
 <style>
 :root {font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:#172a3c; background:#f4f7fa; color-scheme:light}
 *{box-sizing:border-box}body{margin:0;line-height:1.48}main{max-width:700px;margin:0 auto;padding:18px 12px 54px}h1,h2,h3,p{margin-top:0}h1{font-size:25px;letter-spacing:-.5px;margin-bottom:1px}h2{font-size:18px;margin-bottom:12px}button,input,select,textarea{font:inherit}button{border:0;border-radius:11px;min-height:45px;padding:10px 15px;font-weight:700;cursor:pointer}button.primary{background:#163b59;color:white}button.secondary{background:#e9f0f5;color:#163b59}button.outline{background:#fff;color:#163b59;border:1px solid #b9ccd9}button.danger{background:transparent;color:#9b3741;border:1px solid #e4c9cf}button:focus-visible,input:focus,textarea:focus,select:focus{outline:3px solid #8bb9d8;outline-offset:2px}input,textarea,select{display:block;border:1px solid #b9c9d5;background:#fff;border-radius:10px;padding:11px 12px;width:100%;color:#14283b;font-size:16px;min-height:46px}textarea{height:92px;resize:vertical}
@@ -108,7 +109,12 @@
         </div>
        </div>
       </div>
-      
+      <div class="field" id="todoReminderOptions" hidden>
+       <label class="label" for="todoRemindTime">Reminder / calendar event time</label>
+       <input id="todoRemindTime" type="time" value="09:00" step="60">
+       <label class="reminder-check"><input id="todoNotify" type="checkbox"> 🔔 Notify me on my phone</label>
+       <div class="info" id="todoNotifyHelp">Phone notifications require the updated Android app and permission in Settings. You can still add this To-Do to your calendar.</div>
+      </div>
    </form>
    <form id="shoppingReviewForm" class="hide">
     <h2 style="margin:15px 0 8px">Review Shopping List</h2>
@@ -168,6 +174,12 @@
     <section class="admin-panel-section appearance-section" id="appearanceSection" aria-label="Appearance">
      <h2 class="admin-heading">Appearance</h2>
      <div class="appearance-row"><span class="appearance-label">Display mode</span><button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch to night mode" aria-pressed="false">🌙 Night</button></div>
+    </section>
+    <section class="admin-panel-section" id="adminReminderSection" aria-label="Reminders and calendar">
+     <h2 class="admin-heading">Reminders &amp; calendar</h2>
+     <p class="info" id="reminderPermissionStatus">Preparing reminder settings…</p>
+     <button type="button" id="enablePhoneAlerts" class="secondary small">Enable phone notifications</button>
+     <p class="info">Use <strong>Add to calendar</strong> on a To-Do to open an event draft. Your calendar does not automatically sync back into Running Tab.</p>
     </section>
     <section class="admin-panel-section" id="adminCloudSection" aria-label="Google Drive synchronization">
      <h2 class="admin-heading">Google Drive</h2>
@@ -499,9 +511,10 @@ function todoSummary(){
  const kind=$('todoKind').value;
  const title=$('todoTitle').value.trim()||(kind==='note'?'(topic missing)':'(task missing)');
  const deadline='Deadline: '+(type==='none'?'No date':due?TodoParser.deadlineLabel({dueType:type,due}):'Choose a date');
+ const alertLine=type==='day'?'\nTime: '+($('todoRemindTime').value||'09:00')+($('todoNotify').checked?' · Phone alert on':' · Phone alert off'):'';
  $('todoSummary').textContent=kind==='note'
-  ? '📝 '+title+'\n'+($('noteBody').value.trim()||'(note text missing)')+'\n'+deadline
-  : title+'\n'+deadline;
+  ? '📝 '+title+'\n'+($('noteBody').value.trim()||'(note text missing)')+'\n'+deadline+alertLine
+  : title+'\n'+deadline+alertLine;
 }
 function setTodoKind(kind){
  const note=kind==='note';
@@ -516,6 +529,13 @@ function setTodoKind(kind){
 }
 function todoDueChange(){
  const type=$('todoDueType').value;
+ $('todoReminderOptions').hidden=type!=='day';
+ if(type!=='day')$('todoNotify').checked=false;
+ const nativeReady=typeof window.RunningTabAndroid?.enableNotifications==='function';
+ $('todoNotify').disabled=!nativeReady;
+ $('todoNotifyHelp').textContent=nativeReady
+  ?'Allow notifications in Settings to receive alerts even when Running Tab is closed.'
+  :'Phone alerts require the updated Android APK; calendar events can provide alerts in the browser version.';
  todoSummary();window.RunningTabCalendar?.sync();
 }
 
@@ -674,6 +694,7 @@ $('review').addEventListener('click',()=>{
   $('todoTitle').value=note.title;
   $('noteBody').value=note.body;
   $('todoDueType').value='none';$('todoDueDay').value='';$('todoDueMonth').value='';
+  $('todoRemindTime').value='09:00';$('todoNotify').checked=false;
   setTodoKind('note');
   $('todoReviewForm').classList.remove('hide');
   $('entryType').textContent='📝 Note in To-Do';
@@ -698,6 +719,7 @@ $('review').addEventListener('click',()=>{
   const result=TodoParser.interpret(raw);
   if(result.error){hideForm();feedback(result.error,'bad');return;}
   hideForm();setTodoKind('todo');$('todoTitle').value=result.title;$('todoDueType').value=result.dueType;
+  $('todoRemindTime').value='09:00';$('todoNotify').checked=result.dueType==='day'&&typeof window.RunningTabAndroid?.enableNotifications==='function';
   $('todoDueDay').value=result.dueType==='day'?result.due:'';
   $('todoDueMonth').value=result.dueType==='month'?result.due:'';
   $('todoReviewForm').classList.remove('hide');$('entryType').textContent='✓ To-Do entry';todoDueChange();
@@ -714,7 +736,7 @@ $('review').addEventListener('click',()=>{
 });
 $('todoCancel').addEventListener('click',()=>{hideForm();feedback('');$('words').focus();});
 $('todoDueType').addEventListener('change',todoDueChange);
-for(const id of ['todoTitle','todoDueDay','todoDueMonth','noteBody'])$(id).addEventListener('input',todoSummary);
+for(const id of ['todoTitle','todoDueDay','todoDueMonth','noteBody','todoRemindTime','todoNotify'])$(id).addEventListener('input',todoSummary);
 $('todoReviewForm').addEventListener('submit',event=>{
  event.preventDefault();
  const title=$('todoTitle').value.trim(),type=$('todoDueType').value,kind=$('todoKind').value;
@@ -726,11 +748,19 @@ $('todoReviewForm').addEventListener('submit',event=>{
  let tasks=[];
  try{const saved=JSON.parse(localStorage.getItem(TODO_STORE)||'[]');if(Array.isArray(saved))tasks=saved;}
  catch(e){feedback('Could not read To-Do records. No item saved.','bad');return;}
- const task={id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random()),title,dueType:type,due,done:false,created:new Date().toISOString()};
+ const notify=type==='day'&&$('todoNotify').checked;
+ const remindTime=$('todoRemindTime').value||'09:00';
+ if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(remindTime)){feedback('Choose a valid reminder time.','bad');return;}
+ if(notify&&new Date(due+'T'+remindTime).getTime()<=Date.now()){
+  feedback('Choose a future date and time for your phone alert.','bad');return;
+ }
+ const task={id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random()),title,dueType:type,due,remindTime,notify,done:false,created:new Date().toISOString()};
  if(kind==='note'){task.kind='note';task.body=body;}
  try{localStorage.setItem(TODO_STORE,JSON.stringify([...tasks,task]));}
  catch(e){feedback('Could not save this item in your browser.','bad');return;}
- $('words').value='';hideForm();feedback(kind==='note'?'Note saved to To-Do.':'Saved to To-Do.');window.dispatchEvent(new Event('runningtab:todo-changed'));window.RunningTabView?.show('todo');finishSuccessfulSave();
+ $('words').value='';hideForm();feedback(kind==='note'?'Note saved to To-Do.':'Saved to To-Do.');window.dispatchEvent(new Event('runningtab:todo-changed'));
+ if(task.notify)window.RunningTabReminders?.requestPermission();
+ window.RunningTabView?.show('todo');finishSuccessfulSave();
 });
 
 $('clear').addEventListener('click',()=>{

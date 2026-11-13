@@ -79,3 +79,15 @@ The Android APK now uses Play Services `AuthorizationClient` to request `openid`
 Before using Connect Google, create an OAuth client of type **Android** in the existing Running Tab Google Cloud project. The package is `ca.runningtab.widget`; obtain the required **SHA-1 fingerprint** from the GitHub Actions Android build log marked `ANDROID_OAUTH_SHA1`. This SHA-1 corresponds to the pinned Android signer, not a computer's unrelated debug key. Do not put any OAuth secret in the app.
 
 The native app attempts silent reconnection on later opens after the user approves it once; a disconnect revokes access while leaving local entries intact. Android v1.6 uses versionCode 7 and unchanged stable signing identity. The original v1.5 APK is separately preserved at `running-tab-v1.5-stable`. Before installing, verify a JSON backup. Install **over** v1.5, never uninstall to update.
+
+## v1.7 — Calendar and notifications
+
+**Update the installed APK over v1.6** using the same signed preview release; do not uninstall. The version code is 8. The web portion gains a time selector on dated To-Dos, a **📅 Add to calendar** button, and a **🔔 Date & alert** editor.
+
+- **Calendar:** Tapping Add to calendar opens an editable event in your installed calendar app. You confirm which calendar/account to use and tap Save there. It is a one-way export; editing a calendar event later does not change Running Tab.
+- **Notifications:** Enable permissions under Running Tab **Settings → Reminders & calendar**. A To-Do with a specific day, time, and Phone notification enabled is scheduled on-device. The receiver can notify when the app is closed and restores upcoming alarms after restart. Completing, editing, or deleting a To-Do removes or adjusts its alarm.
+- **Timing:** When Android does not permit exact alarms, the app uses an inexact battery-friendly alarm. Some reminders can arrive later than selected, particularly under battery restrictions. Use your calendar's own alerts for time-critical events.
+- **Privacy:** There is no calendar OAuth scope, no read access to personal calendar events, no server-based reminder queue, and no new paid service. The Android wrapper keeps To-Do reminder data in its private preferences to restore alarms after reboot.
+- **Browser:** Google Calendar event drafts work from Chrome/PWA, but background phone alerts require the installed v1.7 APK.
+
+All existing To-Dos without a Phone notification option enabled remain unchanged and do not start sending alerts automatically.

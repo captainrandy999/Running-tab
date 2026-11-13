@@ -167,3 +167,13 @@ The current tab changes the entry placeholder and its example. Full voice comman
 ## Transient confirmation messages
 
 Success confirmations, including **Entry deleted**, now automatically disappear after about 4 seconds. Validation errors remain until addressed. The menu stays directly below the complete shared entry card. The browser and Android WebView may need to be fully closed and reopened to load this update because the PWA uses an offline service-worker cache. Existing records and storage keys are unchanged.
+
+## Calendar and phone reminders (web v38 / Android v1.7)
+
+An exact-day To-Do now has **📅 Add to calendar**, which opens a draft in the phone's Samsung/Google calendar (native Android APK) or Google Calendar's web event editor (browser/PWA). **The user must save the draft in the calendar.** This is one-way handoff, not a background two-way calendar sync. Running Tab does not ask for calendar read/write access and does not silently add events. Dates without a specific day can be changed with **🔔 Date & alert** first.
+
+When reviewing a new To-Do, select a day, time (default 9:00 a.m.), and optionally **Notify me on my phone**. Existing and new To-Dos can change their date, time, and phone-alert setting via **🔔 Date & alert**. Timed fields `remindTime` (HH:mm) and `notify` (boolean) are added to the existing To-Do record and travel through the normal JSON backup / Google Drive sync.
+
+Native Android v1.7 schedules on-device alarms and displays a notification even when its WebView is not running. Use **Settings → Reminders & calendar → Enable phone notifications** and approve the Android permission (Android 13+). Marking a To-Do complete, deleting it, or editing its time cancels/replaces its alarm. Upcoming alarms are restored after phone restart and time/timezone changes. Alerts may be delayed by Android battery saving and inexact-alarm restrictions; no promise is made of an exact-to-the-minute notification. The Android system's permission can be changed under Settings → Apps → Running Tab → Notifications.
+
+**Important:** Phone alarms require the updated **Android v1.7 APK**, not just refreshed website files. The browser/PWA shows calendar options but does not pretend to provide reliable background notifications: use the calendar's notifications when running it in Chrome. This feature does not create a paid service or third-party reminder server.
