@@ -181,3 +181,11 @@ Native Android v1.7 schedules on-device alarms and displays a notification even 
 ### Spoken reminder times
 
 The To-Do parser recognizes **“Remind me tomorrow at 3pm to call Cody,” “Call Cody at 3pm tomorrow,”** and **“Remind me at noon tomorrow to check the order.”** It extracts the time into the editable reminder time field while retaining the due date. Supported forms include 12-hour AM/PM, 24-hour HH:mm, noon, and midnight. Without a spoken time, the review defaults to 9:00 a.m. Phone alerts still require the updated Android APK and notification permission.
+
+## Relative reminder times and 8 AM defaults (v40)
+
+The To-Do speech/text parser now understands **“remind me in 15 minutes to do x”**, **“remind me tomorrow morning at 9 that I have to do x”**, **“remind me tomorrow that x”**, and **“remind me next Tuesday that x.”** It also accepts minute/hour durations such as *in fifteen minutes* and *in an hour and 15 minutes*, and morning/afternoon/evening modifiers with bare clock times (e.g., *tomorrow afternoon at 3* means 3 PM).
+
+Date-only reminders default to **8:00 AM local phone time**, instead of 9 AM. Relative durations are computed from the current device time and rounded up to the next minute so the alarm is never scheduled earlier than requested; the exact time still appears in Review for correction. A duration crossing midnight correctly moves the reminder to the following date. “Next Tuesday” means the next occurrence of Tuesday (or seven days from now if today is Tuesday); trailing phrases such as “by next Tuesday” follow that rule too.
+
+The change affects newly reviewed reminders and missing-time defaults; it does not silently alter existing saved alerts. The updated Android APK v1.7 already supports the resulting day/time fields, so **no new APK install is needed** for this parser update. Android's battery-related alarm limitations still apply.

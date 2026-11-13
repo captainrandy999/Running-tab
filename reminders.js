@@ -45,7 +45,7 @@ function validDay(day){
 function validTime(time){return /^([01]\d|2[0-3]):[0-5]\d$/.test(time);}
 function calendar(task){
  if(task.dueType!=='day'||!validDay(task.due)){message('Set an exact day before adding an event to your calendar.',true);return;}
- const time=validTime(task.remindTime||'')?task.remindTime:'09:00';
+ const time=validTime(task.remindTime||'')?task.remindTime:'08:00';
  if(typeof native()?.addCalendarEvent==='function'){
   try{native().addCalendarEvent(task.title,task.due,time,task.body||'');message('Opening your calendar. Review and save the event there.');return;}
   catch(e){message('Could not open the device calendar.',true);return;}

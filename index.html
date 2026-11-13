@@ -110,8 +110,8 @@
        </div>
       </div>
       <div class="field" id="todoReminderOptions" hidden>
-       <label class="label" for="todoRemindTime">Reminder / calendar event time</label>
-       <input id="todoRemindTime" type="time" value="09:00" step="60">
+       <label class="label" for="todoRemindTime">Reminder / calendar event time (defaults to 8:00 AM)</label>
+       <input id="todoRemindTime" type="time" value="08:00" step="60">
        <label class="reminder-check"><input id="todoNotify" type="checkbox"> 🔔 Notify me on my phone</label>
        <div class="info" id="todoNotifyHelp">Phone notifications require the updated Android app and permission in Settings. You can still add this To-Do to your calendar.</div>
       </div>
@@ -313,12 +313,30 @@ function isPrefixedReminder(input){
 }
 function interpret(input){
  let s=String(input||'').trim().replace(/\s+/g,' ').replace(/[.!?]+$/,'').trim();
- let remindTime=null;
- // Extract spoken times before interpreting the relative date. This handles
- // both "tomorrow at 3pm" and "at 3pm tomorrow" without losing the date.
- const spokenTime=s.match(/(?:^|\s+)at\s+((?:1[0-2]|0?[1-9])(?::[0-5]\d)?\s*(?:a\.?m\.?|p\.?m\.?)|(?:[01]?\d|2[0-3]):[0-5]\d|noon|midnight)(?=$|[\s,;.!?])/i);
+ let remindTime=null,relativeAlarm=null;
+ // "Remind me in 15 minutes..." and "in an hour and 20 minutes".
+ // Round UP to the next clock minute: never schedule a reminder early.
+ const clockNumber='(?:\\d{1,4}|an?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|twenty|thirty|forty|forty-five|sixty|ninety)';
+ const durationRe=new RegExp('(?:^|\\s+)(?:in|after)\\s+('+clockNumber+')\\s+(minutes?|mins?|hours?|hrs?)(?:\\s+(?:and\\s+)?('+clockNumber+')\\s+(minutes?|mins?|hours?|hrs?))?(?=$|[\\s,;.!?])','i');
+ const duration=s.match(durationRe);
+ if(duration){
+  const names={a:1,an:1,one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,twenty:20,thirty:30,forty:40,'forty-five':45,sixty:60,ninety:90};
+  const value=x=>Number(x)||names[x.toLowerCase()]||0;
+  const minutes=(unit,n)=>/^h/i.test(unit)?n*60:n;
+  const delay=minutes(duration[2],value(duration[1]))
+    +(duration[3]?minutes(duration[4],value(duration[3])):0);
+  if(delay<1||delay>10080)return {error:'Set a reminder from 1 minute to 7 days from now.'};
+  const targetMs=Math.ceil((Date.now()+delay*60000)/60000)*60000;
+  relativeAlarm=new Date(targetMs);
+  s=(s.slice(0,duration.index)+' '+s.slice(duration.index+duration[0].length))
+   .replace(/\s+/g,' ').replace(/^[\s,;:]+|[\s,;:]+$/g,'').trim();
+ }
+ // Spoken times also accept "tomorrow morning at 9" (9 AM) and "at 3 in
+ // the afternoon" (3 PM). Dates without a spoken time default to 8 AM.
+ const spokenTime=!relativeAlarm&&s.match(/(?:^|\s+)at\s+((?:1[0-2]|0?[1-9])(?::[0-5]\d)?\s*(?:a\.?m\.?|p\.?m\.?)|(?:[01]?\d|2[0-3]):[0-5]\d|(?:1[0-2]|0?[1-9])|noon|midnight)(?:\s+(?:in\s+the\s+)?(morning|afternoon|evening|night))?(?=$|[\s,;.!?])/i);
  if(spokenTime){
   const value=spokenTime[1].toLowerCase().replace(/\./g,'').replace(/\s+/g,'');
+  const period=(spokenTime[2]||s.match(/\b(morning|afternoon|evening|night)\b/i)?.[1]||'').toLowerCase();
   let hours=0,minutes=0;
   if(value==='noon')hours=12;
   else if(value==='midnight')hours=0;
@@ -326,12 +344,18 @@ function interpret(input){
    const afternoon=value.endsWith('pm'),clock=value.slice(0,-2).split(':');
    hours=Number(clock[0])%12+(afternoon?12:0);minutes=Number(clock[1]||0);
   }else{
-   const clock=value.split(':');hours=Number(clock[0]);minutes=Number(clock[1]);
+   const clock=value.split(':');hours=Number(clock[0]);minutes=Number(clock[1]||0);
+   if(!value.includes(':')){
+    if(/afternoon|evening|night/.test(period))hours=hours%12+12;
+    else if(period==='morning'&&hours===12)hours=0;
+   }
   }
   remindTime=pad(hours)+':'+pad(minutes);
   s=(s.slice(0,spokenTime.index)+' '+s.slice(spokenTime.index+spokenTime[0].length))
     .replace(/\s+/g,' ').trim().replace(/\s+[,;:]\s*/g,' ').trim();
  }
+ // Remove a daypart when it qualifies the due date, not the task itself.
+ s=s.replace(/\b((?:(?:the\s+)?day\s+after\s+tomorrow)|tomorrow|today|(?:(?:next|this)\s+(?:sunday|monday|tuesday|wednesday|thursday|friday|saturday)))\s+(?:in\s+the\s+)?(?:morning|afternoon|evening|night)\b/ig,'$1');
  let prefixDays=null;
  // The recognizer may omit "Remind me". Both forms must produce the same date.
  const lead=s.match(/^(?:please\s+)?remind\s+me\s+(?=(?:in|after|within)\s+(?:\d{1,3}|one|two|three|four|five|six|seven|eight|nine|ten|fourteen)\s+days?\b)/i);
@@ -347,6 +371,10 @@ function interpret(input){
  if(!s)return {error:'Type or say a reminder first.'};
  s=s.replace(/^(?:please\s+)?(?:remind\s+me(?:\s+to\b)?|i\s+need\s+to|i\s+have\s+to|don'?t\s+forget\s+to|(?:add|set|make|create)\s+(?:(?:a|the)\s+)?reminder(?:\s+to\b)?)\s*/i,'').replace(/^[,;:]\s*/,'').trim();
  let dueType='none',due='',unrecognized=false;
+ if(relativeAlarm){
+  dueType='day';due=iso(relativeAlarm);
+  remindTime=pad(relativeAlarm.getHours())+':'+pad(relativeAlarm.getMinutes());
+ }
  // Spoken date first: "Remind me tomorrow to...", "Remind me the day
  // after tomorrow to...", "Tomorrow, remind me to..."
  const headDate=s.match(relativeAtStart);
@@ -355,6 +383,19 @@ function interpret(input){
   dueType='day';due=iso(day);
   s=s.slice(headDate[0].length).replace(/^[\s,;:]+/,'').trim()
    .replace(/^(?:remind\s+me(?:\s+to)?|remember\s+to|(?:that\s+)?(?:i|we)\s+(?:(?:need|have|want)\s+to|should)|to|that)\b\s*/i,'').trim();
+ }
+ // Dates at the front: "remind me next Tuesday that I need to call..." or
+ // "next Tuesday remind me to call...". "Next" means the next occurrence.
+ if(dueType==='none'){
+  const weekdayHead=s.match(/^(?:(?:on|by)\s+)?(?:(next|this)\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)(?=$|[\s,;:])/i);
+  if(weekdayHead){
+   const wanted=days.findIndex(x=>x.toLowerCase()===weekdayHead[2].toLowerCase());
+   const day=now(),distance=(wanted-day.getDay()+7)%7;
+   day.setDate(day.getDate()+((weekdayHead[1]&&weekdayHead[1].toLowerCase()==='next'&&distance===0)?7:distance));
+   dueType='day';due=iso(day);
+   s=s.slice(weekdayHead[0].length).replace(/^[\s,;:]+/,'').trim()
+    .replace(/^(?:remind\s+me(?:\s+to)?|remember\s+to|(?:that\s+)?(?:i|we)\s+(?:(?:need|have|want)\s+to|should)|to|that)\b\s*/i,'').trim();
+  }
  }
  if(prefixDays!==null){
   if(prefixDays<1||prefixDays>365)return {error:'Set a due date between 1 and 365 days from now.'};
@@ -400,7 +441,7 @@ function interpret(input){
  }
  // This Saturday / next Saturday / by Saturday, including current day.
  if(dueType==='none'){m=s.match(/\s+(?:by|on|before|due\s+(?:on|by))\s+(?:(next|this)\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)$/i);
- if(m){const wk=days.findIndex(d=>d.toLowerCase()===m[2].toLowerCase());const d=now();let diff=(wk-d.getDay()+7)%7;if(m[1]&&m[1].toLowerCase()==='next')diff+=diff===0?7:7;d.setDate(d.getDate()+diff);use(m,{type:'day',value:iso(d)});}}
+ if(m){const wk=days.findIndex(d=>d.toLowerCase()===m[2].toLowerCase());const d=now();let diff=(wk-d.getDay()+7)%7;if(m[1]&&m[1].toLowerCase()==='next'&&diff===0)diff=7;d.setDate(d.getDate()+diff);use(m,{type:'day',value:iso(d)});}}
  if(dueType==='none'){m=s.match(/\s+(?:by|on|before)\s+(today|tomorrow)$/i);if(m){const d=now();if(m[1].toLowerCase()==='tomorrow')d.setDate(d.getDate()+1);use(m,{type:'day',value:iso(d)});}}
  if(dueType==='none'){m=s.match(/\s+(?:by|on)\s+(\d{4}-\d{2}-\d{2})$/);if(m){const parts=m[1].split('-').map(Number);if(valid(parts[0],parts[1]-1,parts[2]))use(m,{type:'day',value:m[1]});}}
  if(dueType==='none'&&/\s+(?:by|on|before|in|during)\s+\S+(?:\s+\S+){0,2}$/i.test(s))unrecognized=true;
@@ -530,7 +571,7 @@ function todoSummary(){
  const kind=$('todoKind').value;
  const title=$('todoTitle').value.trim()||(kind==='note'?'(topic missing)':'(task missing)');
  const deadline='Deadline: '+(type==='none'?'No date':due?TodoParser.deadlineLabel({dueType:type,due}):'Choose a date');
- const alertLine=type==='day'?'\nTime: '+($('todoRemindTime').value||'09:00')+($('todoNotify').checked?' · Phone alert on':' · Phone alert off'):'';
+ const alertLine=type==='day'?'\nTime: '+($('todoRemindTime').value||'08:00')+($('todoNotify').checked?' · Phone alert on':' · Phone alert off'):'';
  $('todoSummary').textContent=kind==='note'
   ? '📝 '+title+'\n'+($('noteBody').value.trim()||'(note text missing)')+'\n'+deadline+alertLine
   : title+'\n'+deadline+alertLine;
@@ -713,7 +754,7 @@ $('review').addEventListener('click',()=>{
   $('todoTitle').value=note.title;
   $('noteBody').value=note.body;
   $('todoDueType').value='none';$('todoDueDay').value='';$('todoDueMonth').value='';
-  $('todoRemindTime').value='09:00';$('todoNotify').checked=false;
+  $('todoRemindTime').value='08:00';$('todoNotify').checked=false;
   setTodoKind('note');
   $('todoReviewForm').classList.remove('hide');
   $('entryType').textContent='📝 Note in To-Do';
@@ -738,7 +779,7 @@ $('review').addEventListener('click',()=>{
   const result=TodoParser.interpret(raw);
   if(result.error){hideForm();feedback(result.error,'bad');return;}
   hideForm();setTodoKind('todo');$('todoTitle').value=result.title;$('todoDueType').value=result.dueType;
-  $('todoRemindTime').value=result.remindTime||'09:00';$('todoNotify').checked=result.dueType==='day'&&typeof window.RunningTabAndroid?.enableNotifications==='function';
+  $('todoRemindTime').value=result.remindTime||'08:00';$('todoNotify').checked=result.dueType==='day'&&typeof window.RunningTabAndroid?.enableNotifications==='function';
   $('todoDueDay').value=result.dueType==='day'?result.due:'';
   $('todoDueMonth').value=result.dueType==='month'?result.due:'';
   $('todoReviewForm').classList.remove('hide');$('entryType').textContent='✓ To-Do entry';todoDueChange();
@@ -768,7 +809,7 @@ $('todoReviewForm').addEventListener('submit',event=>{
  try{const saved=JSON.parse(localStorage.getItem(TODO_STORE)||'[]');if(Array.isArray(saved))tasks=saved;}
  catch(e){feedback('Could not read To-Do records. No item saved.','bad');return;}
  const notify=type==='day'&&$('todoNotify').checked;
- const remindTime=$('todoRemindTime').value||'09:00';
+ const remindTime=$('todoRemindTime').value||'08:00';
  if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(remindTime)){feedback('Choose a valid reminder time.','bad');return;}
  if(notify&&new Date(due+'T'+remindTime).getTime()<=Date.now()){
   feedback('Choose a future date and time for your phone alert.','bad');return;
