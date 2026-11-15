@@ -93,8 +93,6 @@ The native app attempts silent reconnection on later opens after the user approv
 All existing To-Dos without a Phone notification option enabled remain unchanged and do not start sending alerts automatically.
 
 
-## v1.8 — Saved GPS pins
+## v1.9 — Removed saved-pin experiment
 
-The native wrapper now includes ACCESS_FINE_LOCATION and ACCESS_COARSE_LOCATION. When the web app calls navigator.geolocation.getCurrentPosition() after **“Drop a pin here”** or a tap on **Pin current location**, WebChromeClient.onGeolocationPermissionsShowPrompt asks Android for foreground location permission, then allows geolocation only for the trusted HTTPS Running Tab origin. Permissions are not requested at startup; no background location API is used.
-
-Pins are stored locally in the WebView's site storage and included in **manual JSON backup/restore**. They are not uploaded through Google Drive sync. **“Navigate to my last pin”** and each saved pin's **Navigate** button open a Google Maps directions URL to the saved coordinates via the existing external-app handoff. Use Android **Settings → Apps → Running Tab → Permissions → Location → Precise location** if a reported location is too broad. The v1.8 APK is an in-place upgrade from v1.7 when signed with the same preview key.
+Removes the Android location permission, WebView geolocation handling, and the experimental **Drop a pin here** feature added in v1.8. Regular Google Maps navigation remains. Version code 10 allows a direct upgrade over v1.8 (code 9) without uninstalling or clearing local app data.

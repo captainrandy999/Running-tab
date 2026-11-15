@@ -1,8 +1,8 @@
-/* Private on-device backups for Running Tab data and saved pins, including legacy backups. */
+/* Private on-device backups for all three Running Tab lists, including legacy backups. */
 (()=>{
  'use strict';
  const $=id=>document.getElementById(id);
- const KEYS={money:'running-tab-simple-v1',todos:'running-tab-todo-v1',shopping:'running-tab-shopping-v1',pins:'running-tab-pins-v1'};
+ const KEYS={money:'running-tab-simple-v1',todos:'running-tab-todo-v1',shopping:'running-tab-shopping-v1'};
  const message=$('backupStatus');
  if(!$('downloadBackup')||!$('restoreBackup'))return;
  if(location.hash==='#dataTools'){
@@ -17,14 +17,9 @@
    &&['none','month','day'].includes(x.dueType)&&typeof x.due==='string'&&typeof x.done==='boolean';
  const validShopping=x=>x&&typeof x.id==='string'&&typeof x.name==='string'
    &&x.name.trim().length>0&&x.name.length<=160&&typeof x.done==='boolean';
- const validPin=x=>x&&typeof x.id==='string'&&typeof x.label==='string'
-   &&x.label.length>0&&x.label.length<=100
-   &&Number.isFinite(x.lat)&&x.lat>=-90&&x.lat<=90
-   &&Number.isFinite(x.lng)&&x.lng>=-180&&x.lng<=180
-   &&typeof x.created==='string';
  function validate(name,items){
   if(!Array.isArray(items)||items.length>100000)throw Error('Invalid '+name+' records.');
-  const checks={money:validMoney,todos:validTodo,shopping:validShopping,pins:validPin};
+  const checks={money:validMoney,todos:validTodo,shopping:validShopping};
   if(!items.every(checks[name]))throw Error('Some '+name+' records are invalid.');
   return items;
  }
@@ -33,10 +28,8 @@
   return validate(name,contents?JSON.parse(contents):[]);
  }
  function makeBackup(){
-  const money=readList('money'),todos=readList('todos'),shopping=readList('shopping'),pins=readList('pins');
-  // Pins are included in manual backups only, not automatic Google Drive sync.
-  // An optional field keeps older v2 backup files compatible.
-  const payload={format:'running-tab-backup',version:2,exportedAt:new Date().toISOString(),money,todos,shopping,pins};
+  const money=readList('money'),todos=readList('todos'),shopping=readList('shopping');
+  const payload={format:'running-tab-backup',version:2,exportedAt:new Date().toISOString(),money,todos,shopping};
   const name='running-tab-backup-'+new Date().toISOString().slice(0,10)+'.json';
   return {text:JSON.stringify(payload,null,2),name,counts:[money.length,todos.length,shopping.length]};
  }
@@ -153,17 +146,13 @@
  if(!d||d.format!=='running-tab-backup'||![1,2].includes(d.version))throw Error('Not a supported Running Tab backup.');
     const money=validate('money',d.money),todos=validate('todos',d.todos);
     const shopping=d.version===2?validate('shopping',d.shopping):null;
-    const pins=Object.prototype.hasOwnProperty.call(d,'pins')?validate('pins',d.pins):null;
     const extra=shopping===null?' Your current shopping list will stay unchanged.':' and '+shopping.length+' shopping items';
-    const pinNote=pins===null?' Your current saved pins will stay unchanged.':' and '+pins.length+' saved pins';
-    const question='Restore '+money.length+' money entries and '+todos.length+' reminders'+extra+pinNote+'? This REPLACES the listed saved data on this phone.';
+    const question='Restore '+money.length+' money entries and '+todos.length+' reminders'+extra+'? This REPLACES those saved lists on this phone.';
     if(!confirm(question))return;
-    const names=['money','todos'];
-    if(shopping!==null)names.push('shopping');
-    if(pins!==null)names.push('pins');
+    const names=shopping===null?['money','todos']:['money','todos','shopping'];
     const previous=Object.fromEntries(names.map(name=>[name,localStorage.getItem(KEYS[name])]));
     try{
-     const values={money,todos,shopping,pins};
+     const values={money,todos,shopping};
      for(const name of names)localStorage.setItem(KEYS[name],JSON.stringify(values[name]));
     }catch(err){
      for(const name of names){

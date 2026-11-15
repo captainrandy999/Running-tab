@@ -15,7 +15,6 @@ import android.speech.RecognizerIntent;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
-import android.webkit.GeolocationPermissions;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
@@ -46,7 +45,6 @@ public class MainActivity extends Activity {
     private static final int RESTORE_PICKER = 2004;
     private static final int GOOGLE_AUTH_PICKER = 2005;
     private static final int ALERT_PERMISSION = 2006;
-    private static final int LOCATION_PERMISSION = 2007;
     private static final String GOOGLE_AUTH_PREF = "google_drive_connected";
     private static final List<Scope> GOOGLE_SCOPES = Arrays.asList(
         new Scope("openid"), new Scope("email"),
@@ -63,8 +61,6 @@ public class MainActivity extends Activity {
     private boolean googleConsentPending = false;
     private String backupToSave = null;
     private String backupName = null;
-    private GeolocationPermissions.Callback pendingLocationCallback = null;
-    private String pendingLocationOrigin = null;
 
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
@@ -77,7 +73,6 @@ public class MainActivity extends Activity {
 
         WebSettings settings = web.getSettings();
         settings.setJavaScriptEnabled(true);
-        settings.setGeolocationEnabled(true);
         settings.setDomStorageEnabled(true);
         settings.setDatabaseEnabled(true);
         settings.setAllowFileAccess(false);
@@ -125,46 +120,6 @@ public class MainActivity extends Activity {
                     Toast.makeText(MainActivity.this, "No file picker available.", Toast.LENGTH_LONG).show();
                 }
                 return true;
-            }
-
-            @Override public void onGeolocationPermissionsShowPrompt(
-                    String origin, GeolocationPermissions.Callback callback) {
-                // Allow GPS prompts only from our HTTPS app, never arbitrary pages.
-                Uri source = Uri.parse(origin);
-                if (!"https".equalsIgnoreCase(source.getScheme())
-                        || !"captainrandy999.github.io".equalsIgnoreCase(source.getHost())) {
-                    callback.invoke(origin, false, false);
-                    return;
-                }
-
-                boolean fine = checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                        == PackageManager.PERMISSION_GRANTED;
-                boolean coarse = checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
-                        == PackageManager.PERMISSION_GRANTED;
-                if (fine || coarse) {
-                    // Retain permission only for this page session, not permanently.
-                    callback.invoke(origin, true, false);
-                    return;
-                }
-                if (pendingLocationCallback != null) {
-                    pendingLocationCallback.invoke(pendingLocationOrigin, false, false);
-                }
-                pendingLocationCallback = callback;
-                pendingLocationOrigin = origin;
-                // Android 12+ requires the fine and coarse permissions together.
-                requestPermissions(new String[]{
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                }, LOCATION_PERMISSION);
-            }
-
-            @Override public void onGeolocationPermissionsHidePrompt() {
-                // The page may navigate away before the Android prompt completes.
-                if (pendingLocationCallback != null) {
-                    pendingLocationCallback.invoke(pendingLocationOrigin, false, false);
-                    pendingLocationCallback = null;
-                    pendingLocationOrigin = null;
-                }
             }
         });
 
@@ -232,23 +187,6 @@ public class MainActivity extends Activity {
 
     @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == LOCATION_PERMISSION) {
-            GeolocationPermissions.Callback callback = pendingLocationCallback;
-            String origin = pendingLocationOrigin;
-            pendingLocationCallback = null;
-            pendingLocationOrigin = null;
-            boolean granted = checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED
-                    || checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED;
-            if (callback != null) callback.invoke(origin, granted, false);
-            if (!granted) {
-                Toast.makeText(this,
-                    "Location access is off. Enable it for Running Tab in Android Settings to save a pin.",
-                    Toast.LENGTH_LONG).show();
-            }
-            return;
-        }
         if (requestCode != ALERT_PERMISSION) return;
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             ReminderManager.restore(this);
@@ -651,11 +589,6 @@ public class MainActivity extends Activity {
     @Override protected void onDestroy() {
         backupToSave = null;
         backupName = null;
-        if (pendingLocationCallback != null) {
-            pendingLocationCallback.invoke(pendingLocationOrigin, false, false);
-            pendingLocationCallback = null;
-            pendingLocationOrigin = null;
-        }
         if (fileCallback != null) { fileCallback.onReceiveValue(null); fileCallback = null; }
         if (web != null) {
             web.removeJavascriptInterface("RunningTabAndroid");

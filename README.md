@@ -197,10 +197,6 @@ Say or type **"Get me to Home Depot in Lethbridge"**, **"Navigate to Costco"**, 
 Navigation commands are **actions only**: no Money, To-Do or Shopping record is created, no app location permission is requested, and no user location is read by Running Tab. Ordinary entries use the same review-and-confirm workflow as before. This is a web-only update; the installed Android wrapper already opens outgoing Google Maps links externally, so no new APK is required.
 
 
-## Saved GPS pins (web v42 / Android v1.8)
+## Pin feature removed (November 2026)
 
-Say or type **“Drop a pin here”** (also accepts **“Save my current location”**), or use **Settings → Saved pins → Pin current location**. Running Tab requests a fresh foreground GPS fix and saves its latitude, longitude, approximate accuracy and timestamp locally on the phone. You can rename or delete each pin in Settings. Say **“Navigate to my last pin”**, or tap **Navigate** beside any pin, to launch Google Maps driving directions back to the stored coordinates. Standard destination navigation, e.g. **“Navigate to Costco”**, still works as before.
-
-The installed Android v1.8 wrapper requests fine and coarse **Location** permissions only after the user tries to save a pin. If accuracy is worse than 500 metres, it refuses to save a misleading pin and asks for a more precise fix. The feature also works in supported browsers that grant geolocation to the secure GitHub Pages site.
-
-**Privacy and backups:** Pins remain in local device storage. They are included in a manually exported JSON backup (existing version 2 format, optional pins array), but are **not** included in automatic Google Drive sync. Restoring an older backup without pins preserves existing saved pins. Opening directions sends the selected saved coordinates to Google Maps; otherwise no app-controlled remote location upload occurs. Updating the installed Android app to v1.8 does not require clearing app data.
+The experimental **Drop a pin here** feature, saved-pin list, and voice shortcuts for pins have been removed. Regular **Navigate to…** and **Get me to…** destination-based Google Maps navigation continues to work. No GPS permission is requested by Running Tab. Existing pin data from the short-lived test version is not erased on upgrade, but is no longer shown or used by the app.

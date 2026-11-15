@@ -22,7 +22,6 @@
 <script src="./view.js" defer></script>
 <script src="./calendar.js" defer></script>
 <script src="./reminders.js" defer></script>
-<script src="./pins.js" defer></script>
 <style>
 :root {font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:#172a3c; background:#f4f7fa; color-scheme:light}
 *{box-sizing:border-box}body{margin:0;line-height:1.48}main{max-width:700px;margin:0 auto;padding:18px 12px 54px}h1,h2,h3,p{margin-top:0}h1{font-size:25px;letter-spacing:-.5px;margin-bottom:1px}h2{font-size:18px;margin-bottom:12px}button,input,select,textarea{font:inherit}button{border:0;border-radius:11px;min-height:45px;padding:10px 15px;font-weight:700;cursor:pointer}button.primary{background:#163b59;color:white}button.secondary{background:#e9f0f5;color:#163b59}button.outline{background:#fff;color:#163b59;border:1px solid #b9ccd9}button.danger{background:transparent;color:#9b3741;border:1px solid #e4c9cf}button:focus-visible,input:focus,textarea:focus,select:focus{outline:3px solid #8bb9d8;outline-offset:2px}input,textarea,select{display:block;border:1px solid #b9c9d5;background:#fff;border-radius:10px;padding:11px 12px;width:100%;color:#14283b;font-size:16px;min-height:46px}textarea{height:92px;resize:vertical}
@@ -59,7 +58,6 @@
      <div><b>To-Do:</b> “In 2 days, remind me to follow up with Henry about payment”</div>
      <div><b>To-Do:</b> “Remind me in 3 days that I need to check the invoice”</div>
      <div><b>Navigation:</b> “Get me to Home Depot in Lethbridge” (opens Google Maps driving navigation)</div>
-     <div><b>Saved pins:</b> “Drop a pin here” or “Navigate to my last pin”</div>
      <div><b>Shopping:</b> “I need to buy milk and eggs”</div>
      <div><b>Shopping:</b> “Add bread and coffee to my shopping list”</div>
      <div><b>Notes:</b> “Take a note that the shed roof needs new flashing”</div>
@@ -177,14 +175,6 @@
     <section class="admin-panel-section appearance-section" id="appearanceSection" aria-label="Appearance">
      <h2 class="admin-heading">Appearance</h2>
      <div class="appearance-row"><span class="appearance-label">Display mode</span><button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch to night mode" aria-pressed="false">🌙 Night</button></div>
-    </section>
-    <section class="admin-panel-section" id="adminPinsSection" aria-label="Saved locations">
-     <h2 class="admin-heading">📍 Saved pins <span id="pinsCount"></span></h2>
-     <p class="info">Say “Drop a pin here” to save your current GPS location, then “Navigate to my last pin” to get back. Rename or navigate to any saved pin below.</p>
-     <button type="button" class="secondary small" id="dropPinButton">📍 Pin current location</button>
-     <p class="info" id="pinsStatus" role="status" aria-live="polite"></p>
-     <div id="pinsList"></div>
-     <p class="info">Pins stay on this phone and are included in manual JSON backups. They are not synced to Google Drive.</p>
     </section>
     <section class="admin-panel-section" id="adminReminderSection" aria-label="Reminders and calendar">
      <h2 class="admin-heading">Reminders &amp; calendar</h2>
@@ -546,7 +536,7 @@ function updateNextAction(){
 function acceptDictation(transcript){
  const words=String(transcript||'').trim();
  if(!words)return false;
- $('words').value=(parseNavigation(words)||window.RunningTabPins?.isCommand(words))?words:[$('words').value.trim(),words].filter(Boolean).join(' ');
+ $('words').value=parseNavigation(words)?words:[$('words').value.trim(),words].filter(Boolean).join(' ');
  $('words').dispatchEvent(new Event('input',{bubbles:true}));
  $('words').dataset.entrySource='speech';
  $('review').click();
@@ -776,12 +766,6 @@ function openNavigation(destination){
 }
 $('review').addEventListener('click',()=>{
  const raw=$('words').value.trim();
- if(window.RunningTabPins?.isCommand(raw)){
-  hideForm();$('words').value='';$('words').dataset.entrySource='';
-  $('words').blur();
-  window.RunningTabPins.handleCommand(raw);
-  return;
- }
  const navigation=parseNavigation(raw);
  if(navigation){
   if(navigation.error){hideForm();feedback(navigation.error,'bad');return;}
@@ -1106,11 +1090,11 @@ if(!API){
      if(shouldReview){
        // A navigation command is self-contained; don't append earlier typed
        // text, which could turn a valid directions request into a saved entry.
-       if(parseNavigation(recognized)||window.RunningTabPins?.isCommand(recognized)){
+       if(parseNavigation(recognized)){
          input.value=recognized;
          input.dispatchEvent(new Event('input',{bubbles:true}));
        }
-       tell(window.RunningTabPins?.isCommand(recognized)?'Handling saved pin…':parseNavigation(recognized)?'Opening Google Maps…':'Dictation complete. Review the details and confirm to save.');
+       tell(parseNavigation(recognized)?'Opening Google Maps…':'Dictation complete. Review the details and confirm to save.');
        document.getElementById('review').click();
      }else if(!failed&&!canceled){
        tell('No words captured. Tap Dictate to try again.');

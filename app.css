@@ -642,20 +642,3 @@ html[data-theme="dark"] .appearance-row .theme-toggle{background:#293f53;color:#
 .task-reminder-form input[type="date"],.task-reminder-form input[type="time"]{display:block;width:100%;margin-top:4px;padding:8px;min-height:40px}
 .task-reminder-form .reminder-check{display:flex;margin:10px 0}
 #adminReminderSection .info{margin:6px 0 10px}
-
-
-/* Saved location pins */
-#adminPinsSection #pinsCount{font-weight:550;color:#7590a0}
-#pinsStatus{min-height:1em;margin:9px 0 4px;color:#14745b;font-size:12px}
-#pinsStatus.pin-error{color:#aa3544}
-#pinsList{display:grid;gap:9px;margin-top:10px}
-.pin-item{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:10px}
-.pin-heading{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-weight:750;font-size:13px;color:var(--ink);overflow-wrap:anywhere}
-.pin-badge{background:#cee9e3;color:#145f54;border-radius:99px;font-size:10px;padding:2px 7px}
-.pin-meta{font-size:11px;color:#597386;margin-top:4px}
-.pin-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
-.pin-actions button,.pin-rename-form button{min-height:35px;padding:6px 10px;font-size:12px}
-.pin-rename-form{margin-top:10px;display:flex;align-items:end;gap:7px;flex-wrap:wrap}
-.pin-rename-form label{flex:1 1 170px;color:var(--ink);font-size:11px;font-weight:700}
-.pin-rename-form input{display:block;width:100%;margin-top:3px;padding:7px 8px;min-height:36px}
-.pin-actions[hidden],.pin-rename-form[hidden]{display:none!important}
