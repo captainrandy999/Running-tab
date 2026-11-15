@@ -57,6 +57,7 @@
      <div><b>To-Do:</b> “Remind me tomorrow to call the supplier” or “Remind me the day after tomorrow to follow up”</div>
      <div><b>To-Do:</b> “In 2 days, remind me to follow up with Henry about payment”</div>
      <div><b>To-Do:</b> “Remind me in 3 days that I need to check the invoice”</div>
+     <div><b>Navigation:</b> “Get me to Home Depot in Lethbridge” (opens Google Maps driving navigation)</div>
      <div><b>Shopping:</b> “I need to buy milk and eggs”</div>
      <div><b>Shopping:</b> “Add bread and coffee to my shopping list”</div>
      <div><b>Notes:</b> “Take a note that the shed roof needs new flashing”</div>
@@ -535,7 +536,7 @@ function updateNextAction(){
 function acceptDictation(transcript){
  const words=String(transcript||'').trim();
  if(!words)return false;
- $('words').value=[$('words').value.trim(),words].filter(Boolean).join(' ');
+ $('words').value=parseNavigation(words)?words:[$('words').value.trim(),words].filter(Boolean).join(' ');
  $('words').dispatchEvent(new Event('input',{bubbles:true}));
  $('words').dataset.entrySource='speech';
  $('review').click();
@@ -744,8 +745,36 @@ function updateEntryCue(){
 }
 window.addEventListener('runningtab:view-changed',updateEntryCue);
 updateEntryCue();
+// Navigation is an action, not a saved entry. Leave place-name resolution and
+// current-location routing to Google Maps; Running Tab never needs GPS access.
+function parseNavigation(input){
+ const text=String(input||'').trim();
+ const match=text.match(/^(?:please\s+)?(?:get\s+me\s+to|take\s+me\s+to|navigate\s+(?:me\s+)?to|(?:get\s+)?directions?\s+to|drive\s+to)\b\s*(.*)$/i);
+ if(!match)return null;
+ const destination=match[1].replace(/(?:[, ]+please)?[.!?]+\s*$/i,'').trim();
+ return destination?{destination}:{error:'Say a destination after “get me to”, such as “get me to Home Depot in Lethbridge”.'};
+}
+function openNavigation(destination){
+ const params=new URLSearchParams({
+  api:'1',destination,travelmode:'driving',dir_action:'navigate'
+ });
+ const url='https://www.google.com/maps/dir/?'+params.toString();
+ // In the Android wrapper, this top-level external URL is handed off to the
+ // system Maps app by MainActivity.shouldOverrideUrlLoading. In Chrome/PWA,
+ // the verified Maps URL opens Google Maps or its website.
+ window.location.assign(url);
+}
 $('review').addEventListener('click',()=>{
  const raw=$('words').value.trim();
+ const navigation=parseNavigation(raw);
+ if(navigation){
+  if(navigation.error){hideForm();feedback(navigation.error,'bad');return;}
+  hideForm();$('words').value='';$('words').dataset.entrySource='';
+  $('words').blur();
+  feedback('Opening Google Maps for '+navigation.destination+'…');
+  openNavigation(navigation.destination);
+  return;
+ }
  const intent=classifyEntry(raw);
  if(intent==='note'){
   const note=NoteParser.interpret(raw);
@@ -1059,7 +1088,13 @@ if(!API){
      const shouldReview=!failed&&!canceled&&recognized.trim().length>0;
      idle();
      if(shouldReview){
-       tell('Dictation complete. Review the details and confirm to save.');
+       // A navigation command is self-contained; don't append earlier typed
+       // text, which could turn a valid directions request into a saved entry.
+       if(parseNavigation(recognized)){
+         input.value=recognized;
+         input.dispatchEvent(new Event('input',{bubbles:true}));
+       }
+       tell(parseNavigation(recognized)?'Opening Google Maps…':'Dictation complete. Review the details and confirm to save.');
        document.getElementById('review').click();
      }else if(!failed&&!canceled){
        tell('No words captured. Tap Dictate to try again.');
