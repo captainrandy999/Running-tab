@@ -637,6 +637,8 @@ html[data-theme="dark"] .appearance-row .theme-toggle{background:#293f53;color:#
 .reminder-check input[type="checkbox"]{width:20px;height:20px;min-height:auto;flex:none;accent-color:var(--teal)}
 .task-reminder-actions{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0 0}
 .task-reminder-actions .small{min-height:36px;padding:7px 10px;font-size:12px}
+#todoPanel .task-quick-actions{flex-wrap:nowrap}
+#todoPanel .task-quick-actions .small{min-width:0;white-space:normal}
 .task-reminder-form{margin:11px 0 0;padding:12px;border:1px solid var(--line);background:var(--soft);border-radius:12px}
 .task-reminder-form>label{display:block;font-size:13px;font-weight:700;margin:7px 0}
 .task-reminder-form input[type="date"],.task-reminder-form input[type="time"]{display:block;width:100%;margin-top:4px;padding:8px;min-height:40px}
