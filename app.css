@@ -638,7 +638,21 @@ html[data-theme="dark"] .appearance-row .theme-toggle{background:#293f53;color:#
 .task-reminder-actions{display:flex;flex-wrap:wrap;gap:7px;margin:9px 0 0}
 .task-reminder-actions .small{min-height:36px;padding:7px 10px;font-size:12px}
 #todoPanel .task-quick-actions{flex-wrap:nowrap}
-#todoPanel .task-quick-actions .small{min-width:0;white-space:normal}
+#todoPanel .task-quick-actions.has-calendar{
+ display:grid;
+ grid-template-columns:minmax(0,1fr) minmax(0,1.22fr);
+ gap:6px;
+}
+#todoPanel .task-quick-actions.has-calendar .small{
+ width:100%;
+ min-width:0;
+ min-height:38px;
+ padding:7px 4px;
+ font-size:11px;
+ line-height:1.2;
+ white-space:normal;
+ text-align:center;
+}
 .task-reminder-form{margin:11px 0 0;padding:12px;border:1px solid var(--line);background:var(--soft);border-radius:12px}
 .task-reminder-form>label{display:block;font-size:13px;font-weight:700;margin:7px 0}
 .task-reminder-form input[type="date"],.task-reminder-form input[type="time"]{display:block;width:100%;margin-top:4px;padding:8px;min-height:40px}

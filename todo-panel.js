@@ -48,7 +48,7 @@ function rows(items,completed=false,expandedNoteId=null){
    +'<button type="button" class="secondary small" data-cancel-note="'+esc(t.id)+'">Cancel</button></div></form>'
    +'</details><div class="task-meta"><span class="task-status-pill task-status-pill--'+appearance.tone+'">'+appearance.text+'</span>'
    +'<span class="task-date-label">'+esc(label(t))+(t.dueType==='day'&&t.notify?' · 🔔 '+esc(t.remindTime||'08:00'):'')+'</span></div>'
-   +(!t.done?'<div class="task-reminder-actions task-quick-actions">'
+   +(!t.done?'<div class="task-reminder-actions task-quick-actions'+(t.dueType==='day'?' has-calendar':'')+'">'
      +'<button type="button" class="secondary small" data-reminder-edit="'+esc(t.id)+'">🔔 Date & alert</button>'
      +(t.dueType==='day'?'<button type="button" class="secondary small" data-calendar="'+esc(t.id)+'">📅 Add to calendar</button>':'')
      +'</div><form class="task-reminder-form" data-reminder-form="'+esc(t.id)+'" hidden>'
