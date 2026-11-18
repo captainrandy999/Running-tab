@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.net.Uri;
 import java.util.List;
 
-/** A scheduled reminder fires even when the Running Tab WebView is closed. */
+/** A scheduled reminder fires even when the Day2Day WebView is closed. */
 public final class ReminderReceiver extends BroadcastReceiver {
     @Override public void onReceive(Context context, Intent intent) {
         if (intent == null) return;

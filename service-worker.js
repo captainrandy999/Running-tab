@@ -1,5 +1,5 @@
 // Offline shell. Transactions stay in this browser's localStorage.
-const CACHE='running-tab-reminder-snooze-v44';
+const CACHE='day2day-rebrand-v45';
 const SHELL=['./','./index.html','./todo.html','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./app.css?v=44','./web-auth-config.js','./web-auth.js','./web-drive-sync.js','./install.js','./backup.js','./todo-panel.js?v=43','./view.js','./shopping-panel.js','./calendar.js','./reminders.js'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(names=>Promise.all(names.filter(name=>name!==CACHE).map(name=>caches.delete(name)))).then(()=>self.clients.claim()));});

@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#163b59">
-<title>Running Tab</title>
-<link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" type="image/svg+xml" href="./icon.svg">
+<title>Day2Day</title>
+<link rel="manifest" href="./manifest.webmanifest?v=45">
+<link rel="icon" type="image/svg+xml" href="./icon.svg?v=45">
 <meta name="description" content="Track money owed and To-Dos with one spoken or typed entry.">
-<link rel="apple-touch-icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png?v=45">
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
 <script>try{document.documentElement.dataset.theme=localStorage.getItem("running-tab-ui-theme-v1")==="dark"?"dark":"light"}catch(e){document.documentElement.dataset.theme="light"}</script>
 <script src="./web-auth-config.js"></script>
@@ -28,15 +28,15 @@
 .head{display:flex;align-items:center;gap:11px;margin:3px 0 17px}.mark{background:#163b59;color:white;border-radius:13px;display:grid;place-items:center;width:46px;height:46px;font-weight:900;font-size:26px}.muted{color:#607386}.hint{font-size:13px;color:#607386;margin:7px 0}.card{background:#fff;border:1px solid #dde6ec;border-radius:17px;padding:17px;margin-bottom:14px;box-shadow:0 1px 3px #163b5908}.label{display:block;font-size:13px;color:#41586a;font-weight:700;margin:0 0 6px}.actions{display:flex;gap:9px;align-items:center;margin-top:11px;flex-wrap:wrap}.actions .primary{flex:1}.callout{background:#eef5f9;border:1px solid #cadae5;border-radius:11px;padding:12px;margin:13px 0 9px;font-size:14px;white-space:pre-line}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{margin-top:11px}.field.wide{grid-column:1/-1}.hide{display:none!important}.totals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}.stat{background:#fff;border:1px solid #dce5eb;border-radius:15px;padding:14px}.stat .label{color:#62778a;font-weight:600}.number{font-size:clamp(21px,5vw,29px);font-weight:800;letter-spacing:-.5px}.pos{color:#0b765d}.neg{color:#a33b43}.info{font-size:13px;color:#5b7081}.person{border:1px solid #dce5ec;border-radius:12px;margin-bottom:9px;background:#fcfdfe;overflow:hidden}.person summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:center;padding:13px}.person summary::-webkit-details-marker{display:none}.person .who{font-weight:800;overflow-wrap:anywhere}.person .right{text-align:right;flex-shrink:0}.person .amount{font-size:17px;font-weight:800}.person .detail{padding:0 13px 12px}.person .meta{border-top:1px solid #e8eef2;padding-top:10px;font-size:13px;color:#607486}.entry{padding:11px 0;display:flex;align-items:flex-start;justify-content:space-between;border-top:1px solid #e7edf2;gap:9px}.entry:nth-child(1){border-top:0}.entry-name{font-weight:700}.entry-notes{font-size:13px;color:#597085;overflow-wrap:anywhere}.entry-right{min-width:90px;text-align:right}.entry-right strong{display:block;white-space:nowrap}.small{font-size:12px;min-height:32px;padding:5px 8px;margin-top:4px}.tag{background:#fff2e4;color:#8d511d;font-size:12px;padding:3px 6px;border-radius:6px;font-weight:700}.notice{margin-top:12px;padding:9px 11px;border-radius:9px;background:#eff8f1;color:#216b44;font-size:14px}.notice.bad{background:#fff0ef;color:#932a31}.bottom{margin-top:25px;text-align:center}.bottom button{font-size:12px}.foot{font-size:12px;text-align:center;color:#718494;margin-top:8px}@media(max-width:430px){main{padding:12px 10px 32px}.card{padding:14px}.grid{grid-template-columns:1fr}.field.wide{grid-column:auto}.stat{padding:12px 10px}.person summary{padding:12px}}
 .tabs{display:flex;gap:8px;margin-bottom:15px}.tabs a{flex:1;background:white;border:1px solid #cbdbe4;border-radius:12px;padding:11px;text-align:center;text-decoration:none;color:#163b59;font-weight:800}.tabs a.active{background:#163b59;border-color:#163b59;color:white}
 </style>
-<link rel="stylesheet" href="./app.css?v=44">
+<link rel="stylesheet" href="./app.css?v=45">
 </head>
 <body>
-<section id="webAuthGate" class="web-auth-gate" hidden aria-label="Running Tab Google account sign-in">
+<section id="webAuthGate" class="web-auth-gate" hidden aria-label="Day2Day Google account sign-in">
  <div class="web-auth-card">
-  <div class="web-auth-mark">RT</div>
-  <h1>Running Tab</h1>
+  <div class="web-auth-mark"><img src="./icon.svg?v=45" alt="" width="52" height="52"></div>
+  <h1>Day2Day</h1>
   <h2>Sign in with Google</h2>
-  <p>Only Google accounts permitted in your Running Tab Google Cloud project can connect. Your existing records stay on this device.</p>
+  <p>Only Google accounts you've authorized for Day2Day can connect. Your existing records stay on this device.</p>
   <button type="button" class="primary" id="webGoogleSignIn" disabled>Continue with Google</button>
   <button type="button" class="secondary" id="webOfflineContinue" hidden>Continue offline on this device</button>
   <p class="hint">Offline access is available after you sign in successfully on this browser. Use only devices you trust.</p>
@@ -128,7 +128,7 @@
    </form>
  </section>
  <div class="top-nav">
-<nav class="tabs" role="tablist" aria-label="Running Tab sections">
+<nav class="tabs" role="tablist" aria-label="Day2Day sections">
 <button type="button" role="tab" class="tab-switch active" data-view="money" id="tabMoney" aria-controls="moneyPanel" aria-selected="true">💰 Money</button>
 <button type="button" role="tab" class="tab-switch" data-view="todo" id="tabTodo" aria-controls="todoPanel" aria-selected="false">✓ To-Do</button>
 <button type="button" role="tab" class="tab-switch" data-view="shopping" id="tabShopping" aria-controls="shoppingPanel" aria-selected="false">🛒 Shopping</button>
@@ -181,7 +181,7 @@
      <p class="info" id="reminderPermissionStatus">Preparing reminder settings…</p>
      <button type="button" id="enablePhoneAlerts" class="secondary small">Enable phone notifications</button>
      <p class="info">In the Android app v1.10+, expand a To-Do notification to choose <strong>Remind me again</strong>: 15 minutes, 1 hour or 4 hours. Snoozing does not change the To-Do due date.</p>
-     <p class="info">Use <strong>Add to calendar</strong> on a To-Do to open an event draft. Your calendar does not automatically sync back into Running Tab.</p>
+     <p class="info">Use <strong>Add to calendar</strong> on a To-Do to open an event draft. Your calendar does not automatically sync back into Day2Day.</p>
     </section>
     <section class="admin-panel-section" id="adminCloudSection" aria-label="Google Drive synchronization">
      <h2 class="admin-heading">Google Drive</h2>
@@ -207,13 +207,13 @@
     <div class="tools-grid"><button type="button" id="downloadBackup" class="secondary">Download backup</button><button type="button" id="copyBackup" class="secondary">Copy backup text</button></div>
     <details id="backupTextPanel" hidden>
      <summary>Backup text (manual copy)</summary>
-     <p>Keep this text somewhere outside Running Tab, such as Samsung Notes or a secure document. Do not uninstall until your copy is safely stored.</p>
+     <p>Keep this text somewhere outside Day2Day, such as Samsung Notes or a secure document. Do not uninstall until your copy is safely stored.</p>
      <textarea id="backupText" readonly rows="5" aria-label="Your backup data to copy"></textarea>
     </details>
     <details id="pasteRestorePanel">
      <summary>Restore a copied backup</summary>
      <p>Paste the complete JSON backup text here, then tap Restore. You will be asked to confirm before any entries are replaced.</p>
-     <textarea id="pastedBackup" rows="5" placeholder="Paste Running Tab JSON backup text" aria-label="Paste backup JSON"></textarea>
+     <textarea id="pastedBackup" rows="5" placeholder="Paste Day2Day JSON backup text" aria-label="Paste backup JSON"></textarea>
      <div class="tools-grid"><button type="button" id="restorePastedBackup" class="secondary">Restore pasted backup</button></div>
     </details>
     <div class="tools-grid"><button type="button" id="restoreNativeBackup" class="secondary" hidden>Restore JSON backup file</button></div>
@@ -227,8 +227,8 @@
     </details>
     <details class="admin-subsection admin-install" id="installDetail">
      <summary>Install options</summary>
-<section class="install-panel" id="installPanel" aria-label="Install Running Tab">
-  <div><strong>Running Tab on your phone</strong><p>Install once and open it like a regular app.</p>
+<section class="install-panel" id="installPanel" aria-label="Install Day2Day">
+  <div><strong>Day2Day on your phone</strong><p>Install once and open it like a regular app.</p>
   <details class="install-tips"><summary>How to install</summary><p>In Chrome, tap the ⋮ menu → Add to Home screen → Install. The wording may be “Install app”.</p></details>
   <div id="installStatus" class="hint" role="status"></div></div>
   <button id="installBtn" type="button" class="primary" hidden>Install app</button>
@@ -237,7 +237,7 @@
    </div>
   </details>
  </section>
-<div class="foot">Running Tab · Saves locally first · Drive sync when connected · Voice transcription may use an online service.</div>
+<div class="foot">Day2Day · Saves locally first · Drive sync when connected · Voice transcription may use an online service.</div>
 </main>
 <script>
 /* Keep the Admin drawer small, with only a short sync indicator when closed. */
@@ -596,7 +596,7 @@ function todoDueChange(){
  const nativeReady=typeof window.RunningTabAndroid?.enableNotifications==='function';
  $('todoNotify').disabled=!nativeReady;
  $('todoNotifyHelp').textContent=nativeReady
-  ?'Allow notifications in Settings to receive alerts even when Running Tab is closed.'
+  ?'Allow notifications in Settings to receive alerts even when Day2Day is closed.'
   :'Phone alerts require the updated Android APK; calendar events can provide alerts in the browser version.';
  todoSummary();window.RunningTabCalendar?.sync();
 }
@@ -747,7 +747,7 @@ function updateEntryCue(){
 window.addEventListener('runningtab:view-changed',updateEntryCue);
 updateEntryCue();
 // Navigation is an action, not a saved entry. Leave place-name resolution and
-// current-location routing to Google Maps; Running Tab never needs GPS access.
+// current-location routing to Google Maps; Day2Day never needs GPS access.
 function parseNavigation(input){
  const text=String(input||'').trim();
  const match=text.match(/^(?:please\s+)?(?:get\s+me\s+to|take\s+me\s+to|navigate\s+(?:me\s+)?to|(?:get\s+)?directions?\s+to|drive\s+to)\b\s*(.*)$/i);

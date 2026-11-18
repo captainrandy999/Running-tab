@@ -1,4 +1,4 @@
-/* Private on-device backups for all three Running Tab lists, including legacy backups. */
+/* Private on-device backups for all three Day2Day lists, including legacy backups. */
 (()=>{
  'use strict';
  const $=id=>document.getElementById(id);
@@ -30,7 +30,7 @@
  function makeBackup(){
   const money=readList('money'),todos=readList('todos'),shopping=readList('shopping');
   const payload={format:'running-tab-backup',version:2,exportedAt:new Date().toISOString(),money,todos,shopping};
-  const name='running-tab-backup-'+new Date().toISOString().slice(0,10)+'.json';
+  const name='day2day-backup-'+new Date().toISOString().slice(0,10)+'.json';
   return {text:JSON.stringify(payload,null,2),name,counts:[money.length,todos.length,shopping.length]};
  }
  function showBackupText(text){
@@ -132,18 +132,18 @@
    say('Native restore is unavailable. Try Restore a copied backup.',true);
    return;
   }
-  say('Select your Running Tab .json backup in the Android file picker…');
+  say('Select your Day2Day .json backup in the Android file picker…');
   try{window.RunningTabAndroid.importBackup();}
   catch(e){say('Could not open the Android file picker: '+e.message,true);}
  });
  async function restoreFromRaw(text){
   let d;
   try{d=JSON.parse(String(text||'').replace(/^\uFEFF/,'').trim());}
-  catch(e){throw Error('Not a valid JSON backup. Select a running-tab-backup-*.json file, not an APK or ZIP.');}
+  catch(e){throw Error('Not a valid JSON backup. Select a day2day-backup-*.json (or older running-tab-backup-*.json) file, not an APK or ZIP.');}
   return restorePayload(d);
  }
  function restorePayload(d){
- if(!d||d.format!=='running-tab-backup'||![1,2].includes(d.version))throw Error('Not a supported Running Tab backup.');
+ if(!d||d.format!=='running-tab-backup'||![1,2].includes(d.version))throw Error('Not a supported Day2Day backup.');
     const money=validate('money',d.money),todos=validate('todos',d.todos);
     const shopping=d.version===2?validate('shopping',d.shopping):null;
     const extra=shopping===null?' Your current shopping list will stay unchanged.':' and '+shopping.length+' shopping items';
@@ -168,7 +168,7 @@
  }
  $('restorePastedBackup').addEventListener('click',async()=>{
   const text=$('pastedBackup').value.trim();
-  if(!text){say('Paste a Running Tab backup first.',true);return;}
+  if(!text){say('Paste a Day2Day backup first.',true);return;}
   try{await restoreFromRaw(text);}
   catch(e){say('Restore failed: '+e.message,true);}
  });
@@ -176,13 +176,13 @@
   const file=event.target.files?.[0];if(!file)return;
   try{
    if(file.size>15000000)throw Error('Backup file is too large.');
-   // APKs and GitHub build artifacts are ZIP files (PK), not Running Tab data.
+   // APKs and GitHub build artifacts are ZIP files (PK), not Day2Day data.
    const header=new Uint8Array(await file.slice(0,4).arrayBuffer());
    if(header[0]===0x50&&header[1]===0x4b&&
       ((header[2]===0x03&&header[3]===0x04)||
        (header[2]===0x05&&header[3]===0x06)||
        (header[2]===0x07&&header[3]===0x08))){
-    throw Error('This is a ZIP/APK archive, not a Running Tab data backup. Open Running Tab where your entries are stored, tap Data & backup → Download backup, then select the .json file.');
+    throw Error('This is a ZIP/APK archive, not a Day2Day data backup. Open Day2Day where your entries are stored, tap Data & backup → Download backup, then select the .json file.');
    }
    await restoreFromRaw(await file.text());
   }catch(e){say('Restore failed: '+e.message,true);}

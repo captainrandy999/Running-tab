@@ -1,8 +1,8 @@
-# Running Tab
+# Day2Day
 
 An Android-installable web app for **Money**, **To-Do**, and **Shopping**.
 
-[Open Running Tab](https://captainrandy999.github.io/Running-tab/)
+[Open Day2Day](https://captainrandy999.github.io/Running-tab/)
 
 ## One box, three lists
 
@@ -48,7 +48,7 @@ In the To-Do review, tap the **calendar date button** to open a month grid. Tap 
 
 A native Android wrapper and **read-only, scrollable home-screen widget** are included under [android/](android/). The widget has Money, To-Do and Shopping tabs, shows full names and amounts, and opens the full app for entry editing. Tapping **🎤 Dictate** opens Android speech recognition in the app.
 
-- [Download the preview APK](https://github.com/captainrandy999/Running-tab/releases/download/widget-preview/running-tab-widget.apk).
+- [Download the preview APK](https://github.com/captainrandy999/Running-tab/releases/download/widget-preview/day2day.apk).
 - [Build details and Android setup](android/README.md).
 - [Latest build status](https://github.com/captainrandy999/Running-tab/actions/workflows/android-widget.yml).
 
@@ -56,7 +56,7 @@ A native Android wrapper and **read-only, scrollable home-screen widget** are in
 
 ## Dictated notes
 
-Say `take a note that …`, `make a note that …`, or `note …`. Running Tab recognizes a Note instead of a reminder, suggests a short topic from the dictated content, then opens the existing editable review. Only **Confirm & save note** saves the entry. In To-Do, a note uses the same completion checkbox as a reminder, and its topic expands to show the full note. An optional date can be chosen. Notes share the existing To-Do storage and backup, keeping older records intact.
+Say `take a note that …`, `make a note that …`, or `note …`. Day2Day recognizes a Note instead of a reminder, suggests a short topic from the dictated content, then opens the existing editable review. Only **Confirm & save note** saves the entry. In To-Do, a note uses the same completion checkbox as a reminder, and its topic expands to show the full note. An optional date can be chosen. Notes share the existing To-Do storage and backup, keeping older records intact.
 
 ## Task completion, deletion and named-note dictation
 
@@ -89,9 +89,9 @@ After an online login, a locally saved trusted-device marker allows that same br
 
 ## Google OAuth login activated (web-only)
 
-The Web OAuth 2.0 client ID in `web-auth-config.js` is for Google Cloud's Running Tab Web client. The client ID is public; no secret is stored in this repository. The browser version now prompts for Google login; access requires a Google account authorized by the project's OAuth consent configuration (test users while in Testing). The native Android WebView does not use this web login and continues to access local records.
+The Web OAuth 2.0 client ID in `web-auth-config.js` is for Google Cloud's existing Google OAuth web client. The client ID is public; no secret is stored in this repository. The browser version now prompts for Google login; access requires a Google account authorized by the project's OAuth consent configuration (test users while in Testing). The native Android WebView does not use this web login and continues to access local records.
 
-**Google Cloud setup:** In Google Auth Platform → Audience, keep External/Testing and add the intended account under Test users. In Google Auth Platform → Clients → Running Tab Web, ensure Authorized JavaScript origins includes `https://captainrandy999.github.io`. Enable Google Drive API to authorize the `drive.appdata` scope. The consent flow may ask for approval.
+**Google Cloud setup:** In Google Auth Platform → Audience, keep External/Testing and add the intended account under Test users. In Google Auth Platform → Clients → your existing web client, ensure Authorized JavaScript origins includes `https://captainrandy999.github.io`. Enable Google Drive API to authorize the `drive.appdata` scope. The consent flow may ask for approval.
 
 **Important:** Google Drive data synchronization is NOT implemented yet. This change gates the browser interface and grants a short-lived token for future Drive operations, but all existing entries still live on each device. An approved account on a different device won't see those entries until the synchronization layer is added. Local trusted offline access is permitted for 30 days after a successful login. Sign out removes the trusted offline marker, but not local data.
 
@@ -105,7 +105,7 @@ Once the Google Cloud Drive API is enabled and Google has authorized the `drive.
 
 The app still **saves every change locally first**. When signed in, opened, or reconnected, it downloads the Drive file, uses a **three-way per-ID merge** against its last successful synchronized state, and uploads changes. This preserves local offline edits, remote additions and known deletions. When the same entry has incompatible changes on two devices, sync stops and keeps both copies as they are; make manual JSON backups and resolve the conflict before continuing. Version checks reduce risk of overwriting simultaneous modifications, but this is designed for one device at a time, not concurrent multi-user updates.
 
-**Rollout limitation:** Google Drive sync currently works in Google-authenticated **browser/PWA** Running Tab. The separate Android APK bypasses browser Google sign-in and still uses its own local data until we add a supported native Android OAuth flow. Existing APK entries are not silently uploaded or replaced; use the Chrome browser on the phone/tablet and your PC to test cross-device sync safely. Retain JSON backups.
+**Rollout limitation:** Google Drive sync currently works in Google-authenticated **browser/PWA** Day2Day. The separate Android APK bypasses browser Google sign-in and still uses its own local data until we add a supported native Android OAuth flow. Existing APK entries are not silently uploaded or replaced; use the Chrome browser on the phone/tablet and your PC to test cross-device sync safely. Retain JSON backups.
 
 If opened offline after an authorized online visit, browser/PWA data remains accessible; changes wait locally and synchronize after connectivity and Google authorization return. Google tokens remain in memory and are never stored persistently.
 
@@ -127,7 +127,7 @@ The Drive JSON field is `todos`, but the To-Do UI and Android widget listen to `
 
 ## Remember trusted web browser for 30 days (no repeated login gate)
 
-After a successful Google login, Running Tab saves a **30-day trusted-browser marker**, associated with the verified Google subject ID. Subsequent visits on the same Chrome browser/PWA now open the locally saved Running Tab lists immediately, whether online or offline; users no longer have to click **Sign in with Google** merely to view or edit their local entries. The Google Drive OAuth access token is **still short-lived and kept in memory only**. For cloud synchronization after restarting the browser, tap **Reconnect Google** (Google may reuse the previously approved account without showing the account chooser). The sync status clearly distinguishes local-only edits from successfully synchronized Drive data. **Sign out** removes the trusted-browser marker, so re-opening the app requires a fresh login; after 30 days the trusted marker also expires. Browser storage clearing, private/incognito mode, or using a different browser will also require login. This trusted marker is convenience, **not strong authentication or encryption**; only enable it on your own device. Native Android Google authorization remains unchanged and can refresh through Play Services.
+After a successful Google login, Day2Day saves a **30-day trusted-browser marker**, associated with the verified Google subject ID. Subsequent visits on the same Chrome browser/PWA now open the locally saved Day2Day lists immediately, whether online or offline; users no longer have to click **Sign in with Google** merely to view or edit their local entries. The Google Drive OAuth access token is **still short-lived and kept in memory only**. For cloud synchronization after restarting the browser, tap **Reconnect Google** (Google may reuse the previously approved account without showing the account chooser). The sync status clearly distinguishes local-only edits from successfully synchronized Drive data. **Sign out** removes the trusted-browser marker, so re-opening the app requires a fresh login; after 30 days the trusted marker also expires. Browser storage clearing, private/incognito mode, or using a different browser will also require login. This trusted marker is convenience, **not strong authentication or encryption**; only enable it on your own device. Native Android Google authorization remains unchanged and can refresh through Play Services.
 
 ## Clean bottom Admin drawer (web, PWA, Android)
 The account controls, Drive sync status and Sync now button, backup/restore status and tools, optional install prompts, and sign-out/disconnect controls are all grouped in one compact **⚙️ Admin** drawer below the Money, To-Do/Notes and Shopping panels. The drawer is closed by default. Its tiny summary shows only Synced / Syncing / Offline / Reconnect / Check sync, with detailed messages and account emails inside. Backups are nested under **Backup & restore**, including per-list delete options. All original control IDs, data storage keys, authorization flows, and JSON formats are preserved. The `#dataTools` backup deep link opens both nested drawers. Older APKs without Google support hide non-working cloud panels. This is a webpage-only change; no APK reinstall needed.
@@ -170,11 +170,11 @@ Success confirmations, including **Entry deleted**, now automatically disappear 
 
 ## Calendar and phone reminders (web v38 / Android v1.7)
 
-An exact-day To-Do now has **📅 Add to calendar**, which opens a draft in the phone's Samsung/Google calendar (native Android APK) or Google Calendar's web event editor (browser/PWA). **The user must save the draft in the calendar.** This is one-way handoff, not a background two-way calendar sync. Running Tab does not ask for calendar read/write access and does not silently add events. Dates without a specific day can be changed with **🔔 Date & alert** first.
+An exact-day To-Do now has **📅 Add to calendar**, which opens a draft in the phone's Samsung/Google calendar (native Android APK) or Google Calendar's web event editor (browser/PWA). **The user must save the draft in the calendar.** This is one-way handoff, not a background two-way calendar sync. Day2Day does not ask for calendar read/write access and does not silently add events. Dates without a specific day can be changed with **🔔 Date & alert** first.
 
 When reviewing a new To-Do, select a day, time (default 9:00 a.m.), and optionally **Notify me on my phone**. Existing and new To-Dos can change their date, time, and phone-alert setting via **🔔 Date & alert**. Timed fields `remindTime` (HH:mm) and `notify` (boolean) are added to the existing To-Do record and travel through the normal JSON backup / Google Drive sync.
 
-Native Android v1.7 schedules on-device alarms and displays a notification even when its WebView is not running. Use **Settings → Reminders & calendar → Enable phone notifications** and approve the Android permission (Android 13+). Marking a To-Do complete, deleting it, or editing its time cancels/replaces its alarm. Upcoming alarms are restored after phone restart and time/timezone changes. Alerts may be delayed by Android battery saving and inexact-alarm restrictions; no promise is made of an exact-to-the-minute notification. The Android system's permission can be changed under Settings → Apps → Running Tab → Notifications.
+Native Android v1.7 schedules on-device alarms and displays a notification even when its WebView is not running. Use **Settings → Reminders & calendar → Enable phone notifications** and approve the Android permission (Android 13+). Marking a To-Do complete, deleting it, or editing its time cancels/replaces its alarm. Upcoming alarms are restored after phone restart and time/timezone changes. Alerts may be delayed by Android battery saving and inexact-alarm restrictions; no promise is made of an exact-to-the-minute notification. The Android system's permission can be changed under Settings → Apps → Day2Day → Notifications.
 
 **Important:** Phone alarms require the updated **Android v1.7 APK**, not just refreshed website files. The browser/PWA shows calendar options but does not pretend to provide reliable background notifications: use the calendar's notifications when running it in Chrome. This feature does not create a paid service or third-party reminder server.
 
@@ -194,12 +194,12 @@ The change affects newly reviewed reminders and missing-time defaults; it does n
 
 Say or type **"Get me to Home Depot in Lethbridge"**, **"Navigate to Costco"**, **"Take me to 123 Main Street, Calgary"**, or **"Get directions to the airport"** in the shared entry box. Built-in Android dictation and browser speech recognition automatically process the spoken command when recognition finishes; typed commands can use **Review**. This launches Google Maps directions with `api=1`, the spoken destination, `travelmode=driving`, and `dir_action=navigate`. Google Maps uses the device's current position if available and begins turn-by-turn navigation where supported; otherwise, it presents a route preview or asks for an origin. If the destination is ambiguous, select the correct result in Maps.
 
-Navigation commands are **actions only**: no Money, To-Do or Shopping record is created, no app location permission is requested, and no user location is read by Running Tab. Ordinary entries use the same review-and-confirm workflow as before. This is a web-only update; the installed Android wrapper already opens outgoing Google Maps links externally, so no new APK is required.
+Navigation commands are **actions only**: no Money, To-Do or Shopping record is created, no app location permission is requested, and no user location is read by Day2Day. Ordinary entries use the same review-and-confirm workflow as before. This is a web-only update; the installed Android wrapper already opens outgoing Google Maps links externally, so no new APK is required.
 
 
 ## Pin feature removed (November 2026)
 
-The experimental **Drop a pin here** feature, saved-pin list, and voice shortcuts for pins have been removed. Regular **Navigate to…** and **Get me to…** destination-based Google Maps navigation continues to work. No GPS permission is requested by Running Tab. Existing pin data from the short-lived test version is not erased on upgrade, but is no longer shown or used by the app.
+The experimental **Drop a pin here** feature, saved-pin list, and voice shortcuts for pins have been removed. Regular **Navigate to…** and **Get me to…** destination-based Google Maps navigation continues to work. No GPS permission is requested by Day2Day. Existing pin data from the short-lived test version is not erased on upgrade, but is no longer shown or used by the app.
 
 
 ## Brighter section selector and reminder snoozes (web v44 / Android v1.10)
@@ -207,3 +207,10 @@ The experimental **Drop a pin here** feature, saved-pin list, and voice shortcut
 The selected **Money**, **To-Do**, or **Shopping** control now uses a bright teal highlight with contrasting text in both day and night mode. The inactive controls remain muted so it is clear which list is open.
 
 The Android v1.10 APK adds three notification actions on each dated To-Do alert: **15 min**, **1 hour**, and **4 hours**. Tap one to dismiss the current alert and schedule another notification after that interval. A To-Do can be snoozed repeatedly. The original To-Do due date/time stays unchanged, and snoozes are cancelled if that To-Do is completed, removed, has its date/time changed, or has phone notifications disabled. Snoozes are private to the Android device and are rescheduled after restart. Android battery/notification policies may delay a reminder beyond the requested interval. Browser/PWA users can still use calendar events but cannot get these native snooze actions without the updated APK.
+
+
+## Day2Day branding and widget launch icon (Android v2.0)
+
+**Day2Day is the new name for Running Tab.** The Android home-screen widget has a small Day2Day **2** icon in its upper-left corner; tap it to open the full app at the selected Money, To-Do, or Shopping section. The title also opens the app, and the compact microphone button still launches dictation. The app label, launcher icon, browser title, and installable web-app icons use the new brand.
+
+This is an **in-place upgrade**: the Android application ID, signing certificate, hosted URL, storage keys, Google Drive data filename, and backup JSON format stay the same. Existing entries and sync compatibility are preserved. New manual backup downloads use a `day2day-backup-YYYY-MM-DD.json` filename; older Running Tab JSON backups still restore normally. You may remove the separate app shortcut from the home screen without uninstalling Day2Day because the widget icon now launches it.

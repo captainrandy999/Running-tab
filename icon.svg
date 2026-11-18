@@ -1,4 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Running Tab">
-<rect width="512" height="512" rx="100" fill="#163b59"/>
-<text x="256" y="352" font-family="Arial, Helvetica, sans-serif" font-size="320" font-weight="bold" text-anchor="middle" fill="#ffffff">$</text>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Day2Day">
+  <rect x="0" y="0" width="512" height="512" rx="112" fill="#163b59"/>
+  <rect x="14" y="14" width="484" height="484" rx="100" fill="none" stroke="#4d8392" stroke-width="8" opacity="0.42"/>
+  <path d="M146 195 C157 138 208 112 269 117 C334 123 379 168 372 224 C364 284 291 320 201 373 L374 373" fill="none" stroke="#48d8c7" stroke-width="56" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="394" cy="118" r="18" fill="#f3dfad"/>
 </svg>

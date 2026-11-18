@@ -685,3 +685,7 @@ html[data-theme="dark"] #runningTabApp .top-nav .tabs button.tab-switch.active{
  border-color:#28c6ba!important;
  box-shadow:0 0 0 2px #48d6c03d,0 5px 16px #0005!important;
 }
+
+/* Day2Day logo in Google sign-in panel. */
+.web-auth-mark{background:transparent!important}
+.web-auth-mark img{display:block;width:52px;height:52px;border-radius:15px}

@@ -1,4 +1,4 @@
-name: Build Running Tab Android widget
+name: Build Day2Day Android widget
 
 on:
   push:
@@ -81,19 +81,23 @@ jobs:
       - name: Save installable APK
         uses: actions/upload-artifact@v4
         with:
-          name: Running-Tab-Widget-APK
+          name: Day2Day-Widget-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
       - name: Publish phone download
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk running-tab-widget.apk
+          cp android/app/build/outputs/apk/debug/app-debug.apk day2day.apk
+          cp day2day.apk running-tab-widget.apk
           if gh release view widget-preview >/dev/null 2>&1; then
-            gh release upload widget-preview running-tab-widget.apk --clobber
+            gh release upload widget-preview day2day.apk running-tab-widget.apk --clobber
+            gh release edit widget-preview \
+              --title "Day2Day Android widget (preview)" \
+              --notes "Day2Day for Android with a Money, To-Do, and Shopping home-screen widget. The widget's top-left icon opens the full app. This update replaces Running Tab in place and keeps your saved entries."
           else
-            gh release create widget-preview running-tab-widget.apk \
-              --title "Running Tab Android widget (preview)" \
-              --notes "Android app with read-only Money, To-Do, and Shopping widget. Import your previous web-app data via Data & backup → Restore backup." \
+            gh release create widget-preview day2day.apk running-tab-widget.apk \
+              --title "Day2Day Android widget (preview)" \
+              --notes "Day2Day for Android with a Money, To-Do, and Shopping widget. The widget's top-left icon opens the app." \
               --prerelease
           fi

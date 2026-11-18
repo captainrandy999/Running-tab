@@ -1,7 +1,7 @@
 {
-  "name": "Running Tab",
-  "short_name": "Running Tab",
-  "description": "Track money owed and check off reminders from one simple entry.",
+  "name": "Day2Day",
+  "short_name": "Day2Day",
+  "description": "Money, reminders, notes and shopping, all in one daily companion.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
@@ -9,19 +9,19 @@
   "theme_color": "#163b59",
   "icons": [
     {
-      "src": "./icon-192.png",
+      "src": "./icon-192.png?v=45",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./icon-512.png",
+      "src": "./icon-512.png?v=45",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "./icon.svg",
+      "src": "./icon.svg?v=45",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"

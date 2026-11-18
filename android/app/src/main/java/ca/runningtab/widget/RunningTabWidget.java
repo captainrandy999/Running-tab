@@ -126,6 +126,7 @@ public class RunningTabWidget extends AppWidgetProvider {
             view.setOnClickPendingIntent(BUTTONS[n], switchIntent(context, widgetId, n));
         }
         view.setOnClickPendingIntent(R.id.widgetMic, activityIntent(context, widgetId, selected, true, false));
+        view.setOnClickPendingIntent(R.id.widgetOpenApp, activityIntent(context, widgetId, selected, false, false));
         view.setOnClickPendingIntent(R.id.widgetTitle, activityIntent(context, widgetId, selected, false, false));
 
         WidgetData.Summary money = WidgetData.moneySummary(context);

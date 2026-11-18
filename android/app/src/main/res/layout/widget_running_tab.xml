@@ -5,19 +5,23 @@
  android:background="@drawable/widget_background">
  <LinearLayout android:layout_width="match_parent" android:layout_height="44dp"
   android:orientation="horizontal" android:gravity="center_vertical">
+  <ImageView android:id="@+id/widgetOpenApp"
+   android:layout_width="44dp" android:layout_height="44dp"
+   android:layout_marginEnd="3dp" android:padding="6dp" android:src="@drawable/app_icon"
+   android:scaleType="fitCenter" android:contentDescription="Open Day2Day" />
   <TextView android:id="@+id/widgetTitle" android:layout_width="0dp" android:layout_weight="1"
-   android:layout_height="wrap_content" android:text="Running Tab" android:textColor="#163B59"
-   android:textStyle="bold" android:textSize="19sp" />
+   android:layout_height="wrap_content" android:text="@string/app_name" android:textColor="#163B59"
+   android:textStyle="bold" android:textSize="18sp" />
   <TextView android:id="@+id/widgetTheme" android:layout_width="38dp" android:layout_height="38dp"
    android:layout_marginEnd="5dp" android:gravity="center"
    android:text="☾" android:textColor="#163B59" android:textSize="23sp"
    android:background="@drawable/widget_tab_idle"
    android:contentDescription="Switch to night mode" />
-  <TextView android:id="@+id/widgetMic" android:layout_width="wrap_content" android:layout_height="38dp"
-   android:gravity="center" android:paddingLeft="10dp" android:paddingRight="10dp"
-   android:text="🎤 Dictate" android:textColor="#163B59" android:textSize="13sp"
+  <TextView android:id="@+id/widgetMic" android:layout_width="42dp" android:layout_height="38dp"
+   android:gravity="center"
+   android:text="🎤" android:textColor="#163B59" android:textSize="19sp"
    android:background="@drawable/widget_tab_idle"
-   android:contentDescription="Open Running Tab and dictate a new entry" />
+   android:contentDescription="Open Day2Day and dictate a new entry" />
  </LinearLayout>
  <LinearLayout android:layout_width="match_parent" android:layout_height="46dp"
   android:orientation="horizontal" android:paddingBottom="5dp">

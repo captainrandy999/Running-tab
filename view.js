@@ -1,4 +1,4 @@
-/* Running Tab view controller: shared entry with swipeable Money, To-Do, Shopping lists. */
+/* Day2Day view controller: shared entry with swipeable Money, To-Do, Shopping lists. */
 (()=>{
 'use strict';
 const viewport=document.getElementById('viewViewport');

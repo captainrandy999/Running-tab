@@ -1,4 +1,4 @@
-/* Running Tab install UI. Voice recognition remains an optional browser feature. */
+/* Day2Day install UI. Voice recognition remains an optional browser feature. */
 (()=>{
 'use strict';
 let deferred=null;
