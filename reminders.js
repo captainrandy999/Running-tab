@@ -1,5 +1,5 @@
 /* Calendar handoff and editable on-device reminders for To-Do items.
-   No calendar access is granted to Day2Day: the user reviews the event in
+   No calendar access is granted to MyDay: the user reviews the event in
    their chosen calendar. Background alerts are scheduled by the native APK. */
 (()=>{
 'use strict';
@@ -27,7 +27,7 @@ function permissionState(){
  let allowed=false;
  try{allowed=!!native().notificationPermissionGranted();}catch(e){}
  label.textContent=allowed
-  ?'🔔 Notifications allowed. Dated To-Dos with phone alerts enabled can notify you when Day2Day is closed.'
+  ?'🔔 Notifications allowed. Dated To-Dos with phone alerts enabled can notify you when MyDay is closed.'
   :'🔕 Notifications are off. Enable them here so dated To-Dos can alert you when the app is closed.';
  btn.textContent=allowed?'Notifications enabled':'Enable phone notifications';
  btn.disabled=allowed;
@@ -56,7 +56,7 @@ function calendar(task){
  const toUtc=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
  const params=new URLSearchParams({
   action:'TEMPLATE',text:task.title,dates:toUtc(start)+'/'+toUtc(end),
-  details:(task.body||'')?.slice(0,700)||'Created from Day2Day'
+  details:(task.body||'')?.slice(0,700)||'Created from MyDay'
  });
  const url='https://calendar.google.com/calendar/render?'+params;
  const w=window.open(url,'_blank');

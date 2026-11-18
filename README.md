@@ -1,8 +1,8 @@
-# Day2Day
+# MyDay
 
-An Android-installable web app for **Money**, **To-Do**, and **Shopping**.
+An Android-installable web app for **Money**, **To-Do**, **Shopping**, and reminders, with a firefighter-inspired logo.
 
-[Open Day2Day](https://captainrandy999.github.io/Running-tab/)
+[Open MyDay](https://captainrandy999.github.io/Running-tab/)
 
 ## One box, three lists
 
@@ -36,7 +36,7 @@ Money uses local storage key `running-tab-simple-v1`, To-Do uses `running-tab-to
 
 Expand **Data & backup** to export a single JSON file containing all three lists. Restoring a current backup replaces all three lists after confirmation. Older v1 backups are still accepted: they replace Money and To-Do while leaving the current Shopping list untouched.
 
-Reminders are checklists, not scheduled Android notifications. Clearing browser site data may erase local records, so download backups if you start relying on the app.
+The browser/PWA reminder list behaves as a checklist. The native MyDay Android APK can also schedule phone notifications and snooze actions when notifications are enabled. Clearing browser site data may erase local records, so download backups if you start relying on the app.
 
 ## Relative reminder dates and calendar
 
@@ -48,7 +48,7 @@ In the To-Do review, tap the **calendar date button** to open a month grid. Tap 
 
 A native Android wrapper and **read-only, scrollable home-screen widget** are included under [android/](android/). The widget has Money, To-Do and Shopping tabs, shows full names and amounts, and opens the full app for entry editing. Tapping **🎤 Dictate** opens Android speech recognition in the app.
 
-- [Download the preview APK](https://github.com/captainrandy999/Running-tab/releases/download/widget-preview/day2day.apk).
+- [Download the MyDay Android APK](https://github.com/captainrandy999/Running-tab/releases/download/widget-preview/myday.apk).
 - [Build details and Android setup](android/README.md).
 - [Latest build status](https://github.com/captainrandy999/Running-tab/actions/workflows/android-widget.yml).
 
@@ -214,3 +214,9 @@ The Android v1.10 APK adds three notification actions on each dated To-Do alert:
 **Day2Day is the new name for Running Tab.** The Android home-screen widget has a small Day2Day **2** icon in its upper-left corner; tap it to open the full app at the selected Money, To-Do, or Shopping section. The title also opens the app, and the compact microphone button still launches dictation. The app label, launcher icon, browser title, and installable web-app icons use the new brand.
 
 This is an **in-place upgrade**: the Android application ID, signing certificate, hosted URL, storage keys, Google Drive data filename, and backup JSON format stay the same. Existing entries and sync compatibility are preserved. New manual backup downloads use a `day2day-backup-YYYY-MM-DD.json` filename; older Running Tab JSON backups still restore normally. You may remove the separate app shortcut from the home screen without uninstalling Day2Day because the widget icon now launches it.
+
+## MyDay branding (Android v2.1)
+
+The app is now **MyDay**, with a cream firefighter helmet and checkmark over crossed teal firefighter axe and Halligan. The Halligan matches the chosen reference: an adz and pike at the head, with a two-pronged fork at the other end. The new icon appears on the Android launcher, the widget's top-left shortcut, the web app and the PWA.
+
+Install **[myday.apk](https://github.com/captainrandy999/Running-tab/releases/download/widget-preview/myday.apk)** over the existing Day2Day APK. The Android application ID `ca.runningtab.widget`, signing identity, site URL, data keys, Google Drive sync data, reminders and saved entries stay the same; no uninstall or data migration is needed. New JSON backup downloads are named `myday-backup-YYYY-MM-DD.json`, and old backups are still accepted.

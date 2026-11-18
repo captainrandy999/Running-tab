@@ -130,7 +130,7 @@ public class MainActivity extends Activity {
         if (!getPreferences(MODE_PRIVATE).getBoolean("intro_seen", false)) {
             getPreferences(MODE_PRIVATE).edit().putBoolean("intro_seen", true).apply();
             new AlertDialog.Builder(this)
-                .setTitle("Welcome to Day2Day")
+                .setTitle("Welcome to MyDay")
                 .setMessage("To bring over your current entries, open the older Running Tab web app in Chrome, choose Data & backup → Download backup. Then open Data & backup → Restore backup here and select that file. After importing, this Android version keeps the home-screen widget updated.")
                 .setPositiveButton("Got it", (dialog, which) -> {})
                 .show();
@@ -190,9 +190,9 @@ public class MainActivity extends Activity {
         if (requestCode != ALERT_PERMISSION) return;
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             ReminderManager.restore(this);
-            Toast.makeText(this, "Day2Day notifications enabled.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "MyDay notifications enabled.", Toast.LENGTH_SHORT).show();
         } else {
-            Toast.makeText(this, "Phone alerts are off. You can enable them in Android Settings → Apps → Day2Day → Notifications.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Phone alerts are off. You can enable them in Android Settings → Apps → MyDay → Notifications.", Toast.LENGTH_LONG).show();
         }
         alertPermissionChanged();
     }
@@ -240,7 +240,7 @@ public class MainActivity extends Activity {
     }
 
     private void injectBridge() {
-        // Day2Day stays a regular, updatable GitHub Pages app in this WebView.
+        // MyDay stays a regular, updatable GitHub Pages app in this WebView.
         // Only the three existing storage keys are read; no account or server is added.
         String script = """
             (function(){
@@ -310,7 +310,7 @@ public class MainActivity extends Activity {
         try {
             JSONObject parsed = new JSONObject(json);
             if (!"running-tab-backup".equals(parsed.optString("format"))) {
-                notifyBackup(false, "Invalid Day2Day backup format.");
+                notifyBackup(false, "Invalid MyDay backup format.");
                 return;
             }
             backupToSave = json;
@@ -397,14 +397,14 @@ public class MainActivity extends Activity {
                 }
                 byte[] bytes = output.toByteArray();
                 if (bytes.length >= 2 && bytes[0] == 0x50 && bytes[1] == 0x4b)
-                    throw new IllegalArgumentException("That's an APK or ZIP, not a Day2Day JSON backup.");
+                    throw new IllegalArgumentException("That's an APK or ZIP, not a MyDay JSON backup.");
                 String json = new String(bytes, StandardCharsets.UTF_8);
                 if (!json.isEmpty() && json.charAt(0) == '\uFEFF') json = json.substring(1);
                 JSONObject parsed;
                 try { parsed = new JSONObject(json); }
                 catch (Exception e) { throw new IllegalArgumentException("The selected file is not valid JSON."); }
                 if (!"running-tab-backup".equals(parsed.optString("format")))
-                    throw new IllegalArgumentException("This file isn't a Day2Day data backup.");
+                    throw new IllegalArgumentException("This file isn't a MyDay data backup.");
                 final String contents = json;
                 runOnUiThread(() -> sendImportToWeb(contents, 0, true));
             } catch (Exception ex) {
@@ -537,7 +537,7 @@ public class MainActivity extends Activity {
             Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-CA");
-            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Tell Day2Day");
+            intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Tell MyDay");
             intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
             startActivityForResult(intent, SPEECH_PICKER);
         } catch (ActivityNotFoundException ex) {

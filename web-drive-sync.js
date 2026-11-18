@@ -54,7 +54,7 @@
  function normalize(value,cloudFile=false){
   if(!value||typeof value!=='object')throw Error('Invalid synchronization file.');
   if(cloudFile&&(value.format!=='running-tab-cloud-sync'||value.version!==1))
-   throw Error('Google Drive has an unfamiliar Day2Day sync file.');
+   throw Error('Google Drive has an unfamiliar MyDay sync file.');
   const copy=blank();
   for(const name of NAMES)copy[name]=check(name,value[name]);
   return copy;
@@ -129,7 +129,7 @@
   const data=await (await get(URL+'?'+q.toString(),access)).json();
   if(data.nextPageToken)throw Error('Too many cloud sync files. Manual review needed.');
   if(!Array.isArray(data.files))throw Error('Google Drive returned an invalid file list.');
-  if(data.files.length>1)throw Error('Multiple Day2Day cloud files found. No changes uploaded.');
+  if(data.files.length>1)throw Error('Multiple MyDay cloud files found. No changes uploaded.');
   return data.files[0]||null;
  }
  async function download(access,file){

@@ -8,7 +8,7 @@
   <ImageView android:id="@+id/widgetOpenApp"
    android:layout_width="44dp" android:layout_height="44dp"
    android:layout_marginEnd="3dp" android:padding="6dp" android:src="@drawable/app_icon"
-   android:scaleType="fitCenter" android:contentDescription="Open Day2Day" />
+   android:scaleType="fitCenter" android:contentDescription="Open MyDay" />
   <TextView android:id="@+id/widgetTitle" android:layout_width="0dp" android:layout_weight="1"
    android:layout_height="wrap_content" android:text="@string/app_name" android:textColor="#163B59"
    android:textStyle="bold" android:textSize="18sp" />
@@ -21,7 +21,7 @@
    android:gravity="center"
    android:text="🎤" android:textColor="#163B59" android:textSize="19sp"
    android:background="@drawable/widget_tab_idle"
-   android:contentDescription="Open Day2Day and dictate a new entry" />
+   android:contentDescription="Open MyDay and dictate a new entry" />
  </LinearLayout>
  <LinearLayout android:layout_width="match_parent" android:layout_height="46dp"
   android:orientation="horizontal" android:paddingBottom="5dp">

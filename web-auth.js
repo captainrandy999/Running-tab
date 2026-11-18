@@ -1,4 +1,4 @@
-/* Day2Day web-only Google account authorization.
+/* MyDay web-only Google account authorization.
    Drive synchronization will be connected separately; this is the account gate.
    Never save Google access tokens in localStorage. OAuth client IDs are public.
    GitHub Pages is public hosting: this cannot hide source code or encrypt local data. */
@@ -80,7 +80,7 @@
         throw Error('Google did not return a verified account email.');
       const owner=getOwner();
       if(owner?.sub&&owner.sub!==profile.sub)
-        throw Error('This browser already has Day2Day entries associated with a different Google account. Sign in with the original account to avoid mixing data.');
+        throw Error('This browser already has MyDay entries associated with a different Google account. Sign in with the original account to avoid mixing data.');
       // Only accept a subject verified by Google's HTTPS userinfo endpoint.
       localStorage.setItem(ownerKey,JSON.stringify({sub:profile.sub,email:profile.email}));
       localStorage.setItem(sessionKey,JSON.stringify({
@@ -139,7 +139,7 @@
   });
   // Google blocks its browser sign-in flow inside Android WebViews. Android
   // instead authorizes with Play Services, and sends an access token only to
-  // this trusted top-level Day2Day page (never localStorage).
+  // this trusted top-level MyDay page (never localStorage).
   if(isNative&&typeof window.RunningTabAndroid?.connectGoogle==='function'){
     let nativeToken=null,nativeExpires=0,nativeAccount=null,generation=0;
     const nativeLink=document.querySelector('.web-sync-bar');

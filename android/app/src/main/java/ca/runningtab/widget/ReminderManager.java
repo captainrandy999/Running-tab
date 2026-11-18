@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-/** Schedules To-Do alarms on the phone, independently of the Day2Day WebView.
+/** Schedules To-Do alarms on the phone, independently of the MyDay WebView.
  *  Calendar events are only opened as editable drafts; the user saves them.
  */
 public final class ReminderManager {
@@ -332,7 +332,7 @@ public final class ReminderManager {
             context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager == null) return;
         NotificationChannel channel = new NotificationChannel(CHANNEL,
-            "Day2Day reminders", NotificationManager.IMPORTANCE_HIGH);
+            "MyDay reminders", NotificationManager.IMPORTANCE_HIGH);
         channel.setDescription("Alerts for dated To-Do items");
         manager.createNotificationChannel(channel);
     }

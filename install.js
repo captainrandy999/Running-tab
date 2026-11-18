@@ -1,4 +1,4 @@
-/* Day2Day install UI. Voice recognition remains an optional browser feature. */
+/* MyDay install UI. Voice recognition remains an optional browser feature. */
 (()=>{
 'use strict';
 let deferred=null;

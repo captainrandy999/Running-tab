@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#163b59">
-<title>Day2Day</title>
-<link rel="manifest" href="./manifest.webmanifest?v=45">
-<link rel="icon" type="image/svg+xml" href="./icon.svg?v=45">
+<title>MyDay</title>
+<link rel="manifest" href="./manifest.webmanifest?v=46">
+<link rel="icon" type="image/svg+xml" href="./icon.svg?v=46">
 <meta name="description" content="Track money owed and To-Dos with one spoken or typed entry.">
-<link rel="apple-touch-icon" href="./icon-192.png?v=45">
-<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png?v=46">
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png?v=46">
 <script>try{document.documentElement.dataset.theme=localStorage.getItem("running-tab-ui-theme-v1")==="dark"?"dark":"light"}catch(e){document.documentElement.dataset.theme="light"}</script>
 <script src="./web-auth-config.js"></script>
 <script>if(!window.RunningTabWebAuthConfig?.clientId||window.RunningTabAndroid)document.documentElement.classList.remove('web-auth-pending');</script>
@@ -31,12 +31,12 @@
 <link rel="stylesheet" href="./app.css?v=45">
 </head>
 <body>
-<section id="webAuthGate" class="web-auth-gate" hidden aria-label="Day2Day Google account sign-in">
+<section id="webAuthGate" class="web-auth-gate" hidden aria-label="MyDay Google account sign-in">
  <div class="web-auth-card">
-  <div class="web-auth-mark"><img src="./icon.svg?v=45" alt="" width="52" height="52"></div>
-  <h1>Day2Day</h1>
+  <div class="web-auth-mark"><img src="./icon-192.png?v=46" alt="" width="52" height="52"></div>
+  <h1>MyDay</h1>
   <h2>Sign in with Google</h2>
-  <p>Only Google accounts you've authorized for Day2Day can connect. Your existing records stay on this device.</p>
+  <p>Only Google accounts you've authorized for MyDay can connect. Your existing records stay on this device.</p>
   <button type="button" class="primary" id="webGoogleSignIn" disabled>Continue with Google</button>
   <button type="button" class="secondary" id="webOfflineContinue" hidden>Continue offline on this device</button>
   <p class="hint">Offline access is available after you sign in successfully on this browser. Use only devices you trust.</p>
@@ -128,7 +128,7 @@
    </form>
  </section>
  <div class="top-nav">
-<nav class="tabs" role="tablist" aria-label="Day2Day sections">
+<nav class="tabs" role="tablist" aria-label="MyDay sections">
 <button type="button" role="tab" class="tab-switch active" data-view="money" id="tabMoney" aria-controls="moneyPanel" aria-selected="true">💰 Money</button>
 <button type="button" role="tab" class="tab-switch" data-view="todo" id="tabTodo" aria-controls="todoPanel" aria-selected="false">✓ To-Do</button>
 <button type="button" role="tab" class="tab-switch" data-view="shopping" id="tabShopping" aria-controls="shoppingPanel" aria-selected="false">🛒 Shopping</button>
@@ -181,7 +181,7 @@
      <p class="info" id="reminderPermissionStatus">Preparing reminder settings…</p>
      <button type="button" id="enablePhoneAlerts" class="secondary small">Enable phone notifications</button>
      <p class="info">In the Android app v1.10+, expand a To-Do notification to choose <strong>Remind me again</strong>: 15 minutes, 1 hour or 4 hours. Snoozing does not change the To-Do due date.</p>
-     <p class="info">Use <strong>Add to calendar</strong> on a To-Do to open an event draft. Your calendar does not automatically sync back into Day2Day.</p>
+     <p class="info">Use <strong>Add to calendar</strong> on a To-Do to open an event draft. Your calendar does not automatically sync back into MyDay.</p>
     </section>
     <section class="admin-panel-section" id="adminCloudSection" aria-label="Google Drive synchronization">
      <h2 class="admin-heading">Google Drive</h2>
@@ -207,13 +207,13 @@
     <div class="tools-grid"><button type="button" id="downloadBackup" class="secondary">Download backup</button><button type="button" id="copyBackup" class="secondary">Copy backup text</button></div>
     <details id="backupTextPanel" hidden>
      <summary>Backup text (manual copy)</summary>
-     <p>Keep this text somewhere outside Day2Day, such as Samsung Notes or a secure document. Do not uninstall until your copy is safely stored.</p>
+     <p>Keep this text somewhere outside MyDay, such as Samsung Notes or a secure document. Do not uninstall until your copy is safely stored.</p>
      <textarea id="backupText" readonly rows="5" aria-label="Your backup data to copy"></textarea>
     </details>
     <details id="pasteRestorePanel">
      <summary>Restore a copied backup</summary>
      <p>Paste the complete JSON backup text here, then tap Restore. You will be asked to confirm before any entries are replaced.</p>
-     <textarea id="pastedBackup" rows="5" placeholder="Paste Day2Day JSON backup text" aria-label="Paste backup JSON"></textarea>
+     <textarea id="pastedBackup" rows="5" placeholder="Paste MyDay JSON backup text" aria-label="Paste backup JSON"></textarea>
      <div class="tools-grid"><button type="button" id="restorePastedBackup" class="secondary">Restore pasted backup</button></div>
     </details>
     <div class="tools-grid"><button type="button" id="restoreNativeBackup" class="secondary" hidden>Restore JSON backup file</button></div>
@@ -227,8 +227,8 @@
     </details>
     <details class="admin-subsection admin-install" id="installDetail">
      <summary>Install options</summary>
-<section class="install-panel" id="installPanel" aria-label="Install Day2Day">
-  <div><strong>Day2Day on your phone</strong><p>Install once and open it like a regular app.</p>
+<section class="install-panel" id="installPanel" aria-label="Install MyDay">
+  <div><strong>MyDay on your phone</strong><p>Install once and open it like a regular app.</p>
   <details class="install-tips"><summary>How to install</summary><p>In Chrome, tap the ⋮ menu → Add to Home screen → Install. The wording may be “Install app”.</p></details>
   <div id="installStatus" class="hint" role="status"></div></div>
   <button id="installBtn" type="button" class="primary" hidden>Install app</button>
@@ -237,7 +237,7 @@
    </div>
   </details>
  </section>
-<div class="foot">Day2Day · Saves locally first · Drive sync when connected · Voice transcription may use an online service.</div>
+<div class="foot">MyDay · Saves locally first · Drive sync when connected · Voice transcription may use an online service.</div>
 </main>
 <script>
 /* Keep the Admin drawer small, with only a short sync indicator when closed. */
@@ -596,7 +596,7 @@ function todoDueChange(){
  const nativeReady=typeof window.RunningTabAndroid?.enableNotifications==='function';
  $('todoNotify').disabled=!nativeReady;
  $('todoNotifyHelp').textContent=nativeReady
-  ?'Allow notifications in Settings to receive alerts even when Day2Day is closed.'
+  ?'Allow notifications in Settings to receive alerts even when MyDay is closed.'
   :'Phone alerts require the updated Android APK; calendar events can provide alerts in the browser version.';
  todoSummary();window.RunningTabCalendar?.sync();
 }
@@ -747,7 +747,7 @@ function updateEntryCue(){
 window.addEventListener('runningtab:view-changed',updateEntryCue);
 updateEntryCue();
 // Navigation is an action, not a saved entry. Leave place-name resolution and
-// current-location routing to Google Maps; Day2Day never needs GPS access.
+// current-location routing to Google Maps; MyDay never needs GPS access.
 function parseNavigation(input){
  const text=String(input||'').trim();
  const match=text.match(/^(?:please\s+)?(?:get\s+me\s+to|take\s+me\s+to|navigate\s+(?:me\s+)?to|(?:get\s+)?directions?\s+to|drive\s+to)\b\s*(.*)$/i);

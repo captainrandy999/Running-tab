@@ -1,8 +1,8 @@
-# Day2Day for Android — read-only home-screen widget
+# MyDay for Android — read-only home-screen widget
 
-This is a small native Android wrapper around the **same GitHub Pages Day2Day** interface, plus a large, scrollable **read-only** home-screen widget. The widget shows Money (full names and dollar amounts), To-Do reminders and deadlines, or Shopping (unchecked items). Tab buttons switch the widget list; none of the list items can be checked off on the widget.
+This is a small native Android wrapper around the **same GitHub Pages MyDay** interface, plus a large, scrollable **read-only** home-screen widget. The widget shows Money (full names and dollar amounts), To-Do reminders and deadlines, or Shopping (unchecked items). Tab buttons switch the widget list; none of the list items can be checked off on the widget.
 
-Tapping an item opens Day2Day to its section. Tapping the **🎤 microphone icon** opens Day2Day and launches Android's speech recognition, placing the result in the existing entry field for review. Editing, checking off and saving still happen in the full app.
+Tapping an item opens MyDay to its section. Tapping the **🎤 microphone icon** opens MyDay and launches Android's speech recognition, placing the result in the existing entry field for review. Editing, checking off and saving still happen in the full app.
 
 ## Download / install directly on Samsung
 
@@ -10,9 +10,9 @@ The GitHub Actions workflow builds a **test APK** and makes it available in:
 - [Preview release](https://github.com/captainrandy999/Running-tab/releases/tag/widget-preview)
 - [Workflow builds](https://github.com/captainrandy999/Running-tab/actions/workflows/android-widget.yml)
 
-When the build succeeds, tap the `day2day.apk` file from the preview release on your phone, allow installation from Chrome/Files if Android prompts, and install. This is a test version signed by a GitHub Actions debug key. It's not an official Play Store release. The build caches the test signing key for updates, but if that cache is ever evicted, a later APK may require uninstall/reinstall.
+When the build succeeds, tap the `myday.apk` file from the preview release on your phone, allow installation from Chrome/Files if Android prompts, and install. This is a test version signed by a GitHub Actions debug key. It's not an official Play Store release. The signing key is pinned to avoid accidental certificate rotation.
 
-Next, press and hold a blank section of your Samsung home screen → **Widgets** → **Day2Day** → add the large widget. Resize it to fit most of a home-screen page.
+Next, press and hold a blank section of your Samsung home screen → **Widgets** → **MyDay** → add the large widget. Resize it to fit most of a home-screen page.
 
 ## Important: one-time data transfer
 
@@ -20,7 +20,7 @@ Your old installed Chrome PWA and this new Android WebView have **separate local
 
 1. Open the *older Running Tab web app* in Chrome or via your existing shortcut.
 2. Expand **Data & backup**, choose **Download backup** and save the JSON file on your phone.
-3. Open the **new native Day2Day app**.
+3. Open the **new native MyDay app**.
 4. Expand **Data & backup → Restore backup**, choose your JSON file, and confirm.
 5. The widget should update with all Money, To-Do and Shopping records.
 
@@ -108,3 +108,7 @@ Version code 11 supports an in-place upgrade from v1.9 and retains all existing 
 ## v2.0 — Day2Day rebrand and launcher shortcut on the widget
 
 The visible app and widget name is **Day2Day**. The same native APK application ID (`ca.runningtab.widget`), stable signing certificate, and local data stores are retained so users can install directly over Running Tab without clearing or migrating data. A 32dp Day2Day icon at the **top-left of the widget** launches the full app to its currently selected section. The title retains the same action. The microphone action is shown as a compact **🎤** icon to make room for the title and new launch button. The full Day2Day icon is also used by Android's launcher. The separate app shortcut can be removed from the home screen without uninstalling the app.
+
+## v2.1 — MyDay firefighter branding
+
+MyDay uses a cream firefighter helmet with checkmark, crossed teal fire axe and Halligan, and the chosen Halligan silhouette showing an adz, pike and fork. Both Android launcher and widget shortcut display the updated icon. Install `myday.apk` over the existing Day2Day app; the stable package ID, signing certificate, data, reminders and Google Drive sync settings are unchanged. The prior `day2day.apk` download filename remains as a compatibility alias.
