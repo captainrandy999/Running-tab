@@ -44,8 +44,10 @@ function rows(items,completed=false,expandedNoteId=null){
    +'<button type="button" class="secondary small note-edit-trigger" data-edit-note="'+esc(t.id)+'">'+(hasBody?'Edit note':'Add note')+'</button>'
    +'<form class="note-edit-form" data-note-edit-form="'+esc(t.id)+'" hidden>'
    +'<label>Note details<textarea maxlength="12000" data-note-editor aria-label="Edit note for '+title+'" placeholder="Add details, follow-up information, or updates…">'+esc(body)+'</textarea></label>'
-   +'<div class="note-edit-actions"><button type="submit" class="primary small">Save changes</button>'
-   +'<button type="button" class="secondary small" data-cancel-note="'+esc(t.id)+'">Cancel</button></div></form>'
+   +'<div class="note-edit-actions"><button type="button" class="secondary small" data-note-dictate>🎤 Dictate</button>'
+   +'<button type="submit" class="primary small">Save changes</button>'
+   +'<button type="button" class="secondary small" data-cancel-note="'+esc(t.id)+'">Cancel</button></div>'
+   +'<div class="edit-dictation-status" data-edit-dictation-status role="status" aria-live="polite" hidden></div></form>'
    +'</details><div class="task-meta"><span class="task-status-pill task-status-pill--'+appearance.tone+'">'+appearance.text+'</span>'
    +'<span class="task-date-label">'+esc(label(t))+(t.dueType==='day'&&t.notify?' · 🔔 '+esc(t.remindTime||'08:00'):'')+'</span></div>'
    +(!t.done?'<div class="task-reminder-actions task-quick-actions'+(t.dueType==='day'?' has-calendar':'')+'">'
@@ -80,6 +82,10 @@ function render(expandedNoteId=null){
     el.hidden=true;
     form.hidden=false;
     form.querySelector('[data-note-editor]').focus();
+  }));
+  $(root).querySelectorAll('[data-note-dictate]').forEach(el=>el.addEventListener('click',()=>{
+    const form=el.closest('[data-note-edit-form]');
+    window.RunningTabFlow?.dictateInto(form?.querySelector('[data-note-editor]'),form?.querySelector('[data-edit-dictation-status]'));
   }));
   $(root).querySelectorAll('[data-cancel-note]').forEach(el=>el.addEventListener('click',()=>{
     const detail=el.closest('.note-details');

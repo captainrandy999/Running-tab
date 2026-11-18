@@ -6,11 +6,13 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.content.IntentSender;
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.inputmethod.InputMethodManager;
 import android.speech.RecognizerIntent;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
@@ -534,6 +536,14 @@ public class MainActivity extends Activity {
 
     private void startDictation() {
         try {
+            if (web != null) {
+                web.clearFocus();
+                InputMethodManager keyboard =
+                    (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (keyboard != null) {
+                    keyboard.hideSoftInputFromWindow(web.getWindowToken(), 0);
+                }
+            }
             Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
             intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "en-CA");
@@ -541,6 +551,8 @@ public class MainActivity extends Activity {
             intent.putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1);
             startActivityForResult(intent, SPEECH_PICKER);
         } catch (ActivityNotFoundException ex) {
+            if (web != null) web.evaluateJavascript(
+                "window.RunningTabFlow?.cancelEditorDictation();", null);
             Toast.makeText(this, "No speech recognizer found. Use your Samsung keyboard microphone.", Toast.LENGTH_LONG).show();
         }
     }
@@ -571,12 +583,17 @@ public class MainActivity extends Activity {
                 fileCallback.onReceiveValue(picked);
                 fileCallback = null;
             }
-        } else if (requestCode == SPEECH_PICKER && resultCode == RESULT_OK && result != null) {
-            ArrayList<String> words = result.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
-            if (words != null && !words.isEmpty() && web != null) {
-                String safe = JSONObject.quote(words.get(0));
-                web.evaluateJavascript(
-                        "window.RunningTabFlow?.acceptDictation(" + safe + ");", null);
+        } else if (requestCode == SPEECH_PICKER) {
+            ArrayList<String> words = resultCode == RESULT_OK && result != null
+                ? result.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS) : null;
+            if (web != null) {
+                if (words != null && !words.isEmpty()) {
+                    String safe = JSONObject.quote(words.get(0));
+                    web.evaluateJavascript(
+                            "window.RunningTabFlow?.acceptDictation(" + safe + ");", null);
+                } else {
+                    web.evaluateJavascript("window.RunningTabFlow?.cancelEditorDictation();", null);
+                }
             }
         }
     }

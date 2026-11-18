@@ -112,3 +112,7 @@ The visible app and widget name is **Day2Day**. The same native APK application 
 ## v2.1 — MyDay firefighter branding
 
 MyDay uses a cream firefighter helmet with checkmark, crossed teal fire axe and Halligan, and the chosen Halligan silhouette showing an adz, pike and fork. Both Android launcher and widget shortcut display the updated icon. Install `myday.apk` over the existing Day2Day app; the stable package ID, signing certificate, data, reminders and Google Drive sync settings are unchanged. The prior `day2day.apk` download filename remains as a compatibility alias.
+
+## v2.2 — Dictation inside existing notes
+
+The **🎤 Dictate** button now sits to the left of **Save changes** in the editor for To-Do/Note details and Money notes. It closes the keyboard and invokes Android's existing speech recognizer. The transcript is appended to the editable field, leaving the record unchanged until the user taps Save changes. Cancelling recognition keeps the current typed text intact. Browser/PWA users can use the same button if their browser supports speech recognition.

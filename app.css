@@ -213,6 +213,9 @@ label.label{font-size:13px;letter-spacing:.05px}
 .note-edit-form textarea{display:block;width:100%;margin-top:6px;min-height:140px!important;resize:vertical;font-size:15px;line-height:1.5}
 .note-edit-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}
 .note-edit-actions button{min-height:38px}
+.edit-dictation-status{font-size:12px;margin-top:7px;color:#237a63;font-weight:650}
+.edit-dictation-status.error{color:#aa4852}
+.edit-dictation-status[hidden]{display:none!important}
 
 /* Browser-only Google account gate. Activated only after a Web OAuth client ID is configured. */
 html.web-auth-pending body{visibility:hidden!important}

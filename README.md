@@ -220,3 +220,7 @@ This is an **in-place upgrade**: the Android application ID, signing certificate
 The app is now **MyDay**, with a cream firefighter helmet and checkmark over crossed teal firefighter axe and Halligan. The Halligan matches the chosen reference: an adz and pike at the head, with a two-pronged fork at the other end. The new icon appears on the Android launcher, the widget's top-left shortcut, the web app and the PWA.
 
 Install **[myday.apk](https://github.com/captainrandy999/Running-tab/releases/download/widget-preview/myday.apk)** over the existing Day2Day APK. The Android application ID `ca.runningtab.widget`, signing identity, site URL, data keys, Google Drive sync data, reminders and saved entries stay the same; no uninstall or data migration is needed. New JSON backup downloads are named `myday-backup-YYYY-MM-DD.json`, and old backups are still accepted.
+
+## Dictate edits to Notes and To-Dos (Android v2.2 / web v47)
+
+Open an existing To-Do or Note, tap **Edit note** or **Add note**, then use **🎤 Dictate** immediately to the left of **Save changes**. The keyboard closes and MyDay opens voice input. Recognized text is appended to the existing note details, without erasing previous text or creating another To-Do. Review the result, edit it if necessary, and tap **Save changes** to store it. Cancelling dictation leaves the original text untouched. The same button is available when editing additional notes attached to Money entries.
