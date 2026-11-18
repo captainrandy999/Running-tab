@@ -200,3 +200,10 @@ Navigation commands are **actions only**: no Money, To-Do or Shopping record is 
 ## Pin feature removed (November 2026)
 
 The experimental **Drop a pin here** feature, saved-pin list, and voice shortcuts for pins have been removed. Regular **Navigate to…** and **Get me to…** destination-based Google Maps navigation continues to work. No GPS permission is requested by Running Tab. Existing pin data from the short-lived test version is not erased on upgrade, but is no longer shown or used by the app.
+
+
+## Brighter section selector and reminder snoozes (web v44 / Android v1.10)
+
+The selected **Money**, **To-Do**, or **Shopping** control now uses a bright teal highlight with contrasting text in both day and night mode. The inactive controls remain muted so it is clear which list is open.
+
+The Android v1.10 APK adds three notification actions on each dated To-Do alert: **15 min**, **1 hour**, and **4 hours**. Tap one to dismiss the current alert and schedule another notification after that interval. A To-Do can be snoozed repeatedly. The original To-Do due date/time stays unchanged, and snoozes are cancelled if that To-Do is completed, removed, has its date/time changed, or has phone notifications disabled. Snoozes are private to the Android device and are rescheduled after restart. Android battery/notification policies may delay a reminder beyond the requested interval. Browser/PWA users can still use calendar events but cannot get these native snooze actions without the updated APK.

@@ -96,3 +96,10 @@ All existing To-Dos without a Phone notification option enabled remain unchanged
 ## v1.9 — Removed saved-pin experiment
 
 Removes the Android location permission, WebView geolocation handling, and the experimental **Drop a pin here** feature added in v1.8. Regular Google Maps navigation remains. Version code 10 allows a direct upgrade over v1.8 (code 9) without uninstalling or clearing local app data.
+
+
+## v1.10 — Remind me again notification actions
+
+When a scheduled To-Do alert arrives, its expanded Android notification offers **15 min**, **1 hour**, and **4 hours** quick actions. These send explicit immutable broadcast PendingIntents to ReminderReceiver. ReminderManager persists a per-task snooze time and original due timestamp in app-private preferences, schedules a separate snooze alarm, and restores pending snoozes after restart or clock changes. Tapping a choice clears the current notification without altering the saved To-Do. Another alert offers the same three choices again. Completing/deleting the To-Do, changing its due time, or turning off its notification cancels the pending snooze. No new permissions or paid services are needed beyond existing notifications. If exact alarms are unavailable, Android may deliver the snoozed alert later than the selected interval.
+
+Version code 11 supports an in-place upgrade from v1.9 and retains all existing Running Tab entries.
