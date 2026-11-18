@@ -95,7 +95,7 @@ jobs:
             gh release upload widget-preview myday.apk day2day.apk running-tab-widget.apk --clobber
             gh release edit widget-preview \
               --title "MyDay Android widget (preview)" \
-              --notes "MyDay for Android with the firefighter helmet, crossed Halligan and axe icon, Money/To-Do/Shopping widget and Dictate buttons inside existing Note and To-Do editors. Install over the existing Day2Day app; saved entries, sync settings, and the Android package ID remain unchanged."
+              --notes "MyDay for Android with the firefighter helmet, crossed Halligan and axe icon, Money/To-Do/Shopping widget and Dictate buttons inside existing Note and To-Do editors. Tap an individual widget item to jump straight to it; editor buttons now fit on one row. Install over the existing Day2Day app; saved entries, sync settings, and the Android package ID remain unchanged."
           else
             gh release create widget-preview myday.apk day2day.apk running-tab-widget.apk \
               --title "MyDay Android widget (preview)" \

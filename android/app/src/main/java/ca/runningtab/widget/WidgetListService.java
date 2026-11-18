@@ -44,6 +44,7 @@ public class WidgetListService extends RemoteViewsService {
             row.setTextViewText(R.id.rowSubtitle, item.subtitle);
             Intent fillIn = new Intent();
             fillIn.putExtra(MainActivity.EXTRA_SECTION, tab);
+            fillIn.putExtra(MainActivity.EXTRA_ITEM_KEY, item.itemKey);
             row.setOnClickFillInIntent(R.id.rowRoot, fillIn);
             return row;
         }

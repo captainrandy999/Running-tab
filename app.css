@@ -329,6 +329,18 @@ color:#3d6373;font-size:12px}
 .money-record-note--empty{color:#82939d;font-style:italic}
 .money-record-actions,.money-record-form-actions{display:flex;flex-wrap:wrap;align-items:center;gap:7px;margin-top:11px}
 .money-record-actions button,.money-record-form-actions button{min-height:38px;padding:7px 10px;font-size:12px;margin:0}
+/* Keep Dictate, Save changes and Cancel beside one another in narrow editors. */
+.note-edit-actions,.money-record-form-actions{flex-wrap:nowrap;gap:5px}
+.note-edit-actions button,.money-record-form-actions button{
+ min-height:35px;min-width:0;padding:5px 7px;font-size:11px;
+ margin:0;white-space:nowrap;flex:0 1 auto
+}
+@media(max-width:370px){
+ .note-edit-actions,.money-record-form-actions{gap:4px}
+ .note-edit-actions button,.money-record-form-actions button{padding:5px;font-size:10px}
+}
+/* Brief locator when someone opens a particular item from the home widget. */
+.widget-jump-highlight{outline:3px solid #efb84e;outline-offset:2px;box-shadow:0 0 0 5px #efb84e38!important}
 .money-record-actions button.danger{margin-left:auto;background:#fff!important}
 .money-record-edit{border-top:1px solid #e0e8ed;margin-top:4px;padding-top:12px}
 .money-editor-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}

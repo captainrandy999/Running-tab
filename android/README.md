@@ -2,7 +2,7 @@
 
 This is a small native Android wrapper around the **same GitHub Pages MyDay** interface, plus a large, scrollable **read-only** home-screen widget. The widget shows Money (full names and dollar amounts), To-Do reminders and deadlines, or Shopping (unchecked items). Tab buttons switch the widget list; none of the list items can be checked off on the widget.
 
-Tapping an item opens MyDay to its section. Tapping the **🎤 microphone icon** opens MyDay and launches Android's speech recognition, placing the result in the existing entry field for review. Editing, checking off and saving still happen in the full app.
+Tapping an item opens MyDay to its specific Money person, To-Do/Note, or Shopping item, with a brief highlight for orientation. Tapping the **🎤 microphone icon** opens MyDay and launches Android's speech recognition, placing the result in the existing entry field for review. Editing, checking off and saving still happen in the full app.
 
 ## Download / install directly on Samsung
 
@@ -116,3 +116,7 @@ MyDay uses a cream firefighter helmet with checkmark, crossed teal fire axe and 
 ## v2.2 — Dictation inside existing notes
 
 The **🎤 Dictate** button now sits to the left of **Save changes** in the editor for To-Do/Note details and Money notes. It closes the keyboard and invokes Android's existing speech recognizer. The transcript is appended to the editable field, leaving the record unchanged until the user taps Save changes. Cancelling recognition keeps the current typed text intact. Browser/PWA users can use the same button if their browser supports speech recognition.
+
+## v2.3 — Open individual widget items
+
+The collection widget passes a stable item key through its row click's fill-in Intent. When MyDay opens, the web view selects the correct section, expands the relevant Money person or To-Do/Note, or scrolls to the matching Shopping item. The selected entry is outlined briefly. This works whether MyDay is already open or is cold-started from the widget. The inline editor buttons are also compact enough to occupy one row on narrow screens.

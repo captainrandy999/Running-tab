@@ -20,7 +20,12 @@ final class WidgetData {
     static final class Row {
         final String title;
         final String subtitle;
-        Row(String title, String subtitle) { this.title = title; this.subtitle = subtitle; }
+        final String itemKey;
+        Row(String title, String subtitle, String itemKey) {
+            this.title = title;
+            this.subtitle = subtitle;
+            this.itemKey = itemKey;
+        }
     }
     static final class Summary {
         final long owedToMe;
@@ -87,7 +92,7 @@ final class WidgetData {
             String balance = net > 0 ? "Owes you " + dollars(net)
                     : net < 0 ? "You owe " + dollars(-net) : "Settled";
             if (p.tbd > 0) balance += "  ·  " + p.tbd + " price TBD";
-            rows.add(new Row(p.name, balance));
+            rows.add(new Row(p.name, balance, p.name));
         }
         return rows;
     }
@@ -123,7 +128,7 @@ final class WidgetData {
                 String preview = body.length() > 68 ? body.substring(0, 67) + "…" : body;
                 detail = "📝 Note · " + detail + (preview.isEmpty() ? "" : " · " + preview);
             }
-            rows.add(new Row(title, detail));
+            rows.add(new Row(title, detail, r.optString("id", "")));
         }
         return rows;
     }
@@ -142,7 +147,7 @@ final class WidgetData {
             JSONObject item = records.optJSONObject(i);
             if (item != null && !item.optBoolean("done", false)) {
                 String name = item.optString("name", "").trim();
-                if (!name.isEmpty()) rows.add(new Row(name, "To buy"));
+                if (!name.isEmpty()) rows.add(new Row(name, "To buy", item.optString("id", "")));
             }
         }
         return rows;

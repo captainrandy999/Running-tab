@@ -224,3 +224,9 @@ Install **[myday.apk](https://github.com/captainrandy999/Running-tab/releases/do
 ## Dictate edits to Notes and To-Dos (Android v2.2 / web v47)
 
 Open an existing To-Do or Note, tap **Edit note** or **Add note**, then use **🎤 Dictate** immediately to the left of **Save changes**. The keyboard closes and MyDay opens voice input. Recognized text is appended to the existing note details, without erasing previous text or creating another To-Do. Review the result, edit it if necessary, and tap **Save changes** to store it. Cancelling dictation leaves the original text untouched. The same button is available when editing additional notes attached to Money entries.
+
+## Widget item links and compact editor buttons (Android v2.3 / web v48)
+
+The **Dictate**, **Save changes**, and **Cancel** buttons in inline Note, To-Do and Money editors are smaller and stay on a single row, including on narrower phones.
+
+Tapping a specific row in the Android home-screen widget now opens that item: a Money person expands to show their entries, a To-Do or Note opens its details, and a Shopping item scrolls into view. The target gets a brief gold outline so it is easy to find. The top-left widget shortcut and title still open the currently selected section as before. No item IDs or local data formats were changed.

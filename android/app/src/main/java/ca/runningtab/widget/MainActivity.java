@@ -41,6 +41,7 @@ import java.nio.charset.StandardCharsets;
 public class MainActivity extends Activity {
     public static final String EXTRA_SECTION = "section";
     public static final String EXTRA_DICTATE = "dictate";
+    public static final String EXTRA_ITEM_KEY = "widget_item_key";
     private static final int FILE_PICKER = 2001;
     private static final int SPEECH_PICKER = 2002;
     private static final int BACKUP_PICKER = 2003;
@@ -59,6 +60,8 @@ public class MainActivity extends Activity {
     private ValueCallback<Uri[]> fileCallback;
     private boolean loaded = false;
     private boolean dictateOnLoad = false;
+    private String pendingWidgetItemKey = null;
+    private String pendingWidgetSection = null;
     private boolean googleAuthBusy = false;
     private boolean googleConsentPending = false;
     private String backupToSave = null;
@@ -98,6 +101,13 @@ public class MainActivity extends Activity {
                 if (!isTrusted(Uri.parse(url))) return;
                 loaded = true;
                 injectBridge();
+                if (pendingWidgetItemKey != null) {
+                    String key = pendingWidgetItemKey;
+                    String section = pendingWidgetSection;
+                    pendingWidgetItemKey = null;
+                    pendingWidgetSection = null;
+                    web.postDelayed(() -> openWidgetItem(section, key), 200);
+                }
                 if (getPreferences(MODE_PRIVATE).getBoolean(GOOGLE_AUTH_PREF, false)) {
                     web.postDelayed(() -> authorizeGoogle(false), 350);
                 }
@@ -152,14 +162,25 @@ public class MainActivity extends Activity {
 
     private void handleLaunchIntent(Intent i, boolean existingPage) {
         if (i == null) return;
+        String section = getSection(i);
+        String itemKey = i.getStringExtra(EXTRA_ITEM_KEY);
         if (i.getBooleanExtra(EXTRA_DICTATE, false)) {
             if (existingPage && loaded) startDictation();
             else dictateOnLoad = true;
         }
         if (existingPage && loaded) {
-            String section = getSection(i);
-            web.evaluateJavascript("window.RunningTabView?.show(" + JSONObject.quote(section) + ");", null);
+            if (itemKey != null && !itemKey.isEmpty()) openWidgetItem(section, itemKey);
+            else web.evaluateJavascript("window.RunningTabView?.show(" + JSONObject.quote(section) + ");", null);
+        } else {
+            pendingWidgetSection = section;
+            pendingWidgetItemKey = itemKey == null || itemKey.isEmpty() ? null : itemKey;
         }
+    }
+
+    private void openWidgetItem(String section, String itemKey) {
+        if (web == null || !loaded) return;
+        web.evaluateJavascript("window.RunningTabView?.openItem(" +
+                JSONObject.quote(section) + "," + JSONObject.quote(itemKey) + ");", null);
     }
 
     @Override protected void onNewIntent(Intent intent) {
