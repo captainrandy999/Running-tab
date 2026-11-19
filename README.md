@@ -230,3 +230,7 @@ Open an existing To-Do or Note, tap **Edit note** or **Add note**, then use **ðŸ
 The **Dictate**, **Save changes**, and **Cancel** buttons in inline Note, To-Do and Money editors are smaller and stay on a single row, including on narrower phones.
 
 Tapping a specific row in the Android home-screen widget now opens that item: a Money person expands to show their entries, a To-Do or Note opens its details, and a Shopping item scrolls into view. The target gets a brief gold outline so it is easy to find. The top-left widget shortcut and title still open the currently selected section as before. No item IDs or local data formats were changed.
+
+## Widget jump alignment fix (web v49)
+
+Jumping to a specific widget item now scrolls the page **vertically only**. The horizontal Money/To-Do/Shopping carousel is clipped without becoming a scrollable container, and its horizontal offset is reset whenever a tab opens. This prevents sideways misalignment and half-visible tabs after a widget jump. The existing MyDay v2.3 Android app receives the fix from the hosted website; no APK reinstall is needed.

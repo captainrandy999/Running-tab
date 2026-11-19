@@ -54,7 +54,7 @@ label.label{font-size:13px;letter-spacing:.05px}
 
 
 /* One-page layout: only the record panels slide. Header and shared entry stay put. */
-.view-viewport{position:relative;overflow:hidden;width:100%;min-height:180px;touch-action:pan-y;transition:height .27s ease}
+.view-viewport{position:relative;overflow:hidden;overflow:clip;width:100%;min-height:180px;touch-action:pan-y;transition:height .27s ease}
 .view-track{display:flex;align-items:flex-start;width:100%;will-change:transform;transition:transform .29s cubic-bezier(.22,.78,.2,1)}
 .view-panel{flex:0 0 100%;width:100%;min-width:0}
 .view-panel[aria-hidden="true"]{pointer-events:none}

@@ -21,6 +21,9 @@ function show(name,opts={}){
  navigationSequence++;
  active=name;
  const idx=order.indexOf(name);
+ // The carousel must never retain a hidden horizontal scroll offset.
+ // Such an offset combines with the translated track and leaves tabs half-shown.
+ viewport.scrollLeft=0;
  track.style.transform='translate3d(-'+(idx*100)+'%,0,0)';
  for(const key of order){
   const selected=key===name;
@@ -78,9 +81,16 @@ function openItem(name,itemKey){
   if(!item){if(attempts++<12)setTimeout(reveal,200);return;}
   item.classList.add('widget-jump-highlight');
   adjust();
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{
-   if(thisNavigation===navigationSequence)item.scrollIntoView({behavior:'smooth',block:'center'});
-  }));
+  // scrollIntoView can also scroll the horizontally clipped carousel, causing
+  // a lasting sideways offset. Move the document vertically only instead.
+  setTimeout(()=>{
+   if(thisNavigation!==navigationSequence||!item.isConnected)return;
+   viewport.scrollLeft=0;
+   const rect=item.getBoundingClientRect();
+   const visibleHeight=Math.min(rect.height,window.innerHeight);
+   const top=window.scrollY+rect.top-(window.innerHeight-visibleHeight)/2;
+   window.scrollTo({left:0,top:Math.max(0,top),behavior:'smooth'});
+  },320); // Wait for the expanded panel's height transition to settle.
   setTimeout(()=>item.classList.remove('widget-jump-highlight'),4500);
  };
  reveal();
