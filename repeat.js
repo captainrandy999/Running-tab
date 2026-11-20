@@ -21,6 +21,7 @@
  }
  function describe(r){
   if(!r)return '';
+  if(r.type==='minutes')return 'Every '+(r.interval||5)+' minute'+(r.interval===1?'':'s')+' until stopped';
   if(r.type==='daily')return 'Every day';
   if(r.type==='weekly')return 'Every '+DAYS[r.weekday??0].replace(/^./,c=>c.toUpperCase());
   if(r.type==='monthly-day')return 'Every month on day '+r.day;
@@ -49,6 +50,7 @@
  }
  function firstDue(repeat,time='08:00',reference=new Date()){
   const base=new Date(reference.getFullYear(),reference.getMonth(),reference.getDate(),12);
+  if(repeat?.type==='minutes')return firstMinuteAlert(repeat.interval,reference).due;
   if(repeat?.type==='months')return dateKey(monthDay(base.getFullYear(),base.getMonth()+Math.max(1,Number(repeat.interval)||3),base.getDate()));
   const anchored=withAnchor(repeat,dateKey(base));
   const previous=new Date(base);
@@ -58,10 +60,23 @@
   const result=next({repeat:anchored,due:dateKey(previous),remindTime:time},reference);
   return result||dateKey(base);
  }
+ function firstMinuteAlert(interval,reference=new Date()){
+  const minutes=Math.max(1,Math.min(1440,Number(interval)||5));
+  const target=new Date(Math.ceil((reference.getTime()+minutes*60000)/60000)*60000);
+  return {due:dateKey(target),time:pad(target.getHours())+':'+pad(target.getMinutes())};
+ }
  function extract(input){
   let text=String(input||''),repeat=null,match;
-  match=text.match(/\b(?:on\s+)?(?:the\s+)?(first|second|third|fourth|last)\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\s+of\s+(?:every|each)\s+month\b/i);
+  match=text.match(/\b(?:every|each)\s+(\d{1,4}|one|two|three|four|five|ten|fifteen|thirty|sixty)\s+(minutes?|mins?|hours?|hrs?)\b/i);
+  if(match){const units=Number(match[1])||NUMBERS[match[1].toLowerCase()]||({fifteen:15,thirty:30,sixty:60}[match[1].toLowerCase()]||0);
+   repeat={type:'minutes',interval:units*(/^h/i.test(match[2])?60:1)};
+   const tail=text.slice(match.index+match[0].length);
+   const stop=tail.match(/^\s+until\s+(?:i|we)\s+(?:turn\s+off\s+(?:my\s+)?reminders?|stop\s+(?:the\s+)?reminders?|stop\s+it|cancel\s+it)\b/i);
+   if(stop)match[0]+=stop[0];
+  }
+  if(!repeat){match=text.match(/\b(?:on\s+)?(?:the\s+)?(first|second|third|fourth|last)\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\s+of\s+(?:every|each)\s+month\b/i);
   if(match)repeat={type:'monthly-weekday',week:ORDINAL[match[1].toLowerCase()],weekday:DAYS.indexOf(match[2].toLowerCase())};
+  }
   if(!repeat){match=text.match(/\bevery\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten|twelve)\s+months?\b/i);
    if(match)repeat={type:'months',interval:Number(match[1])||NUMBERS[match[1].toLowerCase()]||1};}
   if(!repeat){match=text.match(/\b(?:every|each)\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i);
@@ -83,12 +98,13 @@
    if(!r.week)r.week=Math.min(4,Math.ceil(d.getDate()/7));
   }
   if(r.type==='months')r.interval=Math.max(1,Math.min(120,Number(r.interval)||3));
+  if(r.type==='minutes')r.interval=Math.max(1,Math.min(1440,Number(r.interval)||5));
   return r;
  }
  function complete(task,at=new Date()){
   if(!task||task.done)return task;
   const stamp=at.toISOString();
-  if(task.repeat){
+  if(task.repeat&&task.repeat.type!=='minutes'){
    const due=next(task,at);
    if(due)return {...task,due,done:false,lastCompletedAt:stamp,completedOccurrences:(task.completedOccurrences||0)+1,updatedAt:stamp};
   }
@@ -110,5 +126,5 @@
   if(typeof window!=='undefined')window.dispatchEvent(new Event('runningtab:todo-changed'));
   return true;
  }
- return {DAYS,describe,next,firstDue,extract,withAnchor,complete,completeId,dateKey,dateOf};
+ return {DAYS,describe,next,firstDue,firstMinuteAlert,extract,withAnchor,complete,completeId,dateKey,dateOf};
 });

@@ -32,6 +32,25 @@ test('actual To-Do parser turns spoken recurrence into a dated task',()=>{
  assert.equal(oneTime.repeat,null);
 });
 
+test('spoken every-five-minutes-until-stopped means automatic reminders, not title text',()=>{
+ const p=parser();
+ const result=p.interpret('remind me to turn off my reminders every 5 minutes until I turn off my reminders');
+ assert.equal(result.title,'Turn off my reminders');
+ assert.equal(result.repeat.type,'minutes');
+ assert.equal(result.repeat.interval,5);
+ assert.equal(result.dueType,'day');
+ assert.ok(/^([01]\d|2[0-3]):[0-5]\d$/.test(result.remindTime));
+ const target=new Date(result.due+'T'+result.remindTime);
+ assert.ok(target.getTime()>Date.now()&&target.getTime()-Date.now()<7*60*1000);
+});
+
+test('minute interval starts in five minutes and Done stops the nagging cycle',()=>{
+ const start=Repeat.firstMinuteAlert(5,new Date(2026,10,20,11,35,20));
+ assert.deepEqual(start,{due:'2026-11-20',time:'11:41'});
+ const result=Repeat.complete({done:false,repeat:{type:'minutes',interval:5},due:start.due,remindTime:start.time},new Date(2026,10,20,11,41));
+ assert.equal(result.done,true);
+});
+
 test('parses normal spoken recurrence schedules',()=>{
  const weekly=Repeat.extract('Remind me every Friday at 4 PM to submit my hours');
  assert.deepEqual(weekly.repeat,{type:'weekly',weekday:5});

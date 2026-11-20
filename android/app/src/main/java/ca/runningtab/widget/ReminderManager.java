@@ -224,6 +224,24 @@ public final class ReminderManager {
         } catch (Exception ignored) { return -1; }
     }
 
+    private static int repeatMinutes(JSONObject item) {
+        if (item == null) return 0;
+        JSONObject repeat = item.optJSONObject("repeat");
+        if (repeat == null || !"minutes".equals(repeat.optString("type"))) return 0;
+        int amount = repeat.optInt("interval", 0);
+        return amount >= 1 && amount <= 1440 ? amount : 0;
+    }
+
+    /** One future alarm at a time. Reconstruct it after reboot without replaying missed alerts. */
+    private static long nextMinuteAlarm(JSONObject item, long now) {
+        long anchor = scheduledTime(item);
+        int interval = repeatMinutes(item);
+        if (anchor <= 0 || interval == 0) return -1;
+        if (anchor > now) return anchor;
+        long step = interval * 60_000L;
+        return anchor + ((now - anchor) / step + 1) * step;
+    }
+
     private static PendingIntent pending(Context context, String id, int flags) {
         Intent intent = new Intent(context, ReminderReceiver.class);
         intent.setAction(ACTION_ALERT);
@@ -290,7 +308,8 @@ public final class ReminderManager {
     }
 
     private static void schedule(Context context, JSONObject item) {
-        long at = scheduledTime(item);
+        long at = repeatMinutes(item) > 0
+            ? nextMinuteAlarm(item, System.currentTimeMillis()) : scheduledTime(item);
         if (at <= System.currentTimeMillis()) return;
         scheduleAt(context, at,
             pending(context, item.optString("id"), PendingIntent.FLAG_UPDATE_CURRENT));
@@ -317,6 +336,14 @@ public final class ReminderManager {
         } catch (Exception ignored) { return; }
         if (!writeSnoozes(context, snoozes)) return;
         // Replace any earlier snooze; a task has at most one queued repeat alert.
+        if (repeatMinutes(task) > 0) {
+            AlarmManager alarms = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            PendingIntent regular = pending(context, id, PendingIntent.FLAG_NO_CREATE);
+            if (regular != null) {
+                if (alarms != null) alarms.cancel(regular);
+                regular.cancel();
+            }
+        }
         cancelSnoozedAlarm(context, id);
         scheduleAt(context, at,
             snoozedPending(context, id, PendingIntent.FLAG_UPDATE_CURRENT));
@@ -337,6 +364,10 @@ public final class ReminderManager {
         }
         if (at > now + 60_000) return;
         clearSnooze(context, id);
+        if (repeatMinutes(task) > 0) {
+            scheduleAt(context, now + repeatMinutes(task) * 60_000L,
+                pending(context, id, PendingIntent.FLAG_UPDATE_CURRENT));
+        }
         postNotification(context, task);
     }
 
@@ -351,6 +382,18 @@ public final class ReminderManager {
         }
         long due = scheduledTime(task);
         long now = System.currentTimeMillis();
+        if (repeatMinutes(task) > 0) {
+            if (due < 0 || due > now + 60_000L) return;
+            // Continue automatic short-interval alerts until Done, Pause, Stop,
+            // or the device-wide MyDay notifications switch is turned off.
+            // Wait a full interval after the last delivered notification;
+            // avoid several alerts close together when Android delivered late.
+            long next = now + repeatMinutes(task) * 60_000L;
+            if (next > now) scheduleAt(context, next,
+                pending(context, id, PendingIntent.FLAG_UPDATE_CURRENT));
+            postNotification(context, task);
+            return;
+        }
         if (due < 0 || due > now + 60000 || due < now - 24 * HOUR_MS) return;
         postNotification(context, task);
     }

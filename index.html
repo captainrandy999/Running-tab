@@ -17,19 +17,19 @@
 <script src="./web-drive-sync.js" defer></script>
 <script src="./install.js" defer></script>
 <script src="./backup.js" defer></script>
-<script src="./repeat.js?v=52" defer></script>
-<script src="./todo-panel.js?v=52" defer></script>
+<script src="./repeat.js?v=53" defer></script>
+<script src="./todo-panel.js?v=53" defer></script>
 <script src="./shopping-panel.js" defer></script>
 <script src="./view.js?v=49" defer></script>
 <script src="./calendar.js" defer></script>
-<script src="./reminders.js?v=52" defer></script>
+<script src="./reminders.js?v=53" defer></script>
 <style>
 :root {font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:#172a3c; background:#f4f7fa; color-scheme:light}
 *{box-sizing:border-box}body{margin:0;line-height:1.48}main{max-width:700px;margin:0 auto;padding:18px 12px 54px}h1,h2,h3,p{margin-top:0}h1{font-size:25px;letter-spacing:-.5px;margin-bottom:1px}h2{font-size:18px;margin-bottom:12px}button,input,select,textarea{font:inherit}button{border:0;border-radius:11px;min-height:45px;padding:10px 15px;font-weight:700;cursor:pointer}button.primary{background:#163b59;color:white}button.secondary{background:#e9f0f5;color:#163b59}button.outline{background:#fff;color:#163b59;border:1px solid #b9ccd9}button.danger{background:transparent;color:#9b3741;border:1px solid #e4c9cf}button:focus-visible,input:focus,textarea:focus,select:focus{outline:3px solid #8bb9d8;outline-offset:2px}input,textarea,select{display:block;border:1px solid #b9c9d5;background:#fff;border-radius:10px;padding:11px 12px;width:100%;color:#14283b;font-size:16px;min-height:46px}textarea{height:92px;resize:vertical}
 .head{display:flex;align-items:center;gap:11px;margin:3px 0 17px}.mark{background:#163b59;color:white;border-radius:13px;display:grid;place-items:center;width:46px;height:46px;font-weight:900;font-size:26px}.muted{color:#607386}.hint{font-size:13px;color:#607386;margin:7px 0}.card{background:#fff;border:1px solid #dde6ec;border-radius:17px;padding:17px;margin-bottom:14px;box-shadow:0 1px 3px #163b5908}.label{display:block;font-size:13px;color:#41586a;font-weight:700;margin:0 0 6px}.actions{display:flex;gap:9px;align-items:center;margin-top:11px;flex-wrap:wrap}.actions .primary{flex:1}.callout{background:#eef5f9;border:1px solid #cadae5;border-radius:11px;padding:12px;margin:13px 0 9px;font-size:14px;white-space:pre-line}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{margin-top:11px}.field.wide{grid-column:1/-1}.hide{display:none!important}.totals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}.stat{background:#fff;border:1px solid #dce5eb;border-radius:15px;padding:14px}.stat .label{color:#62778a;font-weight:600}.number{font-size:clamp(21px,5vw,29px);font-weight:800;letter-spacing:-.5px}.pos{color:#0b765d}.neg{color:#a33b43}.info{font-size:13px;color:#5b7081}.person{border:1px solid #dce5ec;border-radius:12px;margin-bottom:9px;background:#fcfdfe;overflow:hidden}.person summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:center;padding:13px}.person summary::-webkit-details-marker{display:none}.person .who{font-weight:800;overflow-wrap:anywhere}.person .right{text-align:right;flex-shrink:0}.person .amount{font-size:17px;font-weight:800}.person .detail{padding:0 13px 12px}.person .meta{border-top:1px solid #e8eef2;padding-top:10px;font-size:13px;color:#607486}.entry{padding:11px 0;display:flex;align-items:flex-start;justify-content:space-between;border-top:1px solid #e7edf2;gap:9px}.entry:nth-child(1){border-top:0}.entry-name{font-weight:700}.entry-notes{font-size:13px;color:#597085;overflow-wrap:anywhere}.entry-right{min-width:90px;text-align:right}.entry-right strong{display:block;white-space:nowrap}.small{font-size:12px;min-height:32px;padding:5px 8px;margin-top:4px}.tag{background:#fff2e4;color:#8d511d;font-size:12px;padding:3px 6px;border-radius:6px;font-weight:700}.notice{margin-top:12px;padding:9px 11px;border-radius:9px;background:#eff8f1;color:#216b44;font-size:14px}.notice.bad{background:#fff0ef;color:#932a31}.bottom{margin-top:25px;text-align:center}.bottom button{font-size:12px}.foot{font-size:12px;text-align:center;color:#718494;margin-top:8px}@media(max-width:430px){main{padding:12px 10px 32px}.card{padding:14px}.grid{grid-template-columns:1fr}.field.wide{grid-column:auto}.stat{padding:12px 10px}.person summary{padding:12px}}
 .tabs{display:flex;gap:8px;margin-bottom:15px}.tabs a{flex:1;background:white;border:1px solid #cbdbe4;border-radius:12px;padding:11px;text-align:center;text-decoration:none;color:#163b59;font-weight:800}.tabs a.active{background:#163b59;border-color:#163b59;color:white}
 </style>
-<link rel="stylesheet" href="./app.css?v=52">
+<link rel="stylesheet" href="./app.css?v=53">
 </head>
 <body>
 <section id="webAuthGate" class="web-auth-gate" hidden aria-label="MyDay Google account sign-in">
@@ -126,6 +126,7 @@
         <option value="monthly-day">Every month (same day)</option>
         <option value="monthly-weekday">Monthly on a weekday</option>
         <option value="months">Every few months</option>
+        <option value="minutes">Every few minutes (until stopped)</option>
        </select>
        <div class="repeat-details" id="todoRepeatWeekdayFields" hidden>
         <label for="todoRepeatWeekday">Weekday</label>
@@ -139,7 +140,11 @@
         <label for="todoRepeatMonths">Repeat every (months)</label>
         <input id="todoRepeatMonths" type="number" inputmode="numeric" min="1" max="120" step="1" value="3">
        </div>
-       <p class="info" id="todoRepeatHint">Marking a repeating To-Do done moves it to its next date. You can pause or stop it later.</p>
+       <div class="repeat-details" id="todoRepeatMinuteFields" hidden>
+        <label for="todoRepeatMinutes">Repeat every (minutes)</label>
+        <input id="todoRepeatMinutes" type="number" inputmode="numeric" min="1" max="1440" step="1" value="5">
+       </div>
+       <p class="info" id="todoRepeatHint">Daily, weekly and monthly reminders move to their next date when marked Done. Minute reminders keep alerting until you mark Done, pause or stop them.</p>
       </div>
    </form>
    <form id="shoppingReviewForm" class="hide">
@@ -479,7 +484,11 @@ function interpret(input){
  if(recurrence.repeat){
   if(recurrence.repeat.type==='months'&&!recurrence.repeat.day)recurrence.repeat.day=now().getDate();
   if(dueType==='none'){
-   dueType='day';due=window.MyDayRepeat.firstDue(recurrence.repeat,remindTime||'08:00');
+   dueType='day';
+   if(recurrence.repeat.type==='minutes'){
+    if(remindTime){const first=now();if(new Date(iso(first)+'T'+remindTime).getTime()<=Date.now())first.setDate(first.getDate()+1);due=iso(first);}
+    else {const first=window.MyDayRepeat.firstMinuteAlert(recurrence.repeat.interval);due=first.due;remindTime=first.time;}
+   } else due=window.MyDayRepeat.firstDue(recurrence.repeat,remindTime||'08:00');
   }
   if(dueType==='month')return {error:'Repeating reminders need a specific calendar day.'};
  }
@@ -707,6 +716,7 @@ function todoRepeatValue(){
  if(type==='weekly'||type==='monthly-weekday')r.weekday=Number($('todoRepeatWeekday').value);
  if(type==='monthly-weekday')r.week=Number($('todoRepeatWeek').value);
  if(type==='months')r.interval=Number($('todoRepeatMonths').value);
+ if(type==='minutes')r.interval=Number($('todoRepeatMinutes').value);
  return window.MyDayRepeat?.withAnchor(r,due)||null;
 }
 function setTodoRepeat(r){
@@ -714,6 +724,7 @@ function setTodoRepeat(r){
  if(Number.isInteger(r?.weekday))$('todoRepeatWeekday').value=String(r.weekday);
  if(Number.isInteger(r?.week))$('todoRepeatWeek').value=String(r.week);
  if(r?.interval)$('todoRepeatMonths').value=String(r.interval);
+ if(r?.type==='minutes'&&r.interval)$('todoRepeatMinutes').value=String(r.interval);
  todoRepeatChange(false);
 }
 function todoRepeatChange(adjustDate=true){
@@ -721,13 +732,17 @@ function todoRepeatChange(adjustDate=true){
  $('todoRepeatWeekdayFields').hidden=!(weekly||nth);
  $('todoRepeatWeekFields').hidden=!nth;
  $('todoRepeatMonthFields').hidden=type!=='months';
+ $('todoRepeatMinuteFields').hidden=type!=='minutes';
  if(adjustDate&&type!=='none'){
   const day=$('todoDueDay').value||today(),d=new Date(day+'T12:00:00');
   if((weekly||nth)&&!Number.isNaN(d.getTime()))$('todoRepeatWeekday').value=String(d.getDay());
   if(nth&&!Number.isNaN(d.getTime()))$('todoRepeatWeek').value=String(Math.min(4,Math.ceil(d.getDate()/7)));
   if($('todoDueType').value!=='day'){
    $('todoDueType').value='day';
-   $('todoDueDay').value=window.MyDayRepeat.firstDue(todoRepeatValue(),$('todoRemindTime').value||'08:00');
+   if(type==='minutes'){
+    const first=window.MyDayRepeat.firstMinuteAlert(Number($('todoRepeatMinutes').value));
+    $('todoDueDay').value=first.due;$('todoRemindTime').value=first.time;
+   } else $('todoDueDay').value=window.MyDayRepeat.firstDue(todoRepeatValue(),$('todoRemindTime').value||'08:00');
    todoDueChange();
   }
  }
@@ -1002,7 +1017,7 @@ $('review').addEventListener('click',()=>{
 $('todoCancel').addEventListener('click',()=>{hideForm();feedback('');$('words').focus();});
 $('todoDueType').addEventListener('change',todoDueChange);
 for(const id of ['todoTitle','todoDueDay','todoDueMonth','noteBody','todoRemindTime','todoNotify'])$(id).addEventListener('input',todoSummary);
-for(const id of ['todoRepeat','todoRepeatWeekday','todoRepeatWeek','todoRepeatMonths'])$(id).addEventListener('change',()=>todoRepeatChange(id==='todoRepeat'));
+for(const id of ['todoRepeat','todoRepeatWeekday','todoRepeatWeek','todoRepeatMonths','todoRepeatMinutes'])$(id).addEventListener('change',()=>todoRepeatChange(id==='todoRepeat'));
 $('todoReviewForm').addEventListener('submit',event=>{
  event.preventDefault();
  const title=$('todoTitle').value.trim(),type=$('todoDueType').value,kind=$('todoKind').value;
@@ -1019,6 +1034,7 @@ $('todoReviewForm').addEventListener('submit',event=>{
  const repeat=todoRepeatValue();
  if(repeat&&type!=='day'){feedback('Repeating reminders require a specific day.','bad');return;}
  if(repeat?.type==='months'&&(!Number.isInteger(repeat.interval)||repeat.interval<1||repeat.interval>120)){feedback('Choose 1–120 months between reminders.','bad');return;}
+ if(repeat?.type==='minutes'&&(!Number.isInteger(repeat.interval)||repeat.interval<1||repeat.interval>1440)){feedback('Choose 1–1440 minutes between reminders.','bad');return;}
  if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(remindTime)){feedback('Choose a valid reminder time.','bad');return;}
  if(notify&&new Date(due+'T'+remindTime).getTime()<=Date.now()){
   feedback('Choose a future date and time for your phone alert.','bad');return;

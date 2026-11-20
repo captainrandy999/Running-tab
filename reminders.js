@@ -126,14 +126,22 @@ function repeatFields(form,day){
  if(type==='weekly'||type==='monthly-weekday')r.weekday=Number(form.querySelector('[data-repeat-weekday]').value);
  if(type==='monthly-weekday')r.week=Number(form.querySelector('[data-repeat-week]').value);
  if(type==='months')r.interval=Number(form.querySelector('[data-repeat-months]').value);
+ if(type==='minutes')r.interval=Number(form.querySelector('[data-repeat-minutes]').value);
  return repeat().withAnchor(r,day);
 }
 document.addEventListener('change',event=>{
  if(!event.target.matches?.('[data-reminder-repeat]'))return;
  const form=event.target.closest('[data-reminder-form]');if(!form)return;
  const type=event.target.value;
- for(const [selector,show] of [['[data-repeat-weekday-row]',type==='weekly'||type==='monthly-weekday'],['[data-repeat-week-row]',type==='monthly-weekday'],['[data-repeat-months-row]',type==='months']]){
+ for(const [selector,show] of [['[data-repeat-weekday-row]',type==='weekly'||type==='monthly-weekday'],['[data-repeat-week-row]',type==='monthly-weekday'],['[data-repeat-months-row]',type==='months'],['[data-repeat-minutes-row]',type==='minutes']]){
   const el=form.querySelector(selector);if(el)el.hidden=!show;
+ }
+ if(type==='minutes'){
+  const day=form.querySelector('[data-reminder-date]'),time=form.querySelector('[data-reminder-time]');
+  if(!validDay(day.value)||new Date(day.value+'T'+time.value).getTime()<=Date.now()){
+   const first=repeat().firstMinuteAlert(Number(form.querySelector('[data-repeat-minutes]').value));
+   day.value=first.due;time.value=first.time;
+  }
  }
  const date=form.querySelector('[data-reminder-date]')?.value;
  if(date){const d=new Date(date+'T12:00:00');if(!Number.isNaN(d.getTime())){
@@ -152,6 +160,9 @@ document.addEventListener('submit',event=>{
  const r=repeatFields(form,day);
  if(r?.type==='months'&&(!Number.isInteger(r.interval)||r.interval<1||r.interval>120)){
   message('Repeat interval must be 1–120 months.',true);return;
+ }
+ if(r?.type==='minutes'&&(!Number.isInteger(r.interval)||r.interval<1||r.interval>1440)){
+  message('Repeat interval must be 1–1440 minutes.',true);return;
  }
  if(notify&&new Date(day+'T'+time).getTime()<=Date.now()){
   message('Choose a future date and time for the phone alert.',true);return;
