@@ -76,7 +76,7 @@
       <div class="grid">
         <div class="field"><label class="label" for="direction">Who owes whom?</label><select id="direction"><option value="to_me">They owe me</option><option value="i_owe">I owe them</option></select></div>
         <div class="field"><label class="label" for="person">Person or company</label><input id="person" maxlength="100" list="people" required><datalist id="people"></datalist></div>
-        <div class="field"><label class="label" for="amount">Amount ($ CAD)</label><input id="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Blank = price TBD"></div>
+        <div class="field"><label class="label" for="amount">Amount ($ CAD)</label><input id="amount" type="number" min="0.01" step="0.01" inputmode="decimal" placeholder="Blank = $ TBD"></div>
         <div class="field"><label class="label" for="date">Date</label><input id="date" type="date" required></div>
         <div class="field wide"><label class="label" for="reason">Reason</label><input id="reason" maxlength="400" placeholder="Materials, gas, repairs…"></div>
       </div>
@@ -518,7 +518,7 @@ function feedback(s,kind=''){
   },4000);
  }
 }
-function fillSummary(){const p=$('person').value.trim()||'(person not specified)';const amount=$('amount').value.trim();const amt=amount && Number(amount)>0?money(Math.round(Number(amount)*100)):'Price TBD';const reason=$('reason').value.trim();$('summary').textContent=($('direction').value==='to_me'?p+' owes you ': 'You owe '+p+' ')+amt+(reason?'\nReason: '+reason:'');}
+function fillSummary(){const p=$('person').value.trim()||'(person not specified)';const amount=$('amount').value.trim();const amt=amount && Number(amount)>0?money(Math.round(Number(amount)*100)):'$ TBD';const reason=$('reason').value.trim();$('summary').textContent=($('direction').value==='to_me'?p+' owes you ': 'You owe '+p+' ')+amt+(reason?'\nReason: '+reason:'');}
 function showForm(parsed){$('direction').value=parsed.direction;$('person').value=parsed.person;$('amount').value=parsed.cents===null?'':(parsed.cents/100).toFixed(2);$('reason').value=parsed.reason;$('date').value=parsed.date;$('reviewForm').classList.remove('hide');fillSummary();}
 function hideForm(){$('reviewForm').classList.add('hide');$('todoReviewForm').classList.add('hide');$('shoppingReviewForm').classList.add('hide');window.RunningTabCalendar?.close();$('entryType').textContent='';updateNextAction();}
 function updateNextAction(){
@@ -954,7 +954,7 @@ $('reviewForm').addEventListener('submit',e=>{
  e.preventDefault();let person=normalizeName($('person').value);const match=records.find(x=>caseKey(x.person)===caseKey(person));if(match)person=match.person;
  const v=$('amount').value.trim();const dollars=v===''?null:Number(v);const cents=dollars===null?null:Math.round(dollars*100);
  if(!person||person.length>100){feedback('Please enter a person or company.','bad');return;}
- if(cents!==null&&(!Number.isSafeInteger(cents)||cents<=0||cents>10000000000)){feedback('Enter an amount greater than zero, or leave it blank if the price is not known yet.','bad');return;}
+ if(cents!==null&&(!Number.isSafeInteger(cents)||cents<=0||cents>10000000000)){feedback('Enter an amount greater than zero, or leave it blank if the amount is unknown.','bad');return;}
  const rec={id:(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),person,direction:$('direction').value,cents,reason:$('reason').value.trim(),date:$('date').value||today(),created:new Date().toISOString(),settled:false};
  const next=[...records,rec];try{localStorage.setItem(STORE,JSON.stringify(next));}catch(e){feedback('Could not save to this browser. Check storage permissions.','bad');return;}
  records=next;$('words').value='';hideForm();render();feedback('Saved. Ready for another entry.');window.RunningTabView?.show('money');finishSuccessfulSave();
@@ -965,7 +965,7 @@ function renderMoneyRecord(r,options={}){
  const body=typeof r.body==='string'?r.body:'';
  const hasNote=body.trim().length>0;
  const title=String(r.reason||'').trim()||'No description yet';
- const amount=r.cents===null?'<span class="tag">Price TBD</span>':money(r.cents);
+ const amount=r.cents===null?'<span class="tag">$ TBD</span>':money(r.cents);
  const opened=options.open?' open':'';
  const label=owed?'They owe you':'You owe them';
  const selectedDirection='<option value="to_me"'+(owed?' selected':'')+'>They owe me</option>'
@@ -975,7 +975,7 @@ function renderMoneyRecord(r,options={}){
   +'<div class="money-editor-grid">'
   +'<label class="label">Person or company<input name="person" type="text" maxlength="100" required value="'+safe(r.person)+'"></label>'
   +'<label class="label">Who owes whom?<select name="direction">'+selectedDirection+'</select></label>'
-  +'<label class="label">Amount ($ CAD)<input name="amount" type="text" inputmode="decimal" maxlength="14" placeholder="Blank = price TBD" value="'+(r.cents===null?'':(r.cents/100).toFixed(2))+'"></label>'
+  +'<label class="label">Amount ($ CAD)<input name="amount" type="text" inputmode="decimal" maxlength="14" placeholder="Blank = $ TBD" value="'+(r.cents===null?'':(r.cents/100).toFixed(2))+'"></label>'
   +'<label class="label">Date<input name="date" type="date" required value="'+safe(r.date||'')+'"></label>'
   +'<label class="label money-editor-full">Description<input name="reason" type="text" maxlength="400" value="'+safe(r.reason||'')+'" placeholder="What was this for?"></label>'
   +'<label class="label money-editor-full money-editor-note">Additional note<textarea name="body" maxlength="12000" rows="4" placeholder="Add context, follow-up details, payment information…">'+safe(body)+'</textarea></label>'
@@ -1027,7 +1027,7 @@ function render(options={}){
  $('personList').innerHTML=sorted.length?sorted.map(p=>{
   const net=p.to-p.owe;
   const lbl=net>0?'Owes you '+money(net):net<0?'You owe '+money(-net)
-   :p.tbd?'Price TBD':p.active===0&&p.settled?'Settled':'No balance';
+   :p.tbd?'$ TBD':p.active===0&&p.settled?'Settled':'No balance';
   const tint=net>0?'receivable':net<0?'payable':p.tbd?'pending':'settled';
   const key=caseKey(p.name);
   const groupOpen=openPeople.has(key)||p.entries.some(x=>x.id===options.expandRecordId);
@@ -1038,13 +1038,13 @@ function render(options={}){
   return '<details class="person money-person money-person--'+tint+'" data-person-key="'+safe(key)+'"'+(groupOpen?' open':'')+'>'
    +'<summary class="money-person-summary"><div><div class="who">'+safe(p.name)+'</div>'
    +'<div class="info">'+p.entries.length+' '+(p.entries.length===1?'entry':'entries')
-   +(p.tbd?' · '+p.tbd+' price TBD':'')+(p.settled?' · '+p.settled+' settled':'')+'</div></div>'
+   +(p.tbd?' · '+p.tbd+' × $ TBD':'')+(p.settled?' · '+p.settled+' settled':'')+'</div></div>'
    +'<div class="right"><div class="amount '+(net>0?'pos':net<0?'neg':'')+'">'+lbl+'</div>'
    +'<div class="info money-person-open-cue">'+(groupOpen?'Tap to collapse':'Tap to see entries')+'</div></div></summary>'
    +'<div class="detail"><div class="meta money-person-breakdown">'
    +'<span class="money-breakdown-positive">Owed to you '+money(p.to)+'</span>'
    +'<span class="money-breakdown-negative">You owe '+money(p.owe)+'</span>'
-   +(p.tbd?'<span class="money-breakdown-pending">'+p.tbd+' unpriced</span>':'')
+   +(p.tbd?'<span class="money-breakdown-pending">'+p.tbd+' × $ TBD</span>':'')
    +(p.settled?'<span class="money-breakdown-settled">'+p.settled+' settled</span>':'')
    +'</div><div class="money-record-list">'+rows+'</div></div></details>';
  }).join(''):'<p class="info">No entries yet. Add your first one above.</p>';

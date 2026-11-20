@@ -93,10 +93,10 @@ final class WidgetData {
             long net = p.toMe - p.iOwe;
             String balance = net > 0 ? "Owes you " + dollars(net)
                     : net < 0 ? "You owe " + dollars(-net)
-                    : p.tbd > 0 ? "Price TBD"
+                    : p.tbd > 0 ? "$ TBD"
                     : p.active == 0 && p.settled > 0 ? "Settled" : "No balance";
-            if (p.tbd > 0 && net != 0) balance += "  ·  " + p.tbd + " price TBD";
-            else if (p.tbd > 1) balance += "  ·  " + p.tbd + " unpriced";
+            if (p.tbd > 0 && net != 0) balance += "  ·  " + p.tbd + " × $ TBD";
+            else if (p.tbd > 1) balance += "  ·  " + p.tbd + " entries";
             if (p.settled > 0) balance += "  ·  " + p.settled + " settled";
             rows.add(new Row(p.name, balance, p.name));
         }

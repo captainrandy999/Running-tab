@@ -30,9 +30,9 @@ const record = (id, cents, direction, settled = false) => ({
   id, person: 'Martec', direction, cents, reason: 'Genie', date: '2026-11-20', settled
 });
 
-test('unpriced outstanding debt is Price TBD, never Settled', () => {
+test('unpriced outstanding debt is $ TBD, never Settled', () => {
   const result = render([record('one', null, 'i_owe')]);
-  assert.match(result.personList.innerHTML, /Price TBD/);
+  assert.match(result.personList.innerHTML, /\$ TBD/);
   assert.doesNotMatch(result.personList.innerHTML, />Settled<\/div>/);
   assert.match(result.personList.innerHTML, /data-money-settled="one"/);
   assert.equal(result.iOwe.textContent, '$0.00');

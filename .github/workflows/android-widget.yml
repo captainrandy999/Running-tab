@@ -95,7 +95,7 @@ jobs:
             gh release upload widget-preview myday.apk day2day.apk running-tab-widget.apk --clobber
             gh release edit widget-preview \
               --title "MyDay Android widget (preview)" \
-              --notes "MyDay for Android with the firefighter helmet, crossed Halligan and axe icon, Money/To-Do/Shopping widget, inline Dictate buttons and per-entry Money settlement checkboxes. Checked Money entries stay in history while disappearing from outstanding totals in both the app and widget. Tap an individual widget item to jump straight to it. Install over the existing app; saved entries, sync settings, and Android package ID remain unchanged."
+              --notes "MyDay for Android with the firefighter helmet, crossed Halligan and axe icon, Money/To-Do/Shopping widget, inline Dictate buttons and per-entry Money settlement checkboxes. Unknown Money amounts show $ TBD. Checked debts remain in history while disappearing from outstanding totals in both the app and widget. Install over the existing app; saved entries, sync settings, and Android package ID remain unchanged."
           else
             gh release create widget-preview myday.apk day2day.apk running-tab-widget.apk \
               --title "MyDay Android widget (preview)" \

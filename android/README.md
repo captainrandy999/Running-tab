@@ -124,3 +124,7 @@ The collection widget passes a stable item key through its row click's fill-in I
 ## v2.4 — Mark Money transactions settled
 
 Each expanded Money record has a **Mark settled** checkbox. Checked records remain visible in history, but no longer contribute to the person's outstanding balance, the app's overall totals, or the native widget's Money totals. Unchecking the box reopens the record. An active price-TBD account now shows **Price TBD**, not **Settled**. No storage migration is required; older money JSON records without a `settled` property are treated as outstanding.
+
+## v2.5 — $ TBD labels
+
+Unknown amounts display **$ TBD** instead of **Price TBD** in MyDay and in widget Money rows. Account details show counts such as **2 × $ TBD**. This is a display-only change; existing records and settlement flags are untouched.

@@ -240,3 +240,7 @@ Jumping to a specific widget item now scrolls the page **vertically only**. The 
 Expand a Money person, then expand a transaction. Use the **Mark settled** checkbox to mark that specific debt paid or resolved. Its original amount, date, description, and notes remain in the person’s history, with a visible ✓ Settled status. Checkmarked transactions are excluded from the outstanding **Owed to me** and **I owe** totals in both the app and native Android widget. Uncheck the box to reopen the transaction and restore its outstanding balance.
 
 Unpriced active debts now show **Price TBD** instead of the misleading **Settled** account label. **Settled** appears for an account only if all its entries are explicitly checked off. A zero net balance with still-active priced entries shows **No balance**. Existing records remain outstanding by default; backup and Drive formats preserve the new optional settled flags without migration.
+
+## Compact unknown-amount labels (Android v2.5 / web v51)
+
+Money now displays **$ TBD** wherever an amount has not yet been entered, including review summaries, individual entries, account totals, and the Android widget. Multiple outstanding unknown amounts are shown as **2 × $ TBD**. No balances, entry values, or settlement states change.
