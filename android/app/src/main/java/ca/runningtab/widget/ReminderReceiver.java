@@ -28,6 +28,14 @@ public final class ReminderReceiver extends BroadcastReceiver {
                 long source = Long.parseLong(parts.get(2));
                 ReminderManager.snooze(context, parts.get(0), minutes, source);
             } catch (NumberFormatException ignored) {}
+        } else if (ReminderManager.ACTION_SNOOZE_OPTIONS.equals(action)) {
+            Uri uri = intent.getData();
+            if (uri == null || !"runningtab".equals(uri.getScheme())
+                    || !"snooze-options".equals(uri.getHost())) return;
+            List<String> parts = uri.getPathSegments();
+            if (parts.size() != 2) return;
+            try { ReminderManager.showSnoozeOptions(context, parts.get(0), Long.parseLong(parts.get(1))); }
+            catch (NumberFormatException ignored) {}
         } else if (Intent.ACTION_BOOT_COMPLETED.equals(action)
                 || Intent.ACTION_TIME_CHANGED.equals(action)
                 || Intent.ACTION_TIMEZONE_CHANGED.equals(action)) {

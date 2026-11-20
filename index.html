@@ -17,18 +17,19 @@
 <script src="./web-drive-sync.js" defer></script>
 <script src="./install.js" defer></script>
 <script src="./backup.js" defer></script>
-<script src="./todo-panel.js?v=47" defer></script>
+<script src="./repeat.js?v=52" defer></script>
+<script src="./todo-panel.js?v=52" defer></script>
 <script src="./shopping-panel.js" defer></script>
 <script src="./view.js?v=49" defer></script>
 <script src="./calendar.js" defer></script>
-<script src="./reminders.js" defer></script>
+<script src="./reminders.js?v=52" defer></script>
 <style>
 :root {font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; color:#172a3c; background:#f4f7fa; color-scheme:light}
 *{box-sizing:border-box}body{margin:0;line-height:1.48}main{max-width:700px;margin:0 auto;padding:18px 12px 54px}h1,h2,h3,p{margin-top:0}h1{font-size:25px;letter-spacing:-.5px;margin-bottom:1px}h2{font-size:18px;margin-bottom:12px}button,input,select,textarea{font:inherit}button{border:0;border-radius:11px;min-height:45px;padding:10px 15px;font-weight:700;cursor:pointer}button.primary{background:#163b59;color:white}button.secondary{background:#e9f0f5;color:#163b59}button.outline{background:#fff;color:#163b59;border:1px solid #b9ccd9}button.danger{background:transparent;color:#9b3741;border:1px solid #e4c9cf}button:focus-visible,input:focus,textarea:focus,select:focus{outline:3px solid #8bb9d8;outline-offset:2px}input,textarea,select{display:block;border:1px solid #b9c9d5;background:#fff;border-radius:10px;padding:11px 12px;width:100%;color:#14283b;font-size:16px;min-height:46px}textarea{height:92px;resize:vertical}
 .head{display:flex;align-items:center;gap:11px;margin:3px 0 17px}.mark{background:#163b59;color:white;border-radius:13px;display:grid;place-items:center;width:46px;height:46px;font-weight:900;font-size:26px}.muted{color:#607386}.hint{font-size:13px;color:#607386;margin:7px 0}.card{background:#fff;border:1px solid #dde6ec;border-radius:17px;padding:17px;margin-bottom:14px;box-shadow:0 1px 3px #163b5908}.label{display:block;font-size:13px;color:#41586a;font-weight:700;margin:0 0 6px}.actions{display:flex;gap:9px;align-items:center;margin-top:11px;flex-wrap:wrap}.actions .primary{flex:1}.callout{background:#eef5f9;border:1px solid #cadae5;border-radius:11px;padding:12px;margin:13px 0 9px;font-size:14px;white-space:pre-line}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{margin-top:11px}.field.wide{grid-column:1/-1}.hide{display:none!important}.totals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}.stat{background:#fff;border:1px solid #dce5eb;border-radius:15px;padding:14px}.stat .label{color:#62778a;font-weight:600}.number{font-size:clamp(21px,5vw,29px);font-weight:800;letter-spacing:-.5px}.pos{color:#0b765d}.neg{color:#a33b43}.info{font-size:13px;color:#5b7081}.person{border:1px solid #dce5ec;border-radius:12px;margin-bottom:9px;background:#fcfdfe;overflow:hidden}.person summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:center;padding:13px}.person summary::-webkit-details-marker{display:none}.person .who{font-weight:800;overflow-wrap:anywhere}.person .right{text-align:right;flex-shrink:0}.person .amount{font-size:17px;font-weight:800}.person .detail{padding:0 13px 12px}.person .meta{border-top:1px solid #e8eef2;padding-top:10px;font-size:13px;color:#607486}.entry{padding:11px 0;display:flex;align-items:flex-start;justify-content:space-between;border-top:1px solid #e7edf2;gap:9px}.entry:nth-child(1){border-top:0}.entry-name{font-weight:700}.entry-notes{font-size:13px;color:#597085;overflow-wrap:anywhere}.entry-right{min-width:90px;text-align:right}.entry-right strong{display:block;white-space:nowrap}.small{font-size:12px;min-height:32px;padding:5px 8px;margin-top:4px}.tag{background:#fff2e4;color:#8d511d;font-size:12px;padding:3px 6px;border-radius:6px;font-weight:700}.notice{margin-top:12px;padding:9px 11px;border-radius:9px;background:#eff8f1;color:#216b44;font-size:14px}.notice.bad{background:#fff0ef;color:#932a31}.bottom{margin-top:25px;text-align:center}.bottom button{font-size:12px}.foot{font-size:12px;text-align:center;color:#718494;margin-top:8px}@media(max-width:430px){main{padding:12px 10px 32px}.card{padding:14px}.grid{grid-template-columns:1fr}.field.wide{grid-column:auto}.stat{padding:12px 10px}.person summary{padding:12px}}
 .tabs{display:flex;gap:8px;margin-bottom:15px}.tabs a{flex:1;background:white;border:1px solid #cbdbe4;border-radius:12px;padding:11px;text-align:center;text-decoration:none;color:#163b59;font-weight:800}.tabs a.active{background:#163b59;border-color:#163b59;color:white}
 </style>
-<link rel="stylesheet" href="./app.css?v=50">
+<link rel="stylesheet" href="./app.css?v=52">
 </head>
 <body>
 <section id="webAuthGate" class="web-auth-gate" hidden aria-label="MyDay Google account sign-in">
@@ -116,6 +117,30 @@
        <label class="reminder-check"><input id="todoNotify" type="checkbox"> 🔔 Notify me on my phone</label>
        <div class="info" id="todoNotifyHelp">Phone notifications require the updated Android app and permission in Settings. You can still add this To-Do to your calendar.</div>
       </div>
+      <div class="field" id="todoRepeatOptions">
+       <label class="label" for="todoRepeat">🔁 Repeat reminder</label>
+       <select id="todoRepeat">
+        <option value="none">Does not repeat</option>
+        <option value="daily">Every day</option>
+        <option value="weekly">Every week</option>
+        <option value="monthly-day">Every month (same day)</option>
+        <option value="monthly-weekday">Monthly on a weekday</option>
+        <option value="months">Every few months</option>
+       </select>
+       <div class="repeat-details" id="todoRepeatWeekdayFields" hidden>
+        <label for="todoRepeatWeekday">Weekday</label>
+        <select id="todoRepeatWeekday"><option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option></select>
+       </div>
+       <div class="repeat-details" id="todoRepeatWeekFields" hidden>
+        <label for="todoRepeatWeek">Week of month</label>
+        <select id="todoRepeatWeek"><option value="1">First</option><option value="2">Second</option><option value="3">Third</option><option value="4">Fourth</option><option value="-1">Last</option></select>
+       </div>
+       <div class="repeat-details" id="todoRepeatMonthFields" hidden>
+        <label for="todoRepeatMonths">Repeat every (months)</label>
+        <input id="todoRepeatMonths" type="number" inputmode="numeric" min="1" max="120" step="1" value="3">
+       </div>
+       <p class="info" id="todoRepeatHint">Marking a repeating To-Do done moves it to its next date. You can pause or stop it later.</p>
+      </div>
    </form>
    <form id="shoppingReviewForm" class="hide">
     <h2 style="margin:15px 0 8px">Review Shopping List</h2>
@@ -180,7 +205,9 @@
      <h2 class="admin-heading">Reminders &amp; calendar</h2>
      <p class="info" id="reminderPermissionStatus">Preparing reminder settings…</p>
      <button type="button" id="enablePhoneAlerts" class="secondary small">Enable phone notifications</button>
-     <p class="info">In the Android app v1.10+, expand a To-Do notification to choose <strong>Remind me again</strong>: 15 minutes, 1 hour or 4 hours. Snoozing does not change the To-Do due date.</p>
+     <label class="reminder-check" id="phoneAlertsSwitchRow" hidden><input id="phoneAlertsSwitch" type="checkbox" checked> Allow MyDay phone reminders on this device</label>
+     <p class="info" id="phoneAlertsSwitchInfo" hidden>Turn off to cancel pending alerts, including snoozes, without deleting your To-Dos. Turn on to resume future alerts only.</p>
+     <p class="info">Notifications offer <strong>Done</strong> and <strong>Remind me again</strong> (15 minutes, 1 hour or 4 hours). Done completes a one-time task or advances a repeating task to its next date.</p>
      <p class="info">Use <strong>Add to calendar</strong> on a To-Do to open an event draft. Your calendar does not automatically sync back into MyDay.</p>
     </section>
     <section class="admin-panel-section" id="adminCloudSection" aria-label="Google Drive synchronization">
@@ -315,6 +342,8 @@ function isPrefixedReminder(input){
 }
 function interpret(input){
  let s=String(input||'').trim().replace(/\s+/g,' ').replace(/[.!?]+$/,'').trim();
+ const recurrence=window.MyDayRepeat?.extract(s)||{text:s,repeat:null};
+ s=recurrence.text;
  let remindTime=null,relativeAlarm=null;
  // "Remind me in 15 minutes..." and "in an hour and 20 minutes".
  // Round UP to the next clock minute: never schedule a reminder early.
@@ -447,9 +476,17 @@ function interpret(input){
  if(dueType==='none'){m=s.match(/\s+(?:by|on|before)\s+(today|tomorrow)$/i);if(m){const d=now();if(m[1].toLowerCase()==='tomorrow')d.setDate(d.getDate()+1);use(m,{type:'day',value:iso(d)});}}
  if(dueType==='none'){m=s.match(/\s+(?:by|on)\s+(\d{4}-\d{2}-\d{2})$/);if(m){const parts=m[1].split('-').map(Number);if(valid(parts[0],parts[1]-1,parts[2]))use(m,{type:'day',value:m[1]});}}
  if(dueType==='none'&&/\s+(?:by|on|before|in|during)\s+\S+(?:\s+\S+){0,2}$/i.test(s))unrecognized=true;
+ if(recurrence.repeat){
+  if(recurrence.repeat.type==='months'&&!recurrence.repeat.day)recurrence.repeat.day=now().getDate();
+  if(dueType==='none'){
+   dueType='day';due=window.MyDayRepeat.firstDue(recurrence.repeat,remindTime||'08:00');
+  }
+  if(dueType==='month')return {error:'Repeating reminders need a specific calendar day.'};
+ }
+ s=s.replace(/^(?:to|about)\s+/i,'').trim();
  if(!s){if(isGenericReminder)s='Reminder';else return {error:'Please say what needs to be done.'};}
  if(s.length>300)return {error:'The reminder is too long. Please shorten it.'};
- return {title:s[0].toUpperCase()+s.slice(1),dueType,due,unrecognized,remindTime};
+ return {title:s[0].toUpperCase()+s.slice(1),dueType,due,unrecognized,remindTime,repeat:recurrence.repeat?window.MyDayRepeat.withAnchor(recurrence.repeat,due):null};
 }
 
 return {interpret,deadlineLabel,isPrefixedReminder};
@@ -658,9 +695,43 @@ function todoSummary(){
  const title=$('todoTitle').value.trim()||(kind==='note'?'(topic missing)':'(task missing)');
  const deadline='Deadline: '+(type==='none'?'No date':due?TodoParser.deadlineLabel({dueType:type,due}):'Choose a date');
  const alertLine=type==='day'?'\nTime: '+($('todoRemindTime').value||'08:00')+($('todoNotify').checked?' · Phone alert on':' · Phone alert off'):'';
+ const repeat=todoRepeatValue(),repeatLine=repeat?'\n🔁 '+window.MyDayRepeat.describe(repeat):'';
  $('todoSummary').textContent=kind==='note'
-  ? '📝 '+title+'\n'+($('noteBody').value.trim()||'(note text missing)')+'\n'+deadline+alertLine
-  : title+'\n'+deadline+alertLine;
+  ? '📝 '+title+'\n'+($('noteBody').value.trim()||'(note text missing)')+'\n'+deadline+alertLine+repeatLine
+  : title+'\n'+deadline+alertLine+repeatLine;
+}
+function todoRepeatValue(){
+ const type=$('todoRepeat').value;
+ if(type==='none')return null;
+ const due=$('todoDueDay').value||today(),r={type};
+ if(type==='weekly'||type==='monthly-weekday')r.weekday=Number($('todoRepeatWeekday').value);
+ if(type==='monthly-weekday')r.week=Number($('todoRepeatWeek').value);
+ if(type==='months')r.interval=Number($('todoRepeatMonths').value);
+ return window.MyDayRepeat?.withAnchor(r,due)||null;
+}
+function setTodoRepeat(r){
+ $('todoRepeat').value=r?.type||'none';
+ if(Number.isInteger(r?.weekday))$('todoRepeatWeekday').value=String(r.weekday);
+ if(Number.isInteger(r?.week))$('todoRepeatWeek').value=String(r.week);
+ if(r?.interval)$('todoRepeatMonths').value=String(r.interval);
+ todoRepeatChange(false);
+}
+function todoRepeatChange(adjustDate=true){
+ const type=$('todoRepeat').value,weekly=type==='weekly',nth=type==='monthly-weekday';
+ $('todoRepeatWeekdayFields').hidden=!(weekly||nth);
+ $('todoRepeatWeekFields').hidden=!nth;
+ $('todoRepeatMonthFields').hidden=type!=='months';
+ if(adjustDate&&type!=='none'){
+  const day=$('todoDueDay').value||today(),d=new Date(day+'T12:00:00');
+  if((weekly||nth)&&!Number.isNaN(d.getTime()))$('todoRepeatWeekday').value=String(d.getDay());
+  if(nth&&!Number.isNaN(d.getTime()))$('todoRepeatWeek').value=String(Math.min(4,Math.ceil(d.getDate()/7)));
+  if($('todoDueType').value!=='day'){
+   $('todoDueType').value='day';
+   $('todoDueDay').value=window.MyDayRepeat.firstDue(todoRepeatValue(),$('todoRemindTime').value||'08:00');
+   todoDueChange();
+  }
+ }
+ todoSummary();
 }
 function setTodoKind(kind){
  const note=kind==='note';
@@ -849,8 +920,26 @@ function openNavigation(destination){
  // the verified Maps URL opens Google Maps or its website.
  window.location.assign(url);
 }
+function applyReminderVoiceCommand(raw){
+ const match=String(raw||'').trim().match(/^(?:please\s+)?(pause|resume|stop|turn\s+off|turn\s+on)\s+(?:(?:the|my)\s+)?(?:repeating\s+)?reminder(?:s)?\s+(?:for|about|to)\s+(.+?)[.!?]*$/i)
+  ||String(raw||'').trim().match(/^(?:please\s+)?(pause|resume|stop)\s+reminding\s+me\s+(?:about|to)\s+(.+?)[.!?]*$/i);
+ if(!match)return false;
+ const action=match[1].toLowerCase(),query=match[2].trim().toLowerCase();
+ let items=[];try{items=JSON.parse(localStorage.getItem(TODO_STORE)||'[]');}catch(e){}
+ if(!Array.isArray(items))items=[];
+ const matches=items.filter(t=>t.repeat&&!t.done&&(t.title.toLowerCase()===query||t.title.toLowerCase().includes(query)));
+ if(matches.length!==1){feedback(matches.length?'Several reminders match. Try a more specific name.':'No repeating reminder matched "'+query+'".','bad');return true;}
+ const item=matches[0],stopping=/stop|off/.test(action);
+ if(stopping&&!confirm('Stop repeating "'+item.title+'"? The To-Do will stay on your list.'))return true;
+ const updated=items.map(t=>t.id!==item.id?t:stopping?{...t,repeat:null,repeatPaused:false,updatedAt:new Date().toISOString()}:{...t,repeatPaused:action==='pause',updatedAt:new Date().toISOString()});
+ try{localStorage.setItem(TODO_STORE,JSON.stringify(updated));}catch(e){feedback('Could not update the reminder.','bad');return true;}
+ hideForm();$('words').value='';feedback(stopping?'Repeating stopped; To-Do kept.':action==='pause'?'Reminder paused.':'Reminder resumed.');
+ window.dispatchEvent(new Event('runningtab:todo-changed'));window.RunningTabView?.show('todo');
+ return true;
+}
 $('review').addEventListener('click',()=>{
  const raw=$('words').value.trim();
+ if(applyReminderVoiceCommand(raw))return;
  const navigation=parseNavigation(raw);
  if(navigation){
   if(navigation.error){hideForm();feedback(navigation.error,'bad');return;}
@@ -869,6 +958,7 @@ $('review').addEventListener('click',()=>{
   $('noteBody').value=note.body;
   $('todoDueType').value='none';$('todoDueDay').value='';$('todoDueMonth').value='';
   $('todoRemindTime').value='08:00';$('todoNotify').checked=false;
+  setTodoRepeat(null);
   setTodoKind('note');
   $('todoReviewForm').classList.remove('hide');
   $('entryType').textContent='📝 Note in To-Do';
@@ -896,6 +986,7 @@ $('review').addEventListener('click',()=>{
   $('todoRemindTime').value=result.remindTime||'08:00';$('todoNotify').checked=result.dueType==='day'&&typeof window.RunningTabAndroid?.enableNotifications==='function';
   $('todoDueDay').value=result.dueType==='day'?result.due:'';
   $('todoDueMonth').value=result.dueType==='month'?result.due:'';
+  setTodoRepeat(result.repeat);
   $('todoReviewForm').classList.remove('hide');$('entryType').textContent='✓ To-Do entry';todoDueChange();
   feedback(result.unrecognized?'Date not recognized. Please correct it before confirming.':'');
   bringReviewIntoView('todoReviewForm');
@@ -911,6 +1002,7 @@ $('review').addEventListener('click',()=>{
 $('todoCancel').addEventListener('click',()=>{hideForm();feedback('');$('words').focus();});
 $('todoDueType').addEventListener('change',todoDueChange);
 for(const id of ['todoTitle','todoDueDay','todoDueMonth','noteBody','todoRemindTime','todoNotify'])$(id).addEventListener('input',todoSummary);
+for(const id of ['todoRepeat','todoRepeatWeekday','todoRepeatWeek','todoRepeatMonths'])$(id).addEventListener('change',()=>todoRepeatChange(id==='todoRepeat'));
 $('todoReviewForm').addEventListener('submit',event=>{
  event.preventDefault();
  const title=$('todoTitle').value.trim(),type=$('todoDueType').value,kind=$('todoKind').value;
@@ -924,11 +1016,15 @@ $('todoReviewForm').addEventListener('submit',event=>{
  catch(e){feedback('Could not read To-Do records. No item saved.','bad');return;}
  const notify=type==='day'&&$('todoNotify').checked;
  const remindTime=$('todoRemindTime').value||'08:00';
+ const repeat=todoRepeatValue();
+ if(repeat&&type!=='day'){feedback('Repeating reminders require a specific day.','bad');return;}
+ if(repeat?.type==='months'&&(!Number.isInteger(repeat.interval)||repeat.interval<1||repeat.interval>120)){feedback('Choose 1–120 months between reminders.','bad');return;}
  if(!/^([01]\d|2[0-3]):[0-5]\d$/.test(remindTime)){feedback('Choose a valid reminder time.','bad');return;}
  if(notify&&new Date(due+'T'+remindTime).getTime()<=Date.now()){
   feedback('Choose a future date and time for your phone alert.','bad');return;
  }
  const task={id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())+'-'+Math.random()),title,dueType:type,due,remindTime,notify,done:false,created:new Date().toISOString()};
+ if(repeat)task.repeat=repeat;
  if(kind==='note'){task.kind='note';task.body=body;}
  try{localStorage.setItem(TODO_STORE,JSON.stringify([...tasks,task]));}
  catch(e){feedback('Could not save this item in your browser.','bad');return;}

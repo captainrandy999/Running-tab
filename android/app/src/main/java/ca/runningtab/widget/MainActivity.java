@@ -42,6 +42,8 @@ public class MainActivity extends Activity {
     public static final String EXTRA_SECTION = "section";
     public static final String EXTRA_DICTATE = "dictate";
     public static final String EXTRA_ITEM_KEY = "widget_item_key";
+    public static final String EXTRA_COMPLETE_TODO_ID = "complete_todo_id";
+    public static final String EXTRA_COMPLETE_SOURCE = "complete_todo_source";
     private static final int FILE_PICKER = 2001;
     private static final int SPEECH_PICKER = 2002;
     private static final int BACKUP_PICKER = 2003;
@@ -62,6 +64,8 @@ public class MainActivity extends Activity {
     private boolean dictateOnLoad = false;
     private String pendingWidgetItemKey = null;
     private String pendingWidgetSection = null;
+    private String pendingCompleteTodoId = null;
+    private long pendingCompleteSource = -1;
     private boolean googleAuthBusy = false;
     private boolean googleConsentPending = false;
     private String backupToSave = null;
@@ -101,6 +105,13 @@ public class MainActivity extends Activity {
                 if (!isTrusted(Uri.parse(url))) return;
                 loaded = true;
                 injectBridge();
+                if (pendingCompleteTodoId != null) {
+                    String id = pendingCompleteTodoId;
+                    long source = pendingCompleteSource;
+                    pendingCompleteTodoId = null;
+                    pendingCompleteSource = -1;
+                    web.postDelayed(() -> completeTodoFromNotification(id, source), 260);
+                }
                 if (pendingWidgetItemKey != null) {
                     String key = pendingWidgetItemKey;
                     String section = pendingWidgetSection;
@@ -164,14 +175,19 @@ public class MainActivity extends Activity {
         if (i == null) return;
         String section = getSection(i);
         String itemKey = i.getStringExtra(EXTRA_ITEM_KEY);
+        String completedId = i.getStringExtra(EXTRA_COMPLETE_TODO_ID);
+        long completedSource = i.getLongExtra(EXTRA_COMPLETE_SOURCE, -1);
         if (i.getBooleanExtra(EXTRA_DICTATE, false)) {
             if (existingPage && loaded) startDictation();
             else dictateOnLoad = true;
         }
         if (existingPage && loaded) {
-            if (itemKey != null && !itemKey.isEmpty()) openWidgetItem(section, itemKey);
+            if (completedId != null && !completedId.isEmpty()) completeTodoFromNotification(completedId, completedSource);
+            else if (itemKey != null && !itemKey.isEmpty()) openWidgetItem(section, itemKey);
             else web.evaluateJavascript("window.RunningTabView?.show(" + JSONObject.quote(section) + ");", null);
         } else {
+            pendingCompleteTodoId = completedId == null || completedId.isEmpty() ? null : completedId;
+            pendingCompleteSource = completedSource;
             pendingWidgetSection = section;
             pendingWidgetItemKey = itemKey == null || itemKey.isEmpty() ? null : itemKey;
         }
@@ -181,6 +197,17 @@ public class MainActivity extends Activity {
         if (web == null || !loaded) return;
         web.evaluateJavascript("window.RunningTabView?.openItem(" +
                 JSONObject.quote(section) + "," + JSONObject.quote(itemKey) + ");", null);
+    }
+
+    private void completeTodoFromNotification(String id, long source) {
+        if (web == null || !loaded || id == null || id.isEmpty()) return;
+        // Completing via a notification opens MyDay, updates the same local
+        // To-Do store as the list checkbox, and then triggers widget/Drive sync.
+        String js = "(function(){const done=window.MyDayRepeat?.completeId(" + JSONObject.quote(id) + "," + source
+            + ");window.RunningTabView?.show('todo');return Boolean(done);})()";
+        web.evaluateJavascript(js, result -> {
+            if ("true".equals(result)) ReminderManager.dismiss(MainActivity.this, id);
+        });
     }
 
     @Override protected void onNewIntent(Intent intent) {
@@ -253,6 +280,15 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public boolean notificationPermissionGranted() {
             return ReminderManager.canNotify(MainActivity.this);
+        }
+        @JavascriptInterface public boolean remindersEnabled() {
+            return ReminderManager.remindersEnabled(MainActivity.this);
+        }
+        @JavascriptInterface public void setRemindersEnabled(boolean enabled) {
+            runOnUiThread(() -> {
+                ReminderManager.setRemindersEnabled(MainActivity.this, enabled);
+                alertPermissionChanged();
+            });
         }
         @JavascriptInterface public void enableNotifications() {
             runOnUiThread(MainActivity.this::askForNotifications);

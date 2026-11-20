@@ -5,6 +5,20 @@ const $=id=>document.getElementById(id);
 const STORE='running-tab-todo-v1';
 const months=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const repeat=()=>window.MyDayRepeat;
+function repeatEditor(t){
+ const r=t.repeat||{},type=r.type||'none',selected=v=>type===v?' selected':'';
+ const weekday=Number.isInteger(r.weekday)?r.weekday:new Date((t.dueType==='day'?t.due:'2026-01-01')+'T12:00').getDay();
+ return '<label>Repeat<select data-reminder-repeat>'
+  +'<option value="none"'+selected('none')+'>Does not repeat</option><option value="daily"'+selected('daily')+'>Every day</option>'
+  +'<option value="weekly"'+selected('weekly')+'>Every week</option><option value="monthly-day"'+selected('monthly-day')+'>Every month (same day)</option>'
+  +'<option value="monthly-weekday"'+selected('monthly-weekday')+'>Monthly on a weekday</option><option value="months"'+selected('months')+'>Every few months</option></select></label>'
+  +'<label data-repeat-weekday-row'+(!['weekly','monthly-weekday'].includes(type)?' hidden':'')+'>Weekday<select data-repeat-weekday>'
+  +repeat().DAYS.map((d,i)=>'<option value="'+i+'"'+(weekday===i?' selected':'')+'>'+d[0].toUpperCase()+d.slice(1)+'</option>').join('')+'</select></label>'
+  +'<label data-repeat-week-row'+(type!=='monthly-weekday'?' hidden':'')+'>Week of month<select data-repeat-week>'
+  +[[1,'First'],[2,'Second'],[3,'Third'],[4,'Fourth'],[-1,'Last']].map(([n,name])=>'<option value="'+n+'"'+((r.week||1)===n?' selected':'')+'>'+name+'</option>').join('')+'</select></label>'
+  +'<label data-repeat-months-row'+(type!=='months'?' hidden':'')+'>Every how many months?<input type="number" inputmode="numeric" min="1" max="120" step="1" data-repeat-months value="'+esc(r.interval||3)+'"></label>';
+}
 let tasks=[];
 try{const r=JSON.parse(localStorage.getItem(STORE)||'[]');if(Array.isArray(r))tasks=r.filter(x=>x&&typeof x.id==='string'&&typeof x.title==='string'&&['day','month','none'].includes(x.dueType));}catch(e){}
 function label(t){
@@ -49,14 +63,18 @@ function rows(items,completed=false,expandedNoteId=null){
    +'<button type="button" class="secondary small" data-cancel-note="'+esc(t.id)+'">Cancel</button></div>'
    +'<div class="edit-dictation-status" data-edit-dictation-status role="status" aria-live="polite" hidden></div></form>'
    +'</details><div class="task-meta"><span class="task-status-pill task-status-pill--'+appearance.tone+'">'+appearance.text+'</span>'
-   +'<span class="task-date-label">'+esc(label(t))+(t.dueType==='day'&&t.notify?' · 🔔 '+esc(t.remindTime||'08:00'):'')+'</span></div>'
+   +'<span class="task-date-label">'+esc(label(t))+(t.dueType==='day'&&t.notify&&!t.repeatPaused?' · 🔔 '+esc(t.remindTime||'08:00'):'')+(t.repeat?' · 🔁 '+esc(repeat().describe(t.repeat))+(t.repeatPaused?' (paused)':''):'')+'</span></div>'
    +(!t.done?'<div class="task-reminder-actions task-quick-actions'+(t.dueType==='day'?' has-calendar':'')+'">'
      +'<button type="button" class="secondary small" data-reminder-edit="'+esc(t.id)+'">🔔 Date & alert</button>'
      +(t.dueType==='day'?'<button type="button" class="secondary small" data-calendar="'+esc(t.id)+'">📅 Add to calendar</button>':'')
-     +'</div><form class="task-reminder-form" data-reminder-form="'+esc(t.id)+'" hidden>'
+     +'</div>'
+     +(t.repeat?'<div class="task-repeat-actions"><button type="button" class="secondary small" data-repeat-pause="'+esc(t.id)+'">'+(t.repeatPaused?'▶ Resume repeating':'⏸ Pause reminders')+'</button>'
+       +'<button type="button" class="secondary small" data-repeat-stop="'+esc(t.id)+'">⏹ Stop repeating</button></div>':'')
+     +'<form class="task-reminder-form" data-reminder-form="'+esc(t.id)+'" hidden>'
      +'<label>Due date<input type="date" data-reminder-date required value="'+(t.dueType==='day'?esc(t.due):'')+'"></label>'
      +'<label>Time<input type="time" data-reminder-time required value="'+esc(t.remindTime||'08:00')+'"></label>'
      +'<label class="reminder-check"><input type="checkbox" data-reminder-notify '+(t.notify?'checked':'')+'> Phone notification</label>'
+     +repeatEditor(t)
      +'<div class="info">Calendar events are added separately. Phone alerts require the updated Android app.</div>'
      +'<div class="task-reminder-actions"><button type="submit" class="primary small">Save date & alert</button>'
      +'<button type="button" class="secondary small" data-reminder-cancel="'+esc(t.id)+'">Cancel</button></div></form>':'');
@@ -114,8 +132,9 @@ function render(expandedNoteId=null){
     }
   }));
   $(root).querySelectorAll('[data-toggle]').forEach(el=>el.addEventListener('change',()=>{
-    const next=tasks.map(t=>t.id===el.dataset.toggle?{...t,done:el.checked,completedAt:el.checked?new Date().toISOString():null}:t);
-    if(persist(next)){render();status(el.checked?'Completed.':'Moved back to the To-Do list.');}
+    const original=tasks.find(t=>t.id===el.dataset.toggle);
+    const next=tasks.map(t=>t.id===el.dataset.toggle?(el.checked?repeat().complete(t):{...t,done:false,completedAt:null}):t);
+    if(persist(next)){render();status(el.checked?(original?.repeat?'Occurrence completed; next date scheduled.':'Completed.'):'Moved back to the To-Do list.');window.dispatchEvent(new Event('runningtab:todo-changed'));}
     else el.checked=!el.checked;
   }));
   if(root==='completed')$(root).querySelectorAll('[data-remove]').forEach(el=>el.addEventListener('click',()=>{

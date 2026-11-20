@@ -129,6 +129,9 @@ final class WidgetData {
                     detail = LocalDate.parse(due + "-01").format(MONTH) + " (whole month)";
                 }
             } catch (DateTimeParseException ignored) { detail = "Check date"; }
+            if (r.optJSONObject("repeat") != null) {
+                detail += r.optBoolean("repeatPaused", false) ? " · 🔁 Paused" : " · 🔁 Repeats";
+            }
             if ("note".equals(r.optString("kind"))) {
                 String body = r.optString("body", "").replaceAll("\\s+", " ").trim();
                 String preview = body.length() > 68 ? body.substring(0, 67) + "…" : body;

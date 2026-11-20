@@ -7,6 +7,8 @@ const $=id=>document.getElementById(id);
 const STORE='running-tab-todo-v1';
 const native=()=>window.RunningTabAndroid;
 const hasAlerts=()=>typeof native()?.enableNotifications==='function';
+const hasSwitch=()=>typeof native()?.setRemindersEnabled==='function';
+const repeat=()=>window.MyDayRepeat;
 function tasks(){
  try{const value=JSON.parse(localStorage.getItem(STORE)||'[]');return Array.isArray(value)?value:[];}
  catch(e){return [];}
@@ -17,20 +19,26 @@ function message(value,bad=false){
 }
 function permissionState(){
  const btn=$('enablePhoneAlerts'),label=$('reminderPermissionStatus');
+ const row=$('phoneAlertsSwitchRow'),switcher=$('phoneAlertsSwitch'),info=$('phoneAlertsSwitchInfo');
  if(!btn||!label)return;
  if(!hasAlerts()){
   btn.hidden=true;
+  if(row)row.hidden=true;if(info)info.hidden=true;
   label.textContent='Phone alerts work in the Android APK (version 1.7 or later). The browser version can add events to Google Calendar, which can send its own alerts.';
   return;
  }
  btn.hidden=false;
+ if(row)row.hidden=!hasSwitch();if(info)info.hidden=!hasSwitch();
  let allowed=false;
  try{allowed=!!native().notificationPermissionGranted();}catch(e){}
- label.textContent=allowed
+ let enabled=true;
+ try{enabled=!!native().remindersEnabled();}catch(e){}
+ if(switcher)switcher.checked=enabled;
+ label.textContent=!enabled?'⏸ MyDay phone alerts are paused on this device. Your To-Dos are safe.' : allowed
   ?'🔔 Notifications allowed. Dated To-Dos with phone alerts enabled can notify you when MyDay is closed.'
   :'🔕 Notifications are off. Enable them here so dated To-Dos can alert you when the app is closed.';
  btn.textContent=allowed?'Notifications enabled':'Enable phone notifications';
- btn.disabled=allowed;
+ btn.disabled=allowed||!enabled;
 }
 function requestPermission(){
  if(!hasAlerts()){message('Install the updated Android APK for background phone alerts. Calendar events can also send alerts.',true);return;}
@@ -89,7 +97,49 @@ document.addEventListener('click',event=>{
   const panel=cancel.closest('.todo-item');
   const form=panel?.querySelector('[data-reminder-form]');
   if(form){form.hidden=true;panel.querySelector('[data-reminder-edit]').hidden=false;}
+  return;
  }
+ const pause=target.closest('[data-repeat-pause]');
+ const stop=target.closest('[data-repeat-stop]');
+ if(pause||stop){
+  const id=pause?.dataset.repeatPause||stop?.dataset.repeatStop;
+  const all=tasks(),index=all.findIndex(t=>t.id===id&&t.repeat);
+  if(index<0)return;
+  const original=all[index];
+  if(stop&&!confirm('Stop repeating "'+original.title+'"? The To-Do stays on your list with its current date.'))return;
+  all[index]=stop?{...original,repeat:null,repeatPaused:false,updatedAt:new Date().toISOString()}
+   :{...original,repeatPaused:!original.repeatPaused,updatedAt:new Date().toISOString()};
+  if(!storeTasks(all))return;
+  message(stop?'Repeating stopped. This To-Do was kept.':all[index].repeatPaused?'Repeating alerts paused.':'Repeating alerts resumed.');
+ }
+});
+function storeTasks(all){
+ try{localStorage.setItem(STORE,JSON.stringify(all));}
+ catch(e){message('Could not save the reminder.',true);return false;}
+ window.dispatchEvent(new Event('runningtab:todo-changed'));
+ return true;
+}
+function repeatFields(form,day){
+ const type=form.querySelector('[data-reminder-repeat]').value;
+ if(type==='none')return null;
+ const r={type};
+ if(type==='weekly'||type==='monthly-weekday')r.weekday=Number(form.querySelector('[data-repeat-weekday]').value);
+ if(type==='monthly-weekday')r.week=Number(form.querySelector('[data-repeat-week]').value);
+ if(type==='months')r.interval=Number(form.querySelector('[data-repeat-months]').value);
+ return repeat().withAnchor(r,day);
+}
+document.addEventListener('change',event=>{
+ if(!event.target.matches?.('[data-reminder-repeat]'))return;
+ const form=event.target.closest('[data-reminder-form]');if(!form)return;
+ const type=event.target.value;
+ for(const [selector,show] of [['[data-repeat-weekday-row]',type==='weekly'||type==='monthly-weekday'],['[data-repeat-week-row]',type==='monthly-weekday'],['[data-repeat-months-row]',type==='months']]){
+  const el=form.querySelector(selector);if(el)el.hidden=!show;
+ }
+ const date=form.querySelector('[data-reminder-date]')?.value;
+ if(date){const d=new Date(date+'T12:00:00');if(!Number.isNaN(d.getTime())){
+  form.querySelector('[data-repeat-weekday]').value=String(d.getDay());
+  form.querySelector('[data-repeat-week]').value=String(Math.min(4,Math.ceil(d.getDate()/7)));
+ }}
 });
 document.addEventListener('submit',event=>{
  const form=event.target.closest?.('[data-reminder-form]');
@@ -99,19 +149,27 @@ document.addEventListener('submit',event=>{
  const time=form.querySelector('[data-reminder-time]').value;
  const notify=form.querySelector('[data-reminder-notify]').checked&&hasAlerts();
  if(!validDay(day)||!validTime(time)){message('Choose a valid date and time.',true);return;}
+ const r=repeatFields(form,day);
+ if(r?.type==='months'&&(!Number.isInteger(r.interval)||r.interval<1||r.interval>120)){
+  message('Repeat interval must be 1–120 months.',true);return;
+ }
  if(notify&&new Date(day+'T'+time).getTime()<=Date.now()){
   message('Choose a future date and time for the phone alert.',true);return;
  }
  const all=tasks(),index=all.findIndex(t=>t.id===form.dataset.reminderForm);
  if(index<0){message('This To-Do could not be found.',true);return;}
- all[index]={...all[index],dueType:'day',due:day,remindTime:time,notify,updatedAt:new Date().toISOString()};
- try{localStorage.setItem(STORE,JSON.stringify(all));}
- catch(e){message('Could not save the reminder.',true);return;}
- window.dispatchEvent(new Event('runningtab:todo-changed'));
+ all[index]={...all[index],dueType:'day',due:day,remindTime:time,notify,repeat:r,repeatPaused:r?!!all[index].repeatPaused:false,updatedAt:new Date().toISOString()};
+ if(!storeTasks(all))return;
  message(notify?'Date and phone alert saved.':'Date saved. Phone alert is off.');
  if(notify)requestPermission();
 });
 $('enablePhoneAlerts')?.addEventListener('click',requestPermission);
+$('phoneAlertsSwitch')?.addEventListener('change',event=>{
+ if(!hasAlerts())return;
+ try{native().setRemindersEnabled(!!event.target.checked);}
+ catch(e){message('Could not change phone reminder settings.',true);event.target.checked=!event.target.checked;return;}
+ // Android applies the switch on its UI thread, then calls onPermissionChanged.
+});
 window.RunningTabReminders={requestPermission,onPermissionChanged:permissionState};
 window.addEventListener('pageshow',permissionState);
 permissionState();

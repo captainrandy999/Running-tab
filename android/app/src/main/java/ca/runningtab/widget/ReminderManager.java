@@ -28,14 +28,52 @@ public final class ReminderManager {
     private static final String PREFS = "running_tab_reminders";
     private static final String KEY = "todo_json";
     private static final String KEY_SNOOZES = "snoozes_json";
+    private static final String KEY_ENABLED = "phone_alerts_enabled";
     private static final String CHANNEL = "running_tab_due_alerts";
     static final String ACTION_ALERT = "ca.runningtab.widget.REMIND_TODO";
     static final String ACTION_SNOOZE = "ca.runningtab.widget.SNOOZE_TODO";
     static final String ACTION_SNOOZE_ALERT = "ca.runningtab.widget.REMIND_SNOOZED_TODO";
+    static final String ACTION_SNOOZE_OPTIONS = "ca.runningtab.widget.SNOOZE_OPTIONS";
     private static final long HOUR_MS = 60L * 60 * 1000;
     private ReminderManager() {}
 
+    static boolean remindersEnabled(Context context) {
+        return context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getBoolean(KEY_ENABLED, true);
+    }
+
+    static void setRemindersEnabled(Context context, boolean enabled) {
+        if (remindersEnabled(context) == enabled) return;
+        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putBoolean(KEY_ENABLED, enabled).commit();
+        String raw = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getString(KEY, "[]");
+        if (enabled) { restore(context); return; }
+        cancelAll(context, raw);
+        NotificationManager manager = (NotificationManager)
+            context.getSystemService(Context.NOTIFICATION_SERVICE);
+        try {
+            JSONArray items = new JSONArray(raw);
+            for (int i=0; i<items.length(); i++) {
+                JSONObject item = items.optJSONObject(i);
+                if (item == null) continue;
+                String id = item.optString("id", "");
+                if (id.isEmpty()) continue;
+                cancelSnoozedAlarm(context, id);
+                if (manager != null) manager.cancel(id.hashCode());
+            }
+            JSONObject snoozes = readSnoozes(context);
+            Iterator<String> ids = snoozes.keys();
+            while (ids.hasNext()) {
+                String id = ids.next();
+                cancelSnoozedAlarm(context, id);
+                if (manager != null) manager.cancel(id.hashCode());
+            }
+            writeSnoozes(context, new JSONObject());
+        } catch (Exception ignored) {}
+    }
+
     static boolean canNotify(Context context) {
+        if (!remindersEnabled(context)) return false;
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         if (manager == null || !manager.areNotificationsEnabled()) return false;
         return Build.VERSION.SDK_INT < 33
@@ -84,15 +122,16 @@ public final class ReminderManager {
         try {
             JSONArray items = new JSONArray(value);
             AlarmManager alarms = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-            if (alarms == null) return;
+            NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             for (int i = 0; i < items.length(); i++) {
                 JSONObject item = items.optJSONObject(i);
                 if (item == null) continue;
                 String id = item.optString("id", "");
                 if (id.isEmpty()) continue;
+                if (manager != null) manager.cancel(id.hashCode());
                 PendingIntent pending = pending(context, id, PendingIntent.FLAG_NO_CREATE);
                 if (pending != null) {
-                    alarms.cancel(pending);
+                    if (alarms != null) alarms.cancel(pending);
                     pending.cancel();
                 }
             }
@@ -170,6 +209,7 @@ public final class ReminderManager {
     private static boolean eligible(JSONObject item) {
         return item != null && !item.optBoolean("done", false)
             && item.optBoolean("notify", false)
+            && !item.optBoolean("repeatPaused", false)
             && "day".equals(item.optString("dueType"))
             && !item.optString("id").isEmpty()
             && !item.optString("title").isEmpty();
@@ -208,6 +248,25 @@ public final class ReminderManager {
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
     }
 
+    private static PendingIntent snoozeOptionsPending(Context context, String id, long source) {
+        Intent intent = new Intent(context, ReminderReceiver.class);
+        intent.setAction(ACTION_SNOOZE_OPTIONS);
+        intent.setData(Uri.parse("runningtab://snooze-options/" + Uri.encode(id) + "/" + source));
+        return PendingIntent.getBroadcast(context, 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
+    private static PendingIntent completePending(Context context, String id, long source) {
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.putExtra(MainActivity.EXTRA_SECTION, "todo");
+        intent.putExtra(MainActivity.EXTRA_COMPLETE_TODO_ID, id);
+        intent.putExtra(MainActivity.EXTRA_COMPLETE_SOURCE, source);
+        intent.setData(Uri.parse("runningtab://complete/" + Uri.encode(id) + "/" + source));
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        return PendingIntent.getActivity(context, 0, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+    }
+
     private static void cancelSnoozedAlarm(Context context, String id) {
         AlarmManager alarms = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         PendingIntent existing = snoozedPending(context, id, PendingIntent.FLAG_NO_CREATE);
@@ -238,7 +297,7 @@ public final class ReminderManager {
     }
 
     static void snooze(Context context, String id, int minutes, long source) {
-        if (id == null || !(minutes == 15 || minutes == 60 || minutes == 240)) return;
+        if (!canNotify(context) || id == null || !(minutes == 15 || minutes == 60 || minutes == 240)) return;
         JSONObject task = eligibleTask(context, id);
         NotificationManager manager = (NotificationManager)
             context.getSystemService(Context.NOTIFICATION_SERVICE);
@@ -296,6 +355,37 @@ public final class ReminderManager {
         postNotification(context, task);
     }
 
+    static void dismiss(Context context, String id) {
+        if (id == null || id.isEmpty()) return;
+        NotificationManager manager = (NotificationManager)
+            context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) manager.cancel(id.hashCode());
+        clearSnooze(context, id);
+    }
+
+    static void showSnoozeOptions(Context context, String id, long source) {
+        if (!canNotify(context)) return;
+        JSONObject task = eligibleTask(context, id);
+        if (task == null || scheduledTime(task) != source) {
+            dismiss(context, id); return;
+        }
+        createChannel(context);
+        Notification options = new Notification.Builder(context, CHANNEL)
+            .setSmallIcon(android.R.drawable.ic_popup_reminder)
+            .setContentTitle(task.optString("title", "To-Do reminder"))
+            .setContentText("Remind me again in:")
+            .setOnlyAlertOnce(true)
+            .setCategory(Notification.CATEGORY_REMINDER)
+            .setAutoCancel(true)
+            .addAction(android.R.drawable.ic_popup_reminder, "15 min", snoozeActionPending(context, id, 15, source))
+            .addAction(android.R.drawable.ic_popup_reminder, "1 hour", snoozeActionPending(context, id, 60, source))
+            .addAction(android.R.drawable.ic_popup_reminder, "4 hours", snoozeActionPending(context, id, 240, source))
+            .build();
+        NotificationManager manager = (NotificationManager)
+            context.getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager != null) manager.notify(id.hashCode(), options);
+    }
+
     private static void postNotification(Context context, JSONObject task) {
         createChannel(context);
         String id = task.optString("id", "");
@@ -305,22 +395,21 @@ public final class ReminderManager {
         long source = scheduledTime(task);
         Intent open = new Intent(context, MainActivity.class);
         open.putExtra(MainActivity.EXTRA_SECTION, "todo");
+        open.setData(Uri.parse("runningtab://open-todo/" + Uri.encode(id)));
         open.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent tap = PendingIntent.getActivity(context, 1, open,
             PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         Notification notification = new Notification.Builder(context, CHANNEL)
             .setSmallIcon(android.R.drawable.ic_popup_reminder)
             .setContentTitle(title)
-            .setContentText("Remind me again in:")
+            .setContentText("Mark done or choose when to remind you again")
             .setContentIntent(tap)
             .setCategory(Notification.CATEGORY_REMINDER)
             .setAutoCancel(true)
-            .addAction(android.R.drawable.ic_popup_reminder, "15 min",
-                snoozeActionPending(context, id, 15, source))
-            .addAction(android.R.drawable.ic_popup_reminder, "1 hour",
-                snoozeActionPending(context, id, 60, source))
-            .addAction(android.R.drawable.ic_popup_reminder, "4 hours",
-                snoozeActionPending(context, id, 240, source))
+            .addAction(android.R.drawable.checkbox_on_background, "Done",
+                completePending(context, id, source))
+            .addAction(android.R.drawable.ic_popup_reminder, "Remind me again",
+                snoozeOptionsPending(context, id, source))
             .build();
         NotificationManager manager = (NotificationManager)
             context.getSystemService(Context.NOTIFICATION_SERVICE);
