@@ -35,7 +35,7 @@ final class WidgetData {
     private static final class Person {
         String name;
         long toMe, iOwe;
-        int count, tbd;
+        int count, tbd, settled, active;
         Person(String name) { this.name = name; }
     }
 
@@ -49,7 +49,7 @@ final class WidgetData {
         long to = 0, owe = 0;
         for (int i = 0; i < records.length(); i++) {
             JSONObject rec = records.optJSONObject(i);
-            if (rec == null || rec.isNull("cents")) continue;
+            if (rec == null || rec.optBoolean("settled", false) || rec.isNull("cents")) continue;
             long value = rec.optLong("cents", 0);
             if (value <= 0) continue;
             if ("to_me".equals(rec.optString("direction"))) to += value;
@@ -76,6 +76,8 @@ final class WidgetData {
             Person p = map.get(key);
             if (p == null) { p = new Person(name); map.put(key, p); }
             p.count++;
+            if (r.optBoolean("settled", false)) { p.settled++; continue; }
+            p.active++;
             if (r.isNull("cents")) p.tbd++;
             else {
                 long amount = r.optLong("cents", 0);
@@ -90,8 +92,12 @@ final class WidgetData {
         for (Person p : people) {
             long net = p.toMe - p.iOwe;
             String balance = net > 0 ? "Owes you " + dollars(net)
-                    : net < 0 ? "You owe " + dollars(-net) : "Settled";
-            if (p.tbd > 0) balance += "  ·  " + p.tbd + " price TBD";
+                    : net < 0 ? "You owe " + dollars(-net)
+                    : p.tbd > 0 ? "Price TBD"
+                    : p.active == 0 && p.settled > 0 ? "Settled" : "No balance";
+            if (p.tbd > 0 && net != 0) balance += "  ·  " + p.tbd + " price TBD";
+            else if (p.tbd > 1) balance += "  ·  " + p.tbd + " unpriced";
+            if (p.settled > 0) balance += "  ·  " + p.settled + " settled";
             rows.add(new Row(p.name, balance, p.name));
         }
         return rows;

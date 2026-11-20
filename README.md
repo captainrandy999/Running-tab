@@ -234,3 +234,9 @@ Tapping a specific row in the Android home-screen widget now opens that item: a 
 ## Widget jump alignment fix (web v49)
 
 Jumping to a specific widget item now scrolls the page **vertically only**. The horizontal Money/To-Do/Shopping carousel is clipped without becoming a scrollable container, and its horizontal offset is reset whenever a tab opens. This prevents sideways misalignment and half-visible tabs after a widget jump. The existing MyDay v2.3 Android app receives the fix from the hosted website; no APK reinstall is needed.
+
+## Settle individual Money entries (Android v2.4 / web v50)
+
+Expand a Money person, then expand a transaction. Use the **Mark settled** checkbox to mark that specific debt paid or resolved. Its original amount, date, description, and notes remain in the person’s history, with a visible ✓ Settled status. Checkmarked transactions are excluded from the outstanding **Owed to me** and **I owe** totals in both the app and native Android widget. Uncheck the box to reopen the transaction and restore its outstanding balance.
+
+Unpriced active debts now show **Price TBD** instead of the misleading **Settled** account label. **Settled** appears for an account only if all its entries are explicitly checked off. A zero net balance with still-active priced entries shows **No balance**. Existing records remain outstanding by default; backup and Drive formats preserve the new optional settled flags without migration.

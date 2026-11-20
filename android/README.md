@@ -120,3 +120,7 @@ The **🎤 Dictate** button now sits to the left of **Save changes** in the edit
 ## v2.3 — Open individual widget items
 
 The collection widget passes a stable item key through its row click's fill-in Intent. When MyDay opens, the web view selects the correct section, expands the relevant Money person or To-Do/Note, or scrolls to the matching Shopping item. The selected entry is outlined briefly. This works whether MyDay is already open or is cold-started from the widget. The inline editor buttons are also compact enough to occupy one row on narrow screens.
+
+## v2.4 — Mark Money transactions settled
+
+Each expanded Money record has a **Mark settled** checkbox. Checked records remain visible in history, but no longer contribute to the person's outstanding balance, the app's overall totals, or the native widget's Money totals. Unchecking the box reopens the record. An active price-TBD account now shows **Price TBD**, not **Settled**. No storage migration is required; older money JSON records without a `settled` property are treated as outstanding.
