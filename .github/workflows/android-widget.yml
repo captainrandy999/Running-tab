@@ -95,7 +95,7 @@ jobs:
             gh release upload widget-preview myday.apk day2day.apk running-tab-widget.apk --clobber
             gh release edit widget-preview \
               --title "MyDay Android widget (preview)" \
-              --notes "MyDay v2.7 for Android. Money/To-Do/Shopping with the home-screen widget, voice entry and recurring reminders, including automatic every-few-minutes alerts until Done, Pause or Stop. Notifications offer Done and 15-minute, 1-hour or 4-hour snooze options; Settings can silence all reminders on this device. Existing data and the package identity are preserved on update."
+              --notes "MyDay v2.8 for Android. Recurring daily, weekly and monthly alerts now automatically continue even if you don't tap Done; Done acknowledges the current occurrence without cancelling the next one. Automatic every-few-minutes reminders still stop on Done, Pause or Stop. Notification snoozes and the device-wide reminders switch remain available. Existing app data and Android package identity are preserved on update."
           else
             gh release create widget-preview myday.apk day2day.apk running-tab-widget.apk \
               --title "MyDay Android widget (preview)" \

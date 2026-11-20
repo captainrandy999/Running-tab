@@ -60,6 +60,13 @@
   const result=next({repeat:anchored,due:dateKey(previous),remindTime:time},reference);
   return result||dateKey(base);
  }
+ function currentOrNext(task,reference=new Date()){
+  if(!task?.repeat||task.repeat.type==='minutes'||task.dueType!=='day'||task.done)return task?.due||'';
+  const day=dateOf(task.due);
+  if(!day)return task.due;
+  if(atTime(day,task.remindTime||'08:00').getTime()>reference.getTime())return task.due;
+  return next(task,reference)||task.due;
+ }
  function firstMinuteAlert(interval,reference=new Date()){
   const minutes=Math.max(1,Math.min(1440,Number(interval)||5));
   const target=new Date(Math.ceil((reference.getTime()+minutes*60000)/60000)*60000);
@@ -126,5 +133,5 @@
   if(typeof window!=='undefined')window.dispatchEvent(new Event('runningtab:todo-changed'));
   return true;
  }
- return {DAYS,describe,next,firstDue,firstMinuteAlert,extract,withAnchor,complete,completeId,dateKey,dateOf};
+ return {DAYS,describe,next,currentOrNext,firstDue,firstMinuteAlert,extract,withAnchor,complete,completeId,dateKey,dateOf};
 });

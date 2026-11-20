@@ -37,6 +37,7 @@ public final class ReminderReceiver extends BroadcastReceiver {
             try { ReminderManager.showSnoozeOptions(context, parts.get(0), Long.parseLong(parts.get(1))); }
             catch (NumberFormatException ignored) {}
         } else if (Intent.ACTION_BOOT_COMPLETED.equals(action)
+                || Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)
                 || Intent.ACTION_TIME_CHANGED.equals(action)
                 || Intent.ACTION_TIMEZONE_CHANGED.equals(action)) {
             ReminderManager.restore(context);

@@ -26,20 +26,22 @@ try{const r=JSON.parse(localStorage.getItem(STORE)||'[]');if(Array.isArray(r))ta
 function label(t){
  if(t.dueType==='none')return 'No date';
  if(t.dueType==='month'){const mm=Number(String(t.due).slice(5,7));return (months[mm-1]||'Unknown month')+' '+String(t.due).slice(0,4)+' (no specific day)';}
- const d=new Date(t.due+'T12:00:00');
+ const d=new Date((repeat().currentOrNext(t)||t.due)+'T12:00:00');
  return Number.isNaN(d.getTime())?'Check date':d.toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
 }
 function status(message,bad=false){const el=$('todoStatus');if(!el)return;el.textContent=message;el.className=message?'notice'+(bad?' bad':''):'';}
 function persist(next){try{localStorage.setItem(STORE,JSON.stringify(next));tasks=next;return true;}catch(e){status('Could not save the change on this device.',true);return false;}}
-function sortKey(t){return t.dueType==='none'?'9999-12-31':t.dueType==='month'?t.due+'-32':t.due;}
+function sortKey(t){return t.dueType==='none'?'9999-12-31':t.dueType==='month'?t.due+'-32':repeat().currentOrNext(t);}
 function taskAppearance(t){
  if(t.done)return {tone:'complete',text:'Completed'};
  if(t.kind==='note')return {tone:'note',text:'Note'};
  if(t.dueType==='day'){
   const now=new Date();
   const today=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-');
-  if(t.due<today)return {tone:'overdue',text:'Overdue'};
-  if(t.due===today)return {tone:'today',text:'Due today'};
+  if(t.repeat?.type==='minutes')return {tone:'today',text:'Repeating'};
+  const due=repeat().currentOrNext(t);
+  if(due<today)return {tone:'overdue',text:'Overdue'};
+  if(due===today)return {tone:'today',text:'Due today'};
  }
  return {tone:'open',text:'To do'};
 }
@@ -73,7 +75,7 @@ function rows(items,completed=false,expandedNoteId=null){
      +(t.repeat?'<div class="task-repeat-actions"><button type="button" class="secondary small" data-repeat-pause="'+esc(t.id)+'">'+(t.repeatPaused?'▶ Resume repeating':'⏸ Pause reminders')+'</button>'
        +'<button type="button" class="secondary small" data-repeat-stop="'+esc(t.id)+'">⏹ Stop repeating</button></div>':'')
      +'<form class="task-reminder-form" data-reminder-form="'+esc(t.id)+'" hidden>'
-     +'<label>Due date<input type="date" data-reminder-date required value="'+(t.dueType==='day'?esc(t.due):'')+'"></label>'
+     +'<label>Due date<input type="date" data-reminder-date required value="'+(t.dueType==='day'?esc(repeat().currentOrNext(t)):'' )+'"></label>'
      +'<label>Time<input type="time" data-reminder-time required value="'+esc(t.remindTime||'08:00')+'"></label>'
      +'<label class="reminder-check"><input type="checkbox" data-reminder-notify '+(t.notify?'checked':'')+'> Phone notification</label>'
      +repeatEditor(t)
@@ -162,5 +164,6 @@ function refreshFromStorage(){
  } catch(e){status('Could not refresh reminders from local storage.',true);}
 }
 window.addEventListener('runningtab:todo-changed',refreshFromStorage);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)render();});
 render();
 })();

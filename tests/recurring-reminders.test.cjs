@@ -93,3 +93,21 @@ test('late completion skips past occurrences, does not create many queued alerts
  const prior={repeat:{type:'daily'},due:'2026-11-01',remindTime:'08:00'};
  assert.equal(Repeat.next(prior,new Date(2026,10,20,11)),'2026-11-21');
 });
+
+test('an ignored daily notification still has a next occurrence without tapping Done',()=>{
+ const daily={done:false,repeat:{type:'daily'},dueType:'day',due:'2026-11-20',remindTime:'17:00'};
+ assert.equal(Repeat.currentOrNext(daily,new Date(2026,10,20,16)),'2026-11-20');
+ assert.equal(Repeat.currentOrNext(daily,new Date(2026,10,20,18)),'2026-11-21');
+ assert.equal(Repeat.currentOrNext(daily,new Date(2026,10,21,18)),'2026-11-22');
+ assert.equal(daily.due,'2026-11-20','the saved schedule anchor remains intact');
+ const acknowledged=Repeat.complete(daily,new Date(2026,10,20,18));
+ assert.equal(acknowledged.done,false);
+ assert.equal(acknowledged.due,'2026-11-21');
+});
+
+test('unacknowledged weekly and monthly reminders display their next valid dates',()=>{
+ const weekly={done:false,repeat:{type:'weekly',weekday:5},dueType:'day',due:'2026-11-20',remindTime:'17:00'};
+ assert.equal(Repeat.currentOrNext(weekly,new Date(2026,10,20,18)),'2026-11-27');
+ const monthly={done:false,repeat:{type:'monthly-weekday',week:1,weekday:1},dueType:'day',due:'2026-11-02',remindTime:'17:00'};
+ assert.equal(Repeat.currentOrNext(monthly,new Date(2026,10,20,18)),'2026-12-07');
+});

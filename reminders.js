@@ -52,14 +52,15 @@ function validDay(day){
 }
 function validTime(time){return /^([01]\d|2[0-3]):[0-5]\d$/.test(time);}
 function calendar(task){
- if(task.dueType!=='day'||!validDay(task.due)){message('Set an exact day before adding an event to your calendar.',true);return;}
+ const due=repeat().currentOrNext(task);
+ if(task.dueType!=='day'||!validDay(due)){message('Set an exact day before adding an event to your calendar.',true);return;}
  const time=validTime(task.remindTime||'')?task.remindTime:'08:00';
  if(typeof native()?.addCalendarEvent==='function'){
-  try{native().addCalendarEvent(task.title,task.due,time,task.body||'');message('Opening your calendar. Review and save the event there.');return;}
+  try{native().addCalendarEvent(task.title,due,time,task.body||'');message('Opening your calendar. Review and save the event there.');return;}
   catch(e){message('Could not open the device calendar.',true);return;}
  }
  // The Google Calendar event editor also works without calendar OAuth scopes.
- const start=new Date(task.due+'T'+time+':00');
+ const start=new Date(due+'T'+time+':00');
  const end=new Date(start.getTime()+30*60000);
  const toUtc=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
  const params=new URLSearchParams({
@@ -119,7 +120,7 @@ function storeTasks(all){
  window.dispatchEvent(new Event('runningtab:todo-changed'));
  return true;
 }
-function repeatFields(form,day){
+function repeatFields(form,day,original){
  const type=form.querySelector('[data-reminder-repeat]').value;
  if(type==='none')return null;
  const r={type};
@@ -127,6 +128,10 @@ function repeatFields(form,day){
  if(type==='monthly-weekday')r.week=Number(form.querySelector('[data-repeat-week]').value);
  if(type==='months')r.interval=Number(form.querySelector('[data-repeat-months]').value);
  if(type==='minutes')r.interval=Number(form.querySelector('[data-repeat-minutes]').value);
+ if((type==='monthly-day'||type==='months')&&original?.repeat?.type===type
+    &&day===repeat().currentOrNext(original)&&original.repeat.day){
+  r.day=original.repeat.day;
+ }
  return repeat().withAnchor(r,day);
 }
 document.addEventListener('change',event=>{
@@ -157,7 +162,9 @@ document.addEventListener('submit',event=>{
  const time=form.querySelector('[data-reminder-time]').value;
  const notify=form.querySelector('[data-reminder-notify]').checked&&hasAlerts();
  if(!validDay(day)||!validTime(time)){message('Choose a valid date and time.',true);return;}
- const r=repeatFields(form,day);
+ const all=tasks(),index=all.findIndex(t=>t.id===form.dataset.reminderForm);
+ if(index<0){message('This To-Do could not be found.',true);return;}
+ const r=repeatFields(form,day,all[index]);
  if(r?.type==='months'&&(!Number.isInteger(r.interval)||r.interval<1||r.interval>120)){
   message('Repeat interval must be 1–120 months.',true);return;
  }
@@ -167,8 +174,6 @@ document.addEventListener('submit',event=>{
  if(notify&&new Date(day+'T'+time).getTime()<=Date.now()){
   message('Choose a future date and time for the phone alert.',true);return;
  }
- const all=tasks(),index=all.findIndex(t=>t.id===form.dataset.reminderForm);
- if(index<0){message('This To-Do could not be found.',true);return;}
  all[index]={...all[index],dueType:'day',due:day,remindTime:time,notify,repeat:r,repeatPaused:r?!!all[index].repeatPaused:false,updatedAt:new Date().toISOString()};
  if(!storeTasks(all))return;
  message(notify?'Date and phone alert saved.':'Date saved. Phone alert is off.');

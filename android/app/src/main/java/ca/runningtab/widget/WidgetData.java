@@ -5,6 +5,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import java.text.NumberFormat;
 import java.time.LocalDate;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -119,9 +121,17 @@ final class WidgetData {
             String title = r.optString("title", "Untitled reminder");
             String type = r.optString("dueType", "none");
             String due = r.optString("due", "");
+            JSONObject recurrence = r.optJSONObject("repeat");
+            boolean shortRepeat = recurrence != null && "minutes".equals(recurrence.optString("type"));
+            if (recurrence != null && !shortRepeat && "day".equals(type)) {
+                long next = ReminderManager.nextCalendarAlarm(r, System.currentTimeMillis());
+                if (next > 0) due = LocalDate.ofInstant(Instant.ofEpochMilli(next), ZoneId.systemDefault()).toString();
+            }
             String detail = "No deadline";
             try {
-                if ("day".equals(type) && !due.isEmpty()) {
+                if (shortRepeat) {
+                    detail = "Automatic alerts";
+                } else if ("day".equals(type) && !due.isEmpty()) {
                     LocalDate d = LocalDate.parse(due);
                     detail = d.format(DAY);
                     if (d.isBefore(LocalDate.now())) detail = "Overdue · " + detail;
@@ -144,7 +154,14 @@ final class WidgetData {
 
     private static String sortKey(JSONObject r) {
         String type = r.optString("dueType", "none"), d = r.optString("due", "");
-        if ("day".equals(type) && d.length() == 10) return d;
+        if ("day".equals(type) && d.length() == 10) {
+            JSONObject recurrence = r.optJSONObject("repeat");
+            if (recurrence != null && !"minutes".equals(recurrence.optString("type"))) {
+                long next = ReminderManager.nextCalendarAlarm(r, System.currentTimeMillis());
+                if (next > 0) return LocalDate.ofInstant(Instant.ofEpochMilli(next), ZoneId.systemDefault()).toString();
+            }
+            return d;
+        }
         if ("month".equals(type) && d.length() == 7) return d + "-32";
         return "9999-12-31";
     }

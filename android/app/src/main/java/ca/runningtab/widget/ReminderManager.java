@@ -9,13 +9,21 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.provider.CalendarContract;
 import android.widget.Toast;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.YearMonth;
+import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalAdjusters;
 import java.util.Iterator;
 import java.util.ArrayList;
 import org.json.JSONArray;
@@ -29,6 +37,8 @@ public final class ReminderManager {
     private static final String KEY = "todo_json";
     private static final String KEY_SNOOZES = "snoozes_json";
     private static final String KEY_ENABLED = "phone_alerts_enabled";
+    private static final String KEY_SCHEDULER_VERSION = "scheduler_version";
+    private static final int SCHEDULER_VERSION = 2;
     private static final String CHANNEL = "running_tab_due_alerts";
     static final String ACTION_ALERT = "ca.runningtab.widget.REMIND_TODO";
     static final String ACTION_SNOOZE = "ca.runningtab.widget.SNOOZE_TODO";
@@ -82,10 +92,13 @@ public final class ReminderManager {
 
     static void sync(Context context, String json) {
         if (json == null || json.length() > 2000000) return;
-        String old = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).getString(KEY, "[]");
-        if (json.equals(old)) return;
+        SharedPreferences prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+        String old = prefs.getString(KEY, "[]");
+        if (json.equals(old) && prefs.getInt(KEY_SCHEDULER_VERSION, 0) >= SCHEDULER_VERSION) return;
+        // An APK update can change the scheduling policy without changing any
+        // To-Do JSON. Rebuild alarms once so existing repeats start continuing.
         cancelAll(context, old);
-        context.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY, json).apply();
+        prefs.edit().putString(KEY, json).putInt(KEY_SCHEDULER_VERSION, SCHEDULER_VERSION).apply();
         reconcileSnoozes(context, json);
         restore(context);
     }
@@ -232,6 +245,89 @@ public final class ReminderManager {
         return amount >= 1 && amount <= 1440 ? amount : 0;
     }
 
+    private static boolean calendarRepeat(JSONObject item) {
+        if (item == null) return false;
+        JSONObject repeat = item.optJSONObject("repeat");
+        if (repeat == null) return false;
+        String type = repeat.optString("type", "");
+        return "daily".equals(type) || "weekly".equals(type)
+            || "monthly-day".equals(type) || "monthly-weekday".equals(type)
+            || "months".equals(type);
+    }
+
+    private static long occurrenceTime(LocalDate day, LocalTime time, ZoneId zone) {
+        return day.atTime(time).atZone(zone).toInstant().toEpochMilli();
+    }
+
+    private static LocalDate monthDay(YearMonth month, int day) {
+        return month.atDay(Math.min(Math.max(1, day), month.lengthOfMonth()));
+    }
+
+    private static LocalDate weekInMonth(YearMonth month, int weekday, int week) {
+        DayOfWeek target = DayOfWeek.of(weekday == 0 ? 7 : weekday);
+        if (week == -1) return month.atEndOfMonth().with(TemporalAdjusters.previousOrSame(target));
+        return month.atDay(1).with(TemporalAdjusters.nextOrSame(target))
+            .plusWeeks(Math.max(0, Math.min(4, week - 1)));
+    }
+
+    /** Next calendar occurrence, reconstructed from the original To-Do schedule.
+     *  The web task remains unchanged if yesterday's alert was ignored.
+     */
+    static long nextCalendarAlarm(JSONObject item, long now) {
+        long first = scheduledTime(item);
+        if (!calendarRepeat(item) || first <= 0 || first > now) return first;
+        try {
+            JSONObject repeat = item.getJSONObject("repeat");
+            String type = repeat.getString("type");
+            LocalDate start = LocalDate.parse(item.getString("due"));
+            LocalTime time = LocalTime.parse(item.optString("remindTime", "08:00"));
+            ZoneId zone = ZoneId.systemDefault();
+            LocalDate today = Instant.ofEpochMilli(now).atZone(zone).toLocalDate();
+            if ("daily".equals(type)) {
+                LocalDate candidate = today.isBefore(start) ? start : today;
+                if (occurrenceTime(candidate, time, zone) <= now) candidate = candidate.plusDays(1);
+                return occurrenceTime(candidate, time, zone);
+            }
+            if ("weekly".equals(type)) {
+                int weekday = repeat.optInt("weekday", start.getDayOfWeek().getValue() % 7);
+                if (weekday < 0 || weekday > 6) return -1;
+                DayOfWeek target = DayOfWeek.of(weekday == 0 ? 7 : weekday);
+                LocalDate candidate = start.with(TemporalAdjusters.nextOrSame(target));
+                long days = Math.max(0, ChronoUnit.DAYS.between(candidate, today));
+                candidate = candidate.plusWeeks(days / 7);
+                if (occurrenceTime(candidate, time, zone) <= now) candidate = candidate.plusWeeks(1);
+                return occurrenceTime(candidate, time, zone);
+            }
+            YearMonth anchor = YearMonth.from(start);
+            YearMonth current = YearMonth.from(today);
+            if (current.isBefore(anchor)) current = anchor;
+            if ("months".equals(type)) {
+                int step = repeat.optInt("interval", 3);
+                if (step < 1 || step > 120) return -1;
+                long months = Math.max(0, ChronoUnit.MONTHS.between(anchor, current));
+                current = anchor.plusMonths((months / step) * step);
+                int day = repeat.optInt("day", start.getDayOfMonth());
+                for (int attempt = 0; attempt < 3; attempt++, current = current.plusMonths(step)) {
+                    LocalDate candidate = monthDay(current, day);
+                    if (!candidate.isBefore(start) && occurrenceTime(candidate, time, zone) > now)
+                        return occurrenceTime(candidate, time, zone);
+                }
+            } else if ("monthly-day".equals(type) || "monthly-weekday".equals(type)) {
+                int day = repeat.optInt("day", start.getDayOfMonth());
+                int weekday = repeat.optInt("weekday", start.getDayOfWeek().getValue() % 7);
+                int week = repeat.optInt("week", 1);
+                if (weekday < 0 || weekday > 6 || !(-1 == week || (week >= 1 && week <= 4))) return -1;
+                for (int attempt = 0; attempt < 24; attempt++, current = current.plusMonths(1)) {
+                    LocalDate candidate = "monthly-day".equals(type)
+                        ? monthDay(current, day) : weekInMonth(current, weekday, week);
+                    if (!candidate.isBefore(start) && occurrenceTime(candidate, time, zone) > now)
+                        return occurrenceTime(candidate, time, zone);
+                }
+            }
+        } catch (Exception ignored) {}
+        return -1;
+    }
+
     /** One future alarm at a time. Reconstruct it after reboot without replaying missed alerts. */
     private static long nextMinuteAlarm(JSONObject item, long now) {
         long anchor = scheduledTime(item);
@@ -309,7 +405,9 @@ public final class ReminderManager {
 
     private static void schedule(Context context, JSONObject item) {
         long at = repeatMinutes(item) > 0
-            ? nextMinuteAlarm(item, System.currentTimeMillis()) : scheduledTime(item);
+            ? nextMinuteAlarm(item, System.currentTimeMillis())
+            : calendarRepeat(item) ? nextCalendarAlarm(item, System.currentTimeMillis())
+            : scheduledTime(item);
         if (at <= System.currentTimeMillis()) return;
         scheduleAt(context, at,
             pending(context, item.optString("id"), PendingIntent.FLAG_UPDATE_CURRENT));
@@ -367,8 +465,11 @@ public final class ReminderManager {
         if (repeatMinutes(task) > 0) {
             scheduleAt(context, now + repeatMinutes(task) * 60_000L,
                 pending(context, id, PendingIntent.FLAG_UPDATE_CURRENT));
+        } else if (calendarRepeat(task)) {
+            schedule(context, task);
         }
         postNotification(context, task);
+        if (calendarRepeat(task)) RunningTabWidget.refreshAll(context);
     }
 
     static void deliver(Context context, String id) {
@@ -392,6 +493,17 @@ public final class ReminderManager {
             if (next > now) scheduleAt(context, next,
                 pending(context, id, PendingIntent.FLAG_UPDATE_CURRENT));
             postNotification(context, task);
+            return;
+        }
+        if (calendarRepeat(task)) {
+            if (due < 0 || due > now + 60_000L) return;
+            // Deliver one occurrence, then queue the next even when nobody
+            // taps Done. Ignore missed days instead of flooding notifications.
+            long next = nextCalendarAlarm(task, now + 60_000L);
+            if (next > now) scheduleAt(context, next,
+                pending(context, id, PendingIntent.FLAG_UPDATE_CURRENT));
+            postNotification(context, task);
+            RunningTabWidget.refreshAll(context);
             return;
         }
         if (due < 0 || due > now + 60000 || due < now - 24 * HOUR_MS) return;
