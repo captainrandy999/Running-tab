@@ -164,6 +164,10 @@ function refreshFromStorage(){
  } catch(e){status('Could not refresh reminders from local storage.',true);}
 }
 window.addEventListener('runningtab:todo-changed',refreshFromStorage);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)render();});
+document.addEventListener('visibilitychange',()=>{
+ if(document.hidden || document.querySelector('.note-edit-form:not([hidden]), .task-reminder-form:not([hidden])'))return;
+ const expanded=document.querySelector('#pending .note-details[open] [data-edit-note]');
+ render(expanded?.dataset.editNote||null);
+});
 render();
 })();
