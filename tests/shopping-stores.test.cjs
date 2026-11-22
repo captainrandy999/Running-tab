@@ -108,3 +108,20 @@ test('store locations can be searched by name or address without manual coordina
  assert.match(native,/getFromLocationName/);
  assert.match(native,/JSONObject.quote\(id\)/);
 });
+
+test('vague geocoder results are not considered store pins',()=>{
+ const {api}=fixture();
+ for(const vague of ['Alberta, Canada','Coaldale, Alberta, Canada','Canada','20 Avenue, Coaldale, AB']){
+  assert.equal(api.isPreciseAddress(vague),false,vague);
+ }
+ for(const address of ['1213 20 Avenue, Coaldale, Alberta, Canada','204B Main Street, Coaldale, AB','100 20 St, Lethbridge, Alberta']){
+  assert.equal(api.isPreciseAddress(address),true,address);
+ }
+});
+test('Google Maps handoff explicitly searches there instead of pretending to import a pin',()=>{
+ const panel=fs.readFileSync(path.join(__dirname,'../shopping-panel.js'),'utf8');
+ assert.match(panel,/data-store-google/);
+ assert.match(panel,/https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=/);
+ assert.match(panel,/No precise store address found — PIN NOT SAVED/);
+ assert.match(panel,/api\(\)\.isPreciseAddress\(x\.label\)/);
+});

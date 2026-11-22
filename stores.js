@@ -107,6 +107,15 @@ function resolveTagValues(values){
   return value.startsWith('new:')?ensure(value.slice(4))?.id||'':value;
  }).filter(Boolean))];
 }
+// A geocoder may return a region (such as "Alberta, Canada") for a shop name.
+// Never allow such broad results to become geofence pins. Prefer a street number
+// and a recognizable road type in the SAME address segment.
+function isPreciseAddress(label){
+ if(typeof label!=='string'||label.length>600)return false;
+ const road=/\b(?:street|st\.?|avenue|ave\.?|road|rd\.?|drive|dr\.?|boulevard|blvd\.?|lane|ln\.?|trail|tr\.?|crescent|cres\.?|court|ct\.?|way|place|pl\.?|highway|hwy\.?|parkway|pkwy\.?|close)\b/i;
+ const streetSegment=/^\s*(?:unit\s*[a-z0-9-]+[ ,]+|suite\s*[a-z0-9-]+[ ,]+)?\d{1,6}[a-z]?(?:\s*[-/]\s*\d{1,6})?\s+\S+/i;
+ return label.split(',').some(segment=>streetSegment.test(segment)&&road.test(segment));
+}
 function onCurrentLocation(storeId,lat,lon){
  if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)return;
  update(storeId,{lat,lon});
@@ -122,6 +131,6 @@ function setAlerts(value){
 window.MyDayStores={read,items,notify,save,find,ensure,update,remove,parseDestination,tags,setTags,fillTagChoices,resolveTagValues,
  label:id=>read().find(x=>x.id===id)?.name||'General Shopping',
  selected:()=>window.RunningTabShopping?.selectedStore?.()||'',
- onCurrentLocation,locationError,permission,
+ onCurrentLocation,locationError,permission,isPreciseAddress,
  alerts:()=>localStorage.getItem(P)==='true',setAlerts};
 })();

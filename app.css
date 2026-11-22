@@ -849,3 +849,13 @@ html[data-theme="dark"] #shoppingPanel .shop-tag-summary{color:#aac3d1}
 #shoppingPanel .shop-address-result{display:block;width:100%;text-align:left;white-space:normal;overflow-wrap:anywhere;background:#fff;color:#254c61;border:1px solid #abcbd6;border-radius:9px;padding:8px 10px;min-height:40px;font-size:12px}
 html[data-theme="dark"] #shoppingPanel .shop-find-location{background:#223d4d;border-color:#416374}
 html[data-theme="dark"] #shoppingPanel .shop-address-result{background:#2b4657;color:#e4f2f9;border-color:#52758a}
+
+/* Clear outcome for geocode searches, and a one-tap real Google Maps search. */
+#shoppingPanel .shop-google-search{display:block;width:100%;font-size:13px;text-align:center;
+ border-radius:9px;min-height:42px;margin:8px 0 4px;padding:9px;background:#e0eef7;color:#173d59;border:1px solid #a8c9db}
+#shoppingPanel .shop-find-help{font-size:11px;line-height:1.4;margin:4px 0 10px;color:#506e80}
+#shoppingPanel .shop-address-results.shop-address-error{background:#fff0e8;color:#9d3a2d;
+ border:1px solid #d18b81;border-radius:10px;padding:10px 12px;font-weight:650;line-height:1.45}
+html[data-theme="dark"] #shoppingPanel .shop-google-search{background:#294b60;border-color:#648a9d;color:#f1f8fc}
+html[data-theme="dark"] #shoppingPanel .shop-find-help{color:#afc8d5}
+html[data-theme="dark"] #shoppingPanel .shop-address-results.shop-address-error{background:#4f3038;color:#ffd6ca;border-color:#b27880}

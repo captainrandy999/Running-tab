@@ -67,9 +67,11 @@ function storeTools(store){
   '<option value="dwell"'+(store.arrivalMode==='dwell'?' selected':'')+'>After a few minutes</option>'+
   '</select></label></div>'+
   '<p class="info">Pin: '+(pinned?store.lat.toFixed(5)+', '+store.lon.toFixed(5):'Not set')+'</p>'+
-  '<div class="shop-find-location"><label for="shop-address-'+key+'">Find this store by name or address</label>'+
-  '<div class="shop-find-row"><input type="search" id="shop-address-'+key+'" data-store-query placeholder="Store + town, or street address" maxlength="160" value="'+esc(store.searchQuery||store.name+', Alberta')+'">'+
-  '<button type="button" class="secondary small" data-store-search="'+key+'">Search</button></div>'+
+  '<div class="shop-find-location"><label for="shop-address-'+key+'">Find this store</label>'+
+  '<div class="shop-find-row"><input type="search" id="shop-address-'+key+'" data-store-query placeholder="Store + town, or street address" maxlength="160" value="'+esc(store.searchQuery||store.name+', Coaldale, AB')+'">'+
+  '<button type="button" class="secondary small" data-store-search="'+key+'">Find address</button></div>'+
+  '<button type="button" class="secondary small shop-google-search" data-store-google="'+key+'">🔎 Search in Google Maps</button>'+
+  '<p class="info shop-find-help">Google Maps finds businesses by name. To save a pin in MyDay, enter the full street address above, or use Pin here when at the store.</p>'+
   '<div class="shop-address-results" data-store-results="'+key+'" role="status" aria-live="polite"></div></div>'+
   '<div class="shop-store-buttons">'+
   '<button type="button" class="secondary small" data-store-pin="'+key+'">📍 Pin here instead</button>'+
@@ -164,24 +166,43 @@ function storeSearchResults(storeId,results,error){
  const button=group.querySelector('[data-store-search]');
  if(button)button.disabled=false;
  if(!target)return;
- const valid=Array.isArray(results)?results.filter(x=>x&&typeof x.label==='string'&&
+ const all=Array.isArray(results)?results.filter(x=>x&&typeof x.label==='string'&&
   Number.isFinite(x.lat)&&Number.isFinite(x.lon)&&Math.abs(x.lat)<=90&&Math.abs(x.lon)<=180):[];
+ const valid=all.filter(x=>api().isPreciseAddress(x.label));
  locationResults.set(storeId,valid);
  if(!valid.length){
-  target.textContent=error||'No matches. Try the street address and town instead.';
+  const broad=all.length?' The lookup returned only broad locations such as "'+
+   all[0].label.slice(0,120)+'". These are not safe store pins.':'';
+  target.classList.add('shop-address-error');
+  target.textContent='⚠ No precise store address found — PIN NOT SAVED.'+
+   (error?' '+error:broad)+
+   ' Search the business in Google Maps, copy its full street address, and try Find address again. Or use Pin here at the store.';
   return;
  }
- target.innerHTML='<p class="info">Tap the correct address to save the pin:</p>'+
+ target.classList.remove('shop-address-error');
+ target.innerHTML='<p class="info">Choose the exact street address below to save your pin:</p>'+
   valid.map((x,i)=>'<button type="button" class="shop-address-result" data-store-result="'+i+
    '" data-store-pick="'+esc(storeId)+'">📍 '+esc(x.label)+'</button>').join('');
 }
 $('shopStoreSettings').addEventListener('click',event=>{
  const b=event.target.closest('button');if(!b)return;
- const key=b.dataset.storePin||b.dataset.storeSearch||b.dataset.storePick||b.dataset.storeDelete;
+ const key=b.dataset.storePin||b.dataset.storeSearch||b.dataset.storeGoogle||b.dataset.storePick||b.dataset.storeDelete;
  const s=api().read().find(x=>x.id===key);if(!s)return;
  if(b.dataset.storePin){
   if(window.RunningTabAndroid?.pinStoreHere)window.RunningTabAndroid.pinStoreHere(key);
   else status('Pinning requires the Android app.',true);
+  return;
+ }
+ if(b.hasAttribute('data-store-google')){
+  const box=b.closest('[data-store-id]'),query=(box?.querySelector('[data-store-query]')?.value||s.name).trim();
+  if(!query)return;
+  const url='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(query);
+  const link=document.createElement('a');
+  link.href=url;
+  // Android WebView opens external pages through its safe URL handler.
+  link.target=window.RunningTabAndroid?'_self':'_blank';
+  link.rel='noopener noreferrer';
+  document.body.appendChild(link);link.click();link.remove();
   return;
  }
  if(b.hasAttribute('data-store-search')){
@@ -194,7 +215,7 @@ $('shopStoreSettings').addEventListener('click',event=>{
   }
   b.disabled=true;
   const target=box.querySelector('[data-store-results]');
-  if(target)target.textContent='Searching addresses…';
+  if(target){target.classList.remove('shop-address-error');target.textContent='Looking for a precise street address…';}
   locationResults.delete(key);
   window.RunningTabAndroid.searchStoreLocations(key,query);
   return;
@@ -202,10 +223,10 @@ $('shopStoreSettings').addEventListener('click',event=>{
  if(b.hasAttribute('data-store-pick')){
   const matches=locationResults.get(key)||[];
   const hit=matches[Number(b.dataset.storeResult)];
-  if(!hit)return;
+  if(!hit||!api().isPreciseAddress(hit.label))return;
   locationResults.delete(key);
   api().update(key,{lat:hit.lat,lon:hit.lon,locationLabel:hit.label});
-  status('Store location saved: '+hit.label+'. Arrival reminders are still controlled by your settings.');
+  status('✓ Store pin saved: '+hit.label+'. Arrival reminders are still controlled by your settings.');
   return;
  }
  if(b.dataset.storeDelete)api().remove(key);
