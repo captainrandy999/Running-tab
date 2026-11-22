@@ -135,9 +135,17 @@ public class RunningTabWidget extends AppWidgetProvider {
         view.setTextViewText(R.id.widgetOwed, "Owed to you\n" + WidgetData.dollars(money.owedToMe));
         view.setTextViewText(R.id.widgetIOwe, "You owe\n" + WidgetData.dollars(money.iOwe));
         List<WidgetData.Row> rows = WidgetData.rows(context, selected);
-        String count = SnapshotStore.MONEY.equals(selected)
-                ? rows.size() + " people"
-                : rows.size() + (SnapshotStore.TODO.equals(selected) ? " remaining" : " to buy");
+        int itemsRemaining = 0;
+        if (SnapshotStore.SHOPPING.equals(selected)) {
+            org.json.JSONArray shopping=SnapshotStore.read(context,SnapshotStore.SHOPPING);
+            for(int i=0;i<shopping.length();i++){
+                org.json.JSONObject item=shopping.optJSONObject(i);
+                if(item!=null&&!item.optBoolean("done",false))itemsRemaining++;
+            }
+        }
+        String count = SnapshotStore.MONEY.equals(selected) ? rows.size() + " people"
+                : SnapshotStore.TODO.equals(selected) ? rows.size() + " remaining"
+                : itemsRemaining + " to buy";
         view.setTextViewText(R.id.widgetCount, count);
         view.setTextViewText(R.id.widgetEmpty,
                 "No " + (SnapshotStore.MONEY.equals(selected) ? "money entries"

@@ -75,6 +75,8 @@ jobs:
             echo "::notice::INITIAL_PREVIEW_SIGNING_FINGERPRINT=$FINGERPRINT"
             echo "::warning::Pin this fingerprint in android/preview-signing.sha256 before publishing any later builds."
           fi
+      - name: Verify store shopping parser
+        run: node --test tests/shopping-stores.test.cjs
       - name: Compile Android app and widget
         working-directory: android
         run: gradle :app:assembleDebug --stacktrace --no-daemon
@@ -95,7 +97,7 @@ jobs:
             gh release upload widget-preview myday.apk day2day.apk running-tab-widget.apk --clobber
             gh release edit widget-preview \
               --title "MyDay Android widget (preview)" \
-              --notes "MyDay v2.8 for Android. Recurring daily, weekly and monthly alerts now automatically continue even if you don't tap Done; Done acknowledges the current occurrence without cancelling the next one. Automatic every-few-minutes reminders still stop on Done, Pause or Stop. Notification snoozes and the device-wide reminders switch remain available. Existing app data and Android package identity are preserved on update."
+              --notes "MyDay v2.9 for Android. Recurring daily, weekly and monthly alerts now automatically continue even if you don't tap Done; Done acknowledges the current occurrence without cancelling the next one. Automatic every-few-minutes reminders still stop on Done, Pause or Stop. Notification snoozes and the device-wide reminders switch remain available. Optional shopping store lists and low-power arrival alerts with explicit location permission, store-aware widget shortcuts, and updated data backup. Existing app data and Android package identity are preserved on update."
           else
             gh release create widget-preview myday.apk day2day.apk running-tab-widget.apk \
               --title "MyDay Android widget (preview)" \

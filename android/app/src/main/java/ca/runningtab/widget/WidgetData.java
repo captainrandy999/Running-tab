@@ -188,7 +188,7 @@ final class WidgetData {
                 if(title.isEmpty())continue;
                 count++;group.add(new Row(title,name,item.optString("id","")));
             }
-            if(i>0||count>0){
+            if(count>0){
                 out.add(new Row("🛒 "+name,count+" to buy","store:"+(id.isEmpty()?"general":id)));
                 out.addAll(group);
             }
