@@ -504,7 +504,10 @@ function interpret(input){
   }
   if(dueType==='month')return {error:'Repeating reminders need a specific calendar day.'};
  }
- s=s.replace(/^(?:to|about)\s+/i,'').trim();
+ // Remove instruction-only leading words after dates, times and repeats are parsed.
+ // Dictation occasionally leaves a second "to", or "that I need to".
+ s=s.replace(/^(?:that\\s+)?(?:i|we)\\s+(?:(?:need|have|want)\\s+to|should)\\s+/i,'')
+    .replace(/^(?:(?:to|about)\\b[\\s,;:–-]*)+/i,'').trim();
  if(!s){if(isGenericReminder)s='Reminder';else return {error:'Please say what needs to be done.'};}
  if(s.length>300)return {error:'The reminder is too long. Please shorten it.'};
  return {title:s[0].toUpperCase()+s.slice(1),dueType,due,unrecognized,remindTime,repeat:recurrence.repeat?window.MyDayRepeat.withAnchor(recurrence.repeat,due):null};

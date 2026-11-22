@@ -111,3 +111,25 @@ test('unacknowledged weekly and monthly reminders display their next valid dates
  const monthly={done:false,repeat:{type:'monthly-weekday',week:1,weekday:1},dueType:'day',due:'2026-11-02',remindTime:'17:00'};
  assert.equal(Repeat.currentOrNext(monthly,new Date(2026,10,20,18)),'2026-12-07');
 });
+
+
+test('spoken reminder wording does not become part of the task title',()=>{
+ const p=parser();
+ const examples=[
+  ['Remind me to pull the batteries from the boat','Pull the batteries from the boat'],
+  ['remind me to: pull the batteries from the boat','Pull the batteries from the boat'],
+  ['remind me to to pull the batteries from the boat','Pull the batteries from the boat'],
+  ['remind me tomorrow to pull the batteries from the boat','Pull the batteries from the boat'],
+  ['Remind me to pull the batteries from the boat tomorrow','Pull the batteries from the boat'],
+  ['Remind me in 2 days to pull the batteries from the boat','Pull the batteries from the boat'],
+  ['Remind me that I need to pull the batteries from the boat','Pull the batteries from the boat'],
+  ['Remind me to ask about the roof','Ask about the roof'],
+  ['Remind me to take medication every day','Take medication'],
+  ['Remind me every Friday at 4 PM to submit my hours','Submit my hours']
+ ];
+ for(const [phrase,expected] of examples)assert.equal(p.interpret(phrase).title,expected,phrase);
+ const daily=p.interpret('Remind me to take medication every day');
+ assert.equal(daily.repeat.type,'daily');
+ const weekly=p.interpret('Remind me every Friday at 4 PM to submit my hours');
+ assert.equal(weekly.repeat.type,'weekly');
+});
