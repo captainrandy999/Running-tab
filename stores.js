@@ -56,7 +56,7 @@ function parseDestination(raw){
  const split=tail=>tail.split(/\s+(?:and|or)\s+|\s*&\s*|,\s*/i).map(cleanName).filter(Boolean);
  const known=name=>names.find(s=>s.toLocaleLowerCase()===cleanName(name).toLocaleLowerCase());
  const result=(prefix,rawNames,allowCreate=false)=>{
-  const parts=split(rawNames).map(n=>n.replace(/^(?:my|the)\s+/i,''));
+  const parts=split(rawNames).map(n=>n.replace(/^(?:my|the|a|an)\s+/i,''));
   if(!parts.length)return null;
   const found=parts.map(n=>known(n)||n);
   // Don't create stores accidentally from a phrase such as 'materials and tools'.
