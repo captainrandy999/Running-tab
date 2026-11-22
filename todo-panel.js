@@ -80,13 +80,21 @@ function rows(items,completed=false,expandedNoteId=null){
   const body=hasBody?t.body:'';
   const title=esc(t.title);
   const appearance=taskAppearance(t);
+  // Ordinary To-Do, completed, and undated states are already clear from context.
+  const statusTone=isNote?'note':(['today','overdue'].includes(appearance.tone)?appearance.tone:null);
+  const badge=statusTone?'<span class="task-status-pill task-status-pill--'+statusTone+'">'+esc(isNote?'Note':appearance.text)+'</span>':'';
+  const details=[];
+  if(t.dueType!=='none')details.push(esc(label(t)));
+  if(t.dueType==='day'&&t.notify&&!t.repeatPaused)details.push('🔔 '+esc(t.remindTime||'08:00'));
+  if(t.repeat)details.push('🔁 '+esc(repeat().describe(t.repeat))+(t.repeatPaused?' (paused)':''));
+  const meta=badge||details.length?'<div class="task-meta">'+badge+(details.length?'<span class="task-date-label">'+details.join(' · ')+'</span>':'')+'</div>':'';
   // All entries expand. A normal To-Do retains its title and remains a To-Do
   // when a note is attached, instead of becoming a separate Note.
   const content=
    '<details class="note-details todo-details"'+(expandedNoteId===t.id?' open':'')+'>'
    +'<summary class="task-name">'+title+'</summary>'
    +(hasBody?'<div class="note-body" data-note-body>'+esc(body)+'</div>'
-      :'<div class="note-empty" data-note-body>No details added yet.</div>')
+      :'<div class="note-empty" data-note-body></div>')
    +'<div class="todo-item-edit-actions"><button type="button" class="secondary small note-edit-trigger" data-edit-note="'+esc(t.id)+'">'+(hasBody?'Edit note':'Add note')+'</button>'
    +'<button type="button" class="danger small" data-remove="'+esc(t.id)+'">Delete</button></div>'
    +'<form class="note-edit-form" data-note-edit-form="'+esc(t.id)+'" hidden>'
@@ -95,8 +103,7 @@ function rows(items,completed=false,expandedNoteId=null){
    +'<button type="submit" class="primary small">Save changes</button>'
    +'<button type="button" class="secondary small" data-cancel-note="'+esc(t.id)+'">Cancel</button></div>'
    +'<div class="edit-dictation-status" data-edit-dictation-status role="status" aria-live="polite" hidden></div></form>'
-   +'</details><div class="task-meta"><span class="task-status-pill task-status-pill--'+appearance.tone+'">'+appearance.text+'</span>'
-   +'<span class="task-date-label">'+esc(label(t))+(t.dueType==='day'&&t.notify&&!t.repeatPaused?' · 🔔 '+esc(t.remindTime||'08:00'):'')+(t.repeat?' · 🔁 '+esc(repeat().describe(t.repeat))+(t.repeatPaused?' (paused)':''):'')+'</span></div>'
+   +'</details>'+meta
    +(!t.done?'<div class="task-reminder-actions task-quick-actions'+(t.dueType==='day'?' has-calendar':'')+'">'
      +'<button type="button" class="secondary small" data-reminder-edit="'+esc(t.id)+'">🔔 Date & alert</button>'
      +(t.dueType==='day'?'<button type="button" class="secondary small" data-calendar="'+esc(t.id)+'">📅 Add to calendar</button>':'')
@@ -120,6 +127,7 @@ function render(expandedNoteId=null){
  const done=tasks.filter(t=>t.done).sort((a,b)=>String(b.completedAt||'').localeCompare(String(a.completedAt||'')));
  $('count').textContent=open.length+' remaining';
  $('doneCount').textContent='Completed ('+done.length+')';
+ $('todoCompletedDetails').hidden=done.length===0;
  $('todoClearCompleted').hidden=done.length===0;
  $('todoClearCompleted').textContent='Clear all ('+done.length+')';
  $('pending').innerHTML=open.length?rows(open,false,expandedNoteId):'<p class="empty">Nothing outstanding.</p>';
