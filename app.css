@@ -847,3 +847,9 @@ html[data-theme="dark"] #shoppingPanel .shop-tag-summary{color:#aac3d1}
 #shoppingPanel .shop-tag-management-row span{overflow-wrap:anywhere}
 #shoppingPanel .shop-tag-management-row button{min-height:31px;padding:5px 8px;font-size:12px;flex:none}
 html[data-theme="dark"] #shoppingPanel .shop-tag-management-row{border-color:#456879}
+
+/* Compact To-Do bulk actions and retention preferences. */
+#todoPanel .todo-list-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:10px}
+#todoPanel .todo-list-actions button{font-size:12px;min-height:36px;padding:7px 10px}
+#todoPanel .todo-list-actions button[hidden]{display:none!important}
+#todoHousekeepingSection select{max-width:260px;font-size:14px}
