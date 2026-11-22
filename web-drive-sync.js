@@ -206,7 +206,7 @@
     document.body.appendChild(link);link.click();link.remove();
     setTimeout(()=>URL.revokeObjectURL(url),1500);
    }
-   status('Recovery export requested. Verify it was saved. No changes applied.');
+   status('Sync paused: recovery export requested. Verify it was saved; no changes applied.',true);
   }catch(err){status('Recovery export failed: '+String(err?.message||err),true);}
  }
  reviewPanel.addEventListener('click',event=>{
@@ -386,6 +386,7 @@
    else status('Sync paused: '+msg,true);
   }finally{
    running=false;
+   if(reviewState)renderReview();
    if(pending){pending=false;queue(600);}
   }
  }
