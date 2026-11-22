@@ -166,32 +166,37 @@ final class WidgetData {
         return "9999-12-31";
     }
 
+    // Flat master list; each shopping item appears once, no matter how many tags.
     private static List<Row> shoppingRows(Context context) {
         JSONArray items=SnapshotStore.read(context,SnapshotStore.SHOPPING);
         JSONArray stores=SnapshotStore.read(context,SnapshotStore.STORES);
-        List<Row> out=new ArrayList<>();
-        List<String> ids=new ArrayList<>();
-        List<String> names=new ArrayList<>();
-        ids.add("");names.add("General Shopping");
+        Map<String,String> names=new LinkedHashMap<>();
         for(int i=0;i<stores.length();i++){
             JSONObject s=stores.optJSONObject(i);
-            if(s!=null){ids.add(s.optString("id"));names.add(s.optString("name"));}
+            if(s!=null){
+                String id=s.optString("id",""),name=s.optString("name","");
+                if(!id.isEmpty()&&!name.isEmpty())names.put(id,name);
+            }
         }
-        for(int i=0;i<ids.size();i++){
-            String id=ids.get(i),name=names.get(i);int count=0;
-            List<Row> group=new ArrayList<>();
-            for(int j=0;j<items.length();j++){
-                JSONObject item=items.optJSONObject(j);
-                if(item==null||item.optBoolean("done",false))continue;
-                if(!id.equals(item.optString("storeId","")))continue;
-                String title=item.optString("name","").trim();
-                if(title.isEmpty())continue;
-                count++;group.add(new Row(title,name,item.optString("id","")));
+        List<Row> out=new ArrayList<>();
+        for(int i=0;i<items.length();i++){
+            JSONObject item=items.optJSONObject(i);
+            if(item==null||item.optBoolean("done",false))continue;
+            String name=item.optString("name","").trim();
+            if(name.isEmpty())continue;
+            JSONArray ids=item.optJSONArray("storeIds");
+            List<String> labels=new ArrayList<>();
+            if(ids!=null){
+                for(int j=0;j<ids.length();j++){
+                    String label=names.get(ids.optString(j,""));
+                    if(label!=null&&!labels.contains(label))labels.add(label);
+                }
+            }else{
+                String label=names.get(item.optString("storeId",""));
+                if(label!=null)labels.add(label);
             }
-            if(count>0){
-                out.add(new Row("🛒 "+name,count+" to buy","store:"+(id.isEmpty()?"general":id)));
-                out.addAll(group);
-            }
+            String detail=labels.isEmpty()?"Any store":"🏷 "+String.join(" · ",labels);
+            out.add(new Row(name,detail,item.optString("id","")));
         }
         return out;
     }

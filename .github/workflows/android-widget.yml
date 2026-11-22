@@ -97,7 +97,7 @@ jobs:
             gh release upload widget-preview myday.apk day2day.apk running-tab-widget.apk --clobber
             gh release edit widget-preview \
               --title "MyDay Android widget (preview)" \
-              --notes "MyDay v2.9 for Android. Recurring daily, weekly and monthly alerts now automatically continue even if you don't tap Done; Done acknowledges the current occurrence without cancelling the next one. Automatic every-few-minutes reminders still stop on Done, Pause or Stop. Notification snoozes and the device-wide reminders switch remain available. Optional shopping store lists and low-power arrival alerts with explicit location permission, store-aware widget shortcuts, and updated data backup. Existing app data and Android package identity are preserved on update."
+              --notes "MyDay v3.0 for Android. Recurring daily, weekly and monthly alerts now automatically continue even if you don't tap Done; Done acknowledges the current occurrence without cancelling the next one. Automatic every-few-minutes reminders still stop on Done, Pause or Stop. Notification snoozes and the device-wide reminders switch remain available. One master Shopping list with optional multi-store tags, store filters, and low-power location reminders for tagged items. Store-aware widget shortcuts and backups remain supported. Existing app data and Android package identity are preserved on update."
           else
             gh release create widget-preview myday.apk day2day.apk running-tab-widget.apk \
               --title "MyDay Android widget (preview)" \

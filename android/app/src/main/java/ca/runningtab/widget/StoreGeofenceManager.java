@@ -49,6 +49,15 @@ final class StoreGeofenceManager {
     static JSONArray read(Context c,String key){
         try{return new JSONArray(prefs(c).getString(key,"[]"));}catch(Exception e){return new JSONArray();}
     }
+    /** A shopping record can have several eligible stores; storeId is legacy fallback. */
+    private static boolean itemTagged(JSONObject item,String id){
+        JSONArray ids=item.optJSONArray("storeIds");
+        if(ids!=null){
+            for(int n=0;n<ids.length();n++)if(id.equals(ids.optString(n)))return true;
+            return false;
+        }
+        return id.equals(item.optString("storeId",""));
+    }
     private static PendingIntent pending(Context c){
         Intent intent=new Intent(c,StoreLocationReceiver.class);
         intent.setAction(ACTION);
@@ -67,8 +76,17 @@ final class StoreGeofenceManager {
             Map<String,Integer> remaining=new HashMap<>();
             for(int i=0;i<shopping.length();i++){
                 JSONObject x=shopping.optJSONObject(i);if(x==null||x.optBoolean("done",false))continue;
-                String id=x.optString("storeId","");
-                if(!id.isEmpty())remaining.put(id,remaining.getOrDefault(id,0)+1);
+                JSONArray ids=x.optJSONArray("storeIds");
+                if(ids!=null){
+                    java.util.HashSet<String> unique=new java.util.HashSet<>();
+                    for(int n=0;n<ids.length();n++){
+                        String id=ids.optString(n,"");
+                        if(!id.isEmpty()&&unique.add(id))remaining.put(id,remaining.getOrDefault(id,0)+1);
+                    }
+                }else{
+                    String id=x.optString("storeId","");
+                    if(!id.isEmpty())remaining.put(id,remaining.getOrDefault(id,0)+1);
+                }
             }
             List<Geofence> fences=new ArrayList<>();
             for(int i=0;i<stores.length()&&fences.size()<90;i++){
@@ -114,7 +132,7 @@ final class StoreGeofenceManager {
             int count=0;
             for(int i=0;i<shopping.length();i++){
                 JSONObject x=shopping.optJSONObject(i);
-                if(x!=null&&!x.optBoolean("done",false)&&id.equals(x.optString("storeId")))count++;
+                if(x!=null&&!x.optBoolean("done",false)&&itemTagged(x,id))count++;
             }
             if(count==0)continue;
             long now=System.currentTimeMillis(),last=prefs(c).getLong("last_"+id,0);
