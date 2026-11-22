@@ -68,7 +68,7 @@ function storeTools(store){
   '</select></label></div>'+
   '<p class="info">Pin: '+(pinned?store.lat.toFixed(5)+', '+store.lon.toFixed(5):'Not set')+'</p>'+
   '<div class="shop-find-location"><label for="shop-address-'+key+'">Find this store</label>'+
-  '<div class="shop-find-row"><input type="search" id="shop-address-'+key+'" data-store-query placeholder="Store + town, or street address" maxlength="160" value="'+esc(store.searchQuery||store.name+', Coaldale, AB')+'">'+
+  '<div class="shop-find-row"><input type="search" id="shop-address-'+key+'" data-store-query placeholder="e.g. Home Hardware, Coaldale, AB" maxlength="160" value="'+esc(store.searchQuery||store.name)+'">'+
   '<button type="button" class="secondary small" data-store-search="'+key+'">Find address</button></div>'+
   '<button type="button" class="secondary small shop-google-search" data-store-google="'+key+'">🔎 Search in Google Maps</button>'+
   '<p class="info shop-find-help">Google Maps finds businesses by name. To save a pin in MyDay, enter the full street address above, or use Pin here when at the store.</p>'+
