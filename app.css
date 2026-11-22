@@ -861,3 +861,7 @@ html[data-theme="dark"] #shoppingPanel .shop-tag-management-row{border-color:#45
 #todoPanel .todo-item-edit-actions button{font-size:12px;min-height:34px;padding:6px 10px}
 #shoppingPanel #shopClearChecked{margin:9px 0 4px;font-size:12px;min-height:35px}
 #shoppingPanel #shopClearChecked[hidden]{display:none!important}
+
+/* Hide empty completed groups and blank note placeholders. */
+#todoPanel #todoCompletedDetails[hidden]{display:none!important}
+#todoPanel .todo-details .note-empty:empty{display:none!important}
