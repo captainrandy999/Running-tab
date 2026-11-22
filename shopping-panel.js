@@ -5,6 +5,7 @@ const $=id=>document.getElementById(id),api=()=>window.MyDayStores;
 const KEY='running-tab-shopping-v1';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let rows=[],filter='all',editing=null;
+const locationResults=new Map();
 const status=(message,bad=false)=>{
  const x=$('shopStatus');if(x){x.textContent=message;x.className=message?'notice'+(bad?' bad':''):'';}
 };
@@ -66,9 +67,12 @@ function storeTools(store){
   '<option value="dwell"'+(store.arrivalMode==='dwell'?' selected':'')+'>After a few minutes</option>'+
   '</select></label></div>'+
   '<p class="info">Pin: '+(pinned?store.lat.toFixed(5)+', '+store.lon.toFixed(5):'Not set')+'</p>'+
+  '<div class="shop-find-location"><label for="shop-address-'+key+'">Find this store by name or address</label>'+
+  '<div class="shop-find-row"><input type="search" id="shop-address-'+key+'" data-store-query placeholder="Store + town, or street address" maxlength="160" value="'+esc(store.searchQuery||store.name+', Alberta')+'">'+
+  '<button type="button" class="secondary small" data-store-search="'+key+'">Search</button></div>'+
+  '<div class="shop-address-results" data-store-results="'+key+'" role="status" aria-live="polite"></div></div>'+
   '<div class="shop-store-buttons">'+
-  '<button type="button" class="secondary small" data-store-pin="'+key+'">📍 Pin here</button>'+
-  '<button type="button" class="secondary small" data-store-coords="'+key+'">Coordinates</button>'+
+  '<button type="button" class="secondary small" data-store-pin="'+key+'">📍 Pin here instead</button>'+
   '<button type="button" class="danger small" data-store-delete="'+key+'">Delete store</button>'+
   '</div></div></details>';
 }
@@ -152,23 +156,64 @@ for(const id of ['shopPending','shopCompleted']){
  $(id).addEventListener('click',onItemClick);
  $(id).addEventListener('change',onItemChange);
 }
+function storeSearchResults(storeId,results,error){
+ const group=[...document.querySelectorAll('#shopStoreSettings [data-store-id]')]
+  .find(x=>x.dataset.storeId===storeId);
+ if(!group)return;
+ const target=group.querySelector('[data-store-results]');
+ const button=group.querySelector('[data-store-search]');
+ if(button)button.disabled=false;
+ if(!target)return;
+ const valid=Array.isArray(results)?results.filter(x=>x&&typeof x.label==='string'&&
+  Number.isFinite(x.lat)&&Number.isFinite(x.lon)&&Math.abs(x.lat)<=90&&Math.abs(x.lon)<=180):[];
+ locationResults.set(storeId,valid);
+ if(!valid.length){
+  target.textContent=error||'No matches. Try the street address and town instead.';
+  return;
+ }
+ target.innerHTML='<p class="info">Tap the correct address to save the pin:</p>'+
+  valid.map((x,i)=>'<button type="button" class="shop-address-result" data-store-result="'+i+
+   '" data-store-pick="'+esc(storeId)+'">📍 '+esc(x.label)+'</button>').join('');
+}
 $('shopStoreSettings').addEventListener('click',event=>{
  const b=event.target.closest('button');if(!b)return;
- const key=b.dataset.storePin||b.dataset.storeCoords||b.dataset.storeDelete;
+ const key=b.dataset.storePin||b.dataset.storeSearch||b.dataset.storePick||b.dataset.storeDelete;
  const s=api().read().find(x=>x.id===key);if(!s)return;
  if(b.dataset.storePin){
   if(window.RunningTabAndroid?.pinStoreHere)window.RunningTabAndroid.pinStoreHere(key);
   else status('Pinning requires the Android app.',true);
   return;
  }
- if(b.dataset.storeCoords){
-  const value=prompt('Coordinates from Google Maps (latitude, longitude)',Number.isFinite(s.lat)?s.lat+', '+s.lon:'');
-  if(value===null)return;
-  const c=value.split(/[,;\s]+/).filter(Boolean).map(Number);
-  if(c.length!==2||!Number.isFinite(c[0])||!Number.isFinite(c[1])||Math.abs(c[0])>90||Math.abs(c[1])>180){status('Enter a valid latitude and longitude.',true);return;}
-  api().update(s.id,{lat:c[0],lon:c[1]});status('Location updated.');return;
+ if(b.hasAttribute('data-store-search')){
+  const box=b.closest('[data-store-id]'),input=box?.querySelector('[data-store-query]');
+  const query=(input?.value||'').trim();
+  if(query.length<3){status('Enter a store name and town, or a street address.',true);return;}
+  if(!window.RunningTabAndroid?.searchStoreLocations){
+   storeSearchResults(key,[],'Store search requires MyDay v3.1 or later on Android.');
+   return;
+  }
+  b.disabled=true;
+  const target=box.querySelector('[data-store-results]');
+  if(target)target.textContent='Searching addresses…';
+  locationResults.delete(key);
+  window.RunningTabAndroid.searchStoreLocations(key,query);
+  return;
+ }
+ if(b.hasAttribute('data-store-pick')){
+  const matches=locationResults.get(key)||[];
+  const hit=matches[Number(b.dataset.storeResult)];
+  if(!hit)return;
+  locationResults.delete(key);
+  api().update(key,{lat:hit.lat,lon:hit.lon,locationLabel:hit.label});
+  status('Store location saved: '+hit.label+'. Arrival reminders are still controlled by your settings.');
+  return;
  }
  if(b.dataset.storeDelete)api().remove(key);
+});
+$('shopStoreSettings').addEventListener('keydown',event=>{
+ if(event.key!=='Enter'||!event.target.matches('[data-store-query]'))return;
+ event.preventDefault();
+ event.target.closest('[data-store-id]')?.querySelector('[data-store-search]')?.click();
 });
 $('shopStoreSettings').addEventListener('change',event=>{
  const group=event.target.closest('[data-store-id]');if(!group)return;
@@ -194,7 +239,7 @@ $('shopClearChecked').addEventListener('click',()=>{
 $('shopReset').addEventListener('click',()=>{
  if(rows.length&&confirm('Delete every shopping item? Store tags and locations will be kept.'))save([]);
 });
-window.RunningTabShopping={selectedStore:()=>filter,openStore,refresh};
+window.RunningTabShopping={selectedStore:()=>filter,openStore,refresh,storeSearchResults};
 window.addEventListener('runningtab:shopping-changed',refresh);
 window.addEventListener('runningtab:stores-changed',refresh);
 window.addEventListener('storage',e=>{if([KEY,'running-tab-stores-v1'].includes(e.key))refresh();});

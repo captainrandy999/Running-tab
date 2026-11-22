@@ -95,3 +95,16 @@ test('Android geofencing and widget both understand tag arrays and legacy storeI
  assert.match(widget,/optJSONArray\("storeIds"\)/);
  assert.match(widget,/Flat master list/);
 });
+
+test('store locations can be searched by name or address without manual coordinates',()=>{
+ const panel=fs.readFileSync(path.join(__dirname,'../shopping-panel.js'),'utf8');
+ const native=fs.readFileSync(path.join(__dirname,'../android/app/src/main/java/ca/runningtab/widget/MainActivity.java'),'utf8');
+ assert.match(panel,/data-store-search/);
+ assert.match(panel,/data-store-results/);
+ assert.match(panel,/data-store-pick/);
+ assert.match(panel,/searchStoreLocations/);
+ assert.doesNotMatch(panel,/prompt\('Coordinates from Google Maps/);
+ assert.match(native,/@JavascriptInterface public void searchStoreLocations/);
+ assert.match(native,/getFromLocationName/);
+ assert.match(native,/JSONObject.quote\(id\)/);
+});

@@ -838,3 +838,14 @@ html[data-theme="dark"] #shoppingPanel .shop-filter-option.active{background:#2a
 html[data-theme="dark"] #shoppingPanel .shop-tag-editor{background:#213a49;border-color:#426377}
 html[data-theme="dark"] .shop-tag-choice{background:#294453;color:#e5f3f8;border-color:#456879}
 html[data-theme="dark"] #shoppingPanel .shop-tag-summary{color:#aac3d1}
+
+/* Store address search: in-place results instead of Android's coordinates popup. */
+#shoppingPanel .shop-find-location{margin:9px 0;padding:9px;background:#edf6f9;border-radius:10px;border:1px solid #c5dce5}
+#shoppingPanel .shop-find-location label{font-size:12px;font-weight:650;display:block;margin-bottom:6px}
+#shoppingPanel .shop-find-row{display:flex;gap:6px;align-items:center}
+#shoppingPanel .shop-find-row input{min-width:0;flex:1;font-size:13px;min-height:40px;padding:8px}
+#shoppingPanel .shop-find-row button{flex:none;padding:7px 10px;min-height:40px;font-size:12px}
+#shoppingPanel .shop-address-results{display:grid;gap:6px;margin-top:6px;font-size:12px;overflow-wrap:anywhere}
+#shoppingPanel .shop-address-result{display:block;width:100%;text-align:left;white-space:normal;overflow-wrap:anywhere;background:#fff;color:#254c61;border:1px solid #abcbd6;border-radius:9px;padding:8px 10px;min-height:40px;font-size:12px}
+html[data-theme="dark"] #shoppingPanel .shop-find-location{background:#223d4d;border-color:#416374}
+html[data-theme="dark"] #shoppingPanel .shop-address-result{background:#2b4657;color:#e4f2f9;border-color:#52758a}

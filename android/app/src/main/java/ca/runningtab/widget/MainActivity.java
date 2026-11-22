@@ -3,6 +3,9 @@ package ca.runningtab.widget;
 import android.app.Activity;
 import android.Manifest;
 import android.provider.Settings;
+import android.location.Address;
+import android.location.Geocoder;
+import org.json.JSONArray;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 import android.content.pm.PackageManager;
@@ -283,6 +286,66 @@ public class MainActivity extends Activity {
                 startActivity(i);
             }).show();
     }
+    /**
+     * Forward geocoding is only called on demand. It does not read the phone's
+     * location and does not need foreground/background GPS permission.
+     * Older Android versions use a worker thread for the synchronous API.
+     */
+    private void searchStoreLocations(String id,String query) {
+        if(id==null||id.length()>180||query==null||query.trim().length()<3||query.length()>160){
+            deliverStoreLocations(id==null?"":id,new JSONArray(),"Enter a store name and town, or a street address.");
+            return;
+        }
+        if(!Geocoder.isPresent()){
+            deliverStoreLocations(id,new JSONArray(),"Address search is unavailable on this device. Try Pin here when at the store.");
+            return;
+        }
+        final Geocoder geocoder=new Geocoder(this,Locale.CANADA);
+        if(Build.VERSION.SDK_INT>=33){
+            geocoder.getFromLocationName(query.trim(),5,new Geocoder.GeocodeListener(){
+                @Override public void onGeocode(List<Address> addresses){
+                    deliverStoreLocations(id,addressChoices(addresses),"");
+                }
+                @Override public void onError(String errorMessage){
+                    deliverStoreLocations(id,new JSONArray(),"Unable to search addresses. Try again or use Pin here.");
+                }
+            });
+        }else{
+            new Thread(()->{
+                try{deliverStoreLocations(id,addressChoices(geocoder.getFromLocationName(query.trim(),5)),"");}
+                catch(Exception e){deliverStoreLocations(id,new JSONArray(),"Address search failed. Try a full street address.");}
+            },"MyDay-geocoding").start();
+        }
+    }
+    private JSONArray addressChoices(List<Address> addresses){
+        JSONArray output=new JSONArray();
+        if(addresses==null)return output;
+        for(Address a:addresses){
+            if(a==null||!a.hasLatitude()||!a.hasLongitude())continue;
+            try{
+                JSONObject p=new JSONObject();
+                String label=a.getMaxAddressLineIndex()>=0?a.getAddressLine(0):"";
+                if(label==null||label.trim().isEmpty()){
+                    label=(a.getFeatureName()==null?"":a.getFeatureName())+", "+
+                        (a.getLocality()==null?"":a.getLocality())+", "+
+                        (a.getAdminArea()==null?"":a.getAdminArea());
+                }
+                p.put("label",label.trim());p.put("lat",a.getLatitude());p.put("lon",a.getLongitude());
+                output.put(p);
+            }catch(Exception ignored){}
+        }
+        return output;
+    }
+    private void deliverStoreLocations(String id,JSONArray matches,String error){
+        runOnUiThread(()->{
+            if(web!=null&&loaded){
+                String js="window.RunningTabShopping?.storeSearchResults("+
+                    JSONObject.quote(id)+","+matches.toString()+","+JSONObject.quote(error==null?"":error)+");";
+                web.evaluateJavascript(js,null);
+            }
+        });
+    }
+
     private void pinStoreHere(String id){
         if(id==null||id.isEmpty())return;
         if(!StoreGeofenceManager.hasForeground(this)){
@@ -328,6 +391,9 @@ public class MainActivity extends Activity {
         }
         @JavascriptInterface public void enableStoreLocations(){
             runOnUiThread(MainActivity.this::enableStoreLocations);
+        }
+        @JavascriptInterface public void searchStoreLocations(String id,String query){
+            runOnUiThread(()->MainActivity.this.searchStoreLocations(id,query));
         }
         @JavascriptInterface public void pinStoreHere(String id){
             runOnUiThread(()->MainActivity.this.pinStoreHere(id));
