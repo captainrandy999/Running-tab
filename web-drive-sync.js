@@ -125,7 +125,7 @@
  let reviewState=null,reviewOpen=false;
  const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const fieldNames={
-  stores:{name:'Store',lat:'Latitude',lon:'Longitude',radius:'Radius',enabled:'Arrival alerts',arrivalMode:'Arrival mode'},
+  stores:{name:'Store tag'},
   money:{person:'Person',direction:'Who owes whom',cents:'Amount',reason:'Description',date:'Date',settled:'Settled',body:'Notes'},
   todos:{title:'Task',due:'Date',remindTime:'Time',notify:'Phone alert',repeat:'Repeat',repeatPaused:'Paused',done:'Completed',body:'Notes'},
   shopping:{name:'Item',done:'Purchased'}

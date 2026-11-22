@@ -17,13 +17,12 @@ function fixture(){
  return {api:context.window.MyDayStores,db,events};
 }
 const json=value=>JSON.parse(JSON.stringify(value));
-test('store creation is idempotent and location properties stay intact',()=>{
+test('store creation is idempotent and records contain no location fields',()=>{
  const {api}=fixture();
  const a=api.ensure('Home Hardware'),b=api.ensure(' home hardware ');
  assert.equal(a.id,b.id);
- api.update(a.id,{lat:49.7,lon:-112.8,enabled:true});
  assert.equal(api.read().length,1);
- assert.equal(api.read()[0].lat,49.7);
+ assert.deepEqual(Object.keys(json(api.read()[0])).sort(),['created','id','name']);
 });
 test('generic commands select no tags, even when named stores exist',()=>{
  const {api}=fixture();
@@ -87,41 +86,13 @@ test('shopping page is one list with tag filters and controls',()=>{
  assert.match(panel,/const visibleDone=finished\.filter\(matches\)/);
  assert.match(view,/openStore/);
 });
-test('Android geofencing and widget both understand tag arrays and legacy storeId',()=>{
- const geofence=fs.readFileSync(path.join(__dirname,'../android/app/src/main/java/ca/runningtab/widget/StoreGeofenceManager.java'),'utf8');
- const widget=fs.readFileSync(path.join(__dirname,'../android/app/src/main/java/ca/runningtab/widget/WidgetData.java'),'utf8');
- assert.match(geofence,/itemTagged/);
- assert.match(geofence,/optJSONArray\("storeIds"\)/);
- assert.match(widget,/optJSONArray\("storeIds"\)/);
- assert.match(widget,/Flat master list/);
-});
-
-test('store locations can be searched by name or address without manual coordinates',()=>{
+test('shopping is tags-only and never requests a device location',()=>{
+ const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
  const panel=fs.readFileSync(path.join(__dirname,'../shopping-panel.js'),'utf8');
- const native=fs.readFileSync(path.join(__dirname,'../android/app/src/main/java/ca/runningtab/widget/MainActivity.java'),'utf8');
- assert.match(panel,/data-store-search/);
- assert.match(panel,/data-store-results/);
- assert.match(panel,/data-store-pick/);
- assert.match(panel,/searchStoreLocations/);
- assert.doesNotMatch(panel,/prompt\('Coordinates from Google Maps/);
- assert.match(native,/@JavascriptInterface public void searchStoreLocations/);
- assert.match(native,/getFromLocationName/);
- assert.match(native,/JSONObject.quote\(id\)/);
-});
-
-test('vague geocoder results are not considered store pins',()=>{
- const {api}=fixture();
- for(const vague of ['Alberta, Canada','Coaldale, Alberta, Canada','Canada','20 Avenue, Coaldale, AB']){
-  assert.equal(api.isPreciseAddress(vague),false,vague);
- }
- for(const address of ['1213 20 Avenue, Coaldale, Alberta, Canada','204B Main Street, Coaldale, AB','100 20 St, Lethbridge, Alberta']){
-  assert.equal(api.isPreciseAddress(address),true,address);
- }
-});
-test('Google Maps handoff explicitly searches there instead of pretending to import a pin',()=>{
- const panel=fs.readFileSync(path.join(__dirname,'../shopping-panel.js'),'utf8');
- assert.match(panel,/data-store-google/);
- assert.match(panel,/https:\/\/www\.google\.com\/maps\/search\/\?api=1&query=/);
- assert.match(panel,/No precise store address found — PIN NOT SAVED/);
- assert.match(panel,/api\(\)\.isPreciseAddress\(x\.label\)/);
+ const stores=fs.readFileSync(path.join(__dirname,'../stores.js'),'utf8');
+ assert.match(html,/Manage store tags/);
+ assert.doesNotMatch(html,/shopArrivalToggle|shopLocationStatus/);
+ assert.doesNotMatch(panel,/data-store-pin|data-store-search|data-store-radius|storeSearchResults|Pin here/);
+ assert.doesNotMatch(stores,/setAlerts|pinStoreHere|isPreciseAddress/);
+ assert.match(panel,/data-store-delete/);
 });

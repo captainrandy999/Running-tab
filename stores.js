@@ -1,7 +1,7 @@
 /* Store definitions and lightweight shopping voice routing. */
 (()=>{
 'use strict';
-const K='running-tab-stores-v1',S='running-tab-shopping-v1',P='running-tab-store-alerts-v1';
+const K='running-tab-stores-v1',S='running-tab-shopping-v1';
 const read=()=>{try{const v=JSON.parse(localStorage.getItem(K)||'[]');return Array.isArray(v)?v:[];}catch(e){return [];}};
 const items=()=>{try{const v=JSON.parse(localStorage.getItem(S)||'[]');return Array.isArray(v)?v:[];}catch(e){return [];}};
 const notify=()=>window.dispatchEvent(new Event('runningtab:stores-changed'));
@@ -12,7 +12,7 @@ function ensure(name){
  name=String(name||'').replace(/\s+/g,' ').trim().slice(0,100);
  if(!name)return null;
  const old=find(name);if(old)return old;
- const store={id:id(),name,radius:200,enabled:false,arrivalMode:'arrival',created:new Date().toISOString()};
+ const store={id:id(),name,created:new Date().toISOString()};
  save([...read(),store]);return store;
 }
 function update(id,patch){
@@ -107,30 +107,7 @@ function resolveTagValues(values){
   return value.startsWith('new:')?ensure(value.slice(4))?.id||'':value;
  }).filter(Boolean))];
 }
-// A geocoder may return a region (such as "Alberta, Canada") for a shop name.
-// Never allow such broad results to become geofence pins. Prefer a street number
-// and a recognizable road type in the SAME address segment.
-function isPreciseAddress(label){
- if(typeof label!=='string'||label.length>600)return false;
- const road=/\b(?:street|st\.?|avenue|ave\.?|road|rd\.?|drive|dr\.?|boulevard|blvd\.?|lane|ln\.?|trail|tr\.?|crescent|cres\.?|court|ct\.?|way|place|pl\.?|highway|hwy\.?|parkway|pkwy\.?|close)\b/i;
- const streetSegment=/^\s*(?:unit\s*[a-z0-9-]+[ ,]+|suite\s*[a-z0-9-]+[ ,]+)?\d{1,6}[a-z]?(?:\s*[-/]\s*\d{1,6})?\s+\S+\s+\S+/i;
- return label.split(',').some(segment=>streetSegment.test(segment)&&road.test(segment));
-}
-function onCurrentLocation(storeId,lat,lon){
- if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)return;
- update(storeId,{lat,lon});
- const el=document.getElementById('shopStatus');if(el)el.textContent='Store pin saved.';
-}
-function locationError(message){const el=document.getElementById('shopStatus');if(el)el.textContent=String(message);}
-function permission(){try{return !!window.RunningTabAndroid?.storeLocationPermissionGranted?.();}catch(e){return false;}}
-function setAlerts(value){
- localStorage.setItem(P,value?'true':'false');
- window.__rtWidgetSnapshot?.();notify();
- if(value&&!permission())window.RunningTabAndroid?.enableStoreLocations?.();
-}
 window.MyDayStores={read,items,notify,save,find,ensure,update,remove,parseDestination,tags,setTags,fillTagChoices,resolveTagValues,
  label:id=>read().find(x=>x.id===id)?.name||'General Shopping',
- selected:()=>window.RunningTabShopping?.selectedStore?.()||'',
- onCurrentLocation,locationError,permission,isPreciseAddress,
- alerts:()=>localStorage.getItem(P)==='true',setAlerts};
+ selected:()=>window.RunningTabShopping?.selectedStore?.()||''};
 })();
