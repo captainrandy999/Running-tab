@@ -2,12 +2,6 @@ package ca.runningtab.widget;
 
 import android.app.Activity;
 import android.Manifest;
-import android.provider.Settings;
-import android.location.Address;
-import android.location.Geocoder;
-import org.json.JSONArray;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.Priority;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.content.IntentSender;
@@ -38,7 +32,6 @@ import java.util.List;
 import android.widget.Toast;
 import org.json.JSONObject;
 import java.util.ArrayList;
-import java.util.Locale;
 import java.io.OutputStream;
 import java.io.InputStream;
 import java.io.ByteArrayOutputStream;
@@ -56,8 +49,6 @@ public class MainActivity extends Activity {
     private static final int RESTORE_PICKER = 2004;
     private static final int GOOGLE_AUTH_PICKER = 2005;
     private static final int ALERT_PERMISSION = 2006;
-    private static final int STORE_LOCATION_PERMISSION = 2007;
-    private String pendingStorePin = null;
     private static final String GOOGLE_AUTH_PREF = "google_drive_connected";
     private static final List<Scope> GOOGLE_SCOPES = Arrays.asList(
         new Scope("openid"), new Scope("email"),
@@ -81,6 +72,7 @@ public class MainActivity extends Activity {
 
     @Override protected void onCreate(Bundle state) {
         super.onCreate(state);
+        LegacyStoreLocationCleanup.disable(this);
         getWindow().setStatusBarColor(Color.rgb(22, 59, 89));
         getWindow().setNavigationBarColor(Color.rgb(245, 248, 250));
 
@@ -228,7 +220,6 @@ public class MainActivity extends Activity {
         super.onResume();
         if (loaded && web != null) {
             web.evaluateJavascript("window.__rtWidgetSnapshot?.();window.RunningTabShopping?.refresh?.();", null);
-            StoreGeofenceManager.refresh(this);
             if (getPreferences(MODE_PRIVATE).getBoolean(GOOGLE_AUTH_PREF, false))
                 web.postDelayed(() -> authorizeGoogle(false), 400);
         }
@@ -246,14 +237,6 @@ public class MainActivity extends Activity {
 
     @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(requestCode==STORE_LOCATION_PERMISSION){
-            String pin=pendingStorePin;pendingStorePin=null;
-            if(pin!=null&&StoreGeofenceManager.hasForeground(this))pinStoreHere(pin);
-            else if(StoreGeofenceManager.hasForeground(this))guideBackgroundStorePermission();
-            else Toast.makeText(this,"Allow precise location to use store arrival reminders.",Toast.LENGTH_LONG).show();
-            if(web!=null)web.evaluateJavascript("window.RunningTabShopping?.refresh?.();",null);
-            return;
-        }
         if (requestCode != ALERT_PERMISSION) return;
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             ReminderManager.restore(this);
@@ -262,109 +245,6 @@ public class MainActivity extends Activity {
             Toast.makeText(this, "Phone alerts are off. You can enable them in Android Settings → Apps → MyDay → Notifications.", Toast.LENGTH_LONG).show();
         }
         alertPermissionChanged();
-    }
-
-    private void askStoreForeground(){
-        if(Build.VERSION.SDK_INT>=31)
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},STORE_LOCATION_PERMISSION);
-        else requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},STORE_LOCATION_PERMISSION);
-    }
-    private void enableStoreLocations(){
-        if(!StoreGeofenceManager.hasForeground(this)){askStoreForeground();return;}
-        if(!StoreGeofenceManager.hasBackground(this)){guideBackgroundStorePermission();return;}
-        StoreGeofenceManager.refresh(this);
-        Toast.makeText(this,"Store arrival reminders are allowed.",Toast.LENGTH_SHORT).show();
-        if(web!=null)web.evaluateJavascript("window.RunningTabShopping?.refresh?.();",null);
-    }
-    private void guideBackgroundStorePermission(){
-        new AlertDialog.Builder(this).setTitle("Allow store arrival reminders")
-            .setMessage("To notify you while MyDay is closed, open MyDay permissions, choose Location, select Allow all the time, and enable Precise location. Only stores you enable with unpurchased items are monitored.")
-            .setNegativeButton("Not now",(d,w)->{})
-            .setPositiveButton("Open app settings",(d,w)->{
-                Intent i=new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                i.setData(Uri.parse("package:"+getPackageName()));
-                startActivity(i);
-            }).show();
-    }
-    /**
-     * Forward geocoding is only called on demand. It does not read the phone's
-     * location and does not need foreground/background GPS permission.
-     * Older Android versions use a worker thread for the synchronous API.
-     */
-    private void searchStoreLocations(String id,String query) {
-        if(id==null||id.length()>180||query==null||query.trim().length()<3||query.length()>160){
-            deliverStoreLocations(id==null?"":id,new JSONArray(),"Enter a store name and town, or a street address.");
-            return;
-        }
-        if(!Geocoder.isPresent()){
-            deliverStoreLocations(id,new JSONArray(),"Address search is unavailable on this device. Try Pin here when at the store.");
-            return;
-        }
-        final Geocoder geocoder=new Geocoder(this,Locale.CANADA);
-        if(Build.VERSION.SDK_INT>=33){
-            geocoder.getFromLocationName(query.trim(),5,new Geocoder.GeocodeListener(){
-                @Override public void onGeocode(List<Address> addresses){
-                    deliverStoreLocations(id,addressChoices(addresses),"");
-                }
-                @Override public void onError(String errorMessage){
-                    deliverStoreLocations(id,new JSONArray(),"Unable to search addresses. Try again or use Pin here.");
-                }
-            });
-        }else{
-            new Thread(()->{
-                try{deliverStoreLocations(id,addressChoices(geocoder.getFromLocationName(query.trim(),5)),"");}
-                catch(Exception e){deliverStoreLocations(id,new JSONArray(),"Address search failed. Try a full street address.");}
-            },"MyDay-geocoding").start();
-        }
-    }
-    private JSONArray addressChoices(List<Address> addresses){
-        JSONArray output=new JSONArray();
-        if(addresses==null)return output;
-        for(Address a:addresses){
-            if(a==null||!a.hasLatitude()||!a.hasLongitude())continue;
-            try{
-                JSONObject p=new JSONObject();
-                String label=a.getMaxAddressLineIndex()>=0?a.getAddressLine(0):"";
-                if(label==null||label.trim().isEmpty()){
-                    label=(a.getFeatureName()==null?"":a.getFeatureName())+", "+
-                        (a.getLocality()==null?"":a.getLocality())+", "+
-                        (a.getAdminArea()==null?"":a.getAdminArea());
-                }
-                p.put("label",label.trim());p.put("lat",a.getLatitude());p.put("lon",a.getLongitude());
-                output.put(p);
-            }catch(Exception ignored){}
-        }
-        return output;
-    }
-    private void deliverStoreLocations(String id,JSONArray matches,String error){
-        runOnUiThread(()->{
-            if(web!=null&&loaded){
-                String js="window.RunningTabShopping?.storeSearchResults("+
-                    JSONObject.quote(id)+","+matches.toString()+","+JSONObject.quote(error==null?"":error)+");";
-                web.evaluateJavascript(js,null);
-            }
-        });
-    }
-
-    private void pinStoreHere(String id){
-        if(id==null||id.isEmpty())return;
-        if(!StoreGeofenceManager.hasForeground(this)){
-            pendingStorePin=id;askStoreForeground();return;
-        }
-        LocationServices.getFusedLocationProviderClient(this)
-            .getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY,null)
-            .addOnSuccessListener(this,location->{
-                if(web==null)return;
-                if(location==null){
-                    web.evaluateJavascript("window.MyDayStores?.locationError('Location unavailable. Enable device location and try again.');",null);
-                    return;
-                }
-                web.evaluateJavascript("window.MyDayStores?.onCurrentLocation("+
-                    JSONObject.quote(id)+","+location.getLatitude()+","+location.getLongitude()+");",null);
-            })
-            .addOnFailureListener(this,error->{
-                if(web!=null)web.evaluateJavascript("window.MyDayStores?.locationError('Unable to get location. Try again.');",null);
-            });
     }
 
     private void alertPermissionChanged() {
@@ -380,23 +260,10 @@ public class MainActivity extends Activity {
                 ReminderManager.sync(MainActivity.this, todo);
             });
         }
-        @JavascriptInterface public void shoppingStores(String stores,String shopping,boolean enabled){
-            runOnUiThread(()->{
-                SnapshotStore.saveStores(MainActivity.this,stores);
-                StoreGeofenceManager.snapshot(MainActivity.this,stores,shopping,enabled);
-            });
-        }
-        @JavascriptInterface public boolean storeLocationPermissionGranted(){
-            return StoreGeofenceManager.hasBackground(MainActivity.this);
-        }
-        @JavascriptInterface public void enableStoreLocations(){
-            runOnUiThread(MainActivity.this::enableStoreLocations);
-        }
-        @JavascriptInterface public void searchStoreLocations(String id,String query){
-            runOnUiThread(()->MainActivity.this.searchStoreLocations(id,query));
-        }
-        @JavascriptInterface public void pinStoreHere(String id){
-            runOnUiThread(()->MainActivity.this.pinStoreHere(id));
+        // Keep the bridge signature for older cached web pages; the widget
+        // still needs store names, but location data is never processed.
+        @JavascriptInterface public void shoppingStores(String stores,String unusedShopping,boolean unusedAlerts){
+            runOnUiThread(()->SnapshotStore.saveStores(MainActivity.this,stores));
         }
         @JavascriptInterface public void dictate() {
             runOnUiThread(MainActivity.this::startDictation);
@@ -438,14 +305,14 @@ public class MainActivity extends Activity {
 
     private void injectBridge() {
         // MyDay stays a regular, updatable GitHub Pages app in this WebView.
-        // Only the three existing storage keys are read; no account or server is added.
+        // Native storage snapshots update the widget without using location services.
         String script = """
             (function(){
              if (!window.RunningTabAndroid || window.__rtBridgeReady) {
                window.__rtWidgetSnapshot?.(); return;
              }
              window.__rtBridgeReady=true;
-             const keys=['running-tab-simple-v1','running-tab-todo-v1','running-tab-shopping-v1','running-tab-stores-v1','running-tab-store-alerts-v1'];
+             const keys=['running-tab-simple-v1','running-tab-todo-v1','running-tab-shopping-v1','running-tab-stores-v1'];
              const sync=()=>{
                try {
                  window.RunningTabAndroid.snapshot(
@@ -455,7 +322,7 @@ public class MainActivity extends Activity {
                  window.RunningTabAndroid.shoppingStores(
                    localStorage.getItem(keys[3])||'[]',
                    localStorage.getItem(keys[2])||'[]',
-                   localStorage.getItem(keys[4])==='true');
+                   false);
                } catch(e){}
              };
              window.__rtWidgetSnapshot=sync;

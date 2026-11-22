@@ -96,3 +96,19 @@ test('shopping is tags-only and never requests a device location',()=>{
  assert.doesNotMatch(stores,/setAlerts|pinStoreHere|isPreciseAddress/);
  assert.match(panel,/data-store-delete/);
 });
+
+test('Android no longer requests location permissions or registers store geofences',()=>{
+ const path=require('node:path');
+ const root=path.join(__dirname,'../android/app/src/main');
+ const manifest=fs.readFileSync(path.join(root,'AndroidManifest.xml'),'utf8');
+ const activity=fs.readFileSync(path.join(root,'java/ca/runningtab/widget/MainActivity.java'),'utf8');
+ const cleaner=fs.readFileSync(path.join(root,'java/ca/runningtab/widget/LegacyStoreLocationCleanup.java'),'utf8');
+ const widget=fs.readFileSync(path.join(root,'java/ca/runningtab/widget/WidgetData.java'),'utf8');
+ assert.doesNotMatch(manifest,/ACCESS_(?:FINE|COARSE|BACKGROUND)_LOCATION|StoreLocationReceiver/);
+ assert.doesNotMatch(activity,/enableStoreLocations|searchStoreLocations|pinStoreHere|StoreGeofenceManager/);
+ assert.match(activity,/SnapshotStore.saveStores/);
+ assert.match(activity,/LegacyStoreLocationCleanup.disable/);
+ assert.match(cleaner,/removeGeofences/);
+ assert.doesNotMatch(cleaner,/addGeofences|getCurrentLocation/);
+ assert.match(widget,/optJSONArray\("storeIds"\)/);
+});
