@@ -35,10 +35,12 @@ function section(store){
  return html+'</div></details>';
 }
 function render(){
+ const opened=[...document.querySelectorAll('#shopPending .shop-store-group[open]')].map(x=>x.dataset.shopStoreId);
  const stores=api().read(),needed=rows.filter(x=>!x.done).length,done=rows.filter(x=>x.done).length;
  $('shopCount').textContent=needed+' to buy';
  $('shopDoneCount').textContent='Purchased ('+done+')';
  $('shopPending').innerHTML=[null,...stores].map(section).join('');
+ for(const id of opened){const group=[...document.querySelectorAll('#shopPending .shop-store-group')].find(x=>x.dataset.shopStoreId===id);if(group)group.open=true;}
  $('shopCompleted').innerHTML='';
  $('shopDoneCount').closest('details').hidden=true;
  $('shopClearChecked').hidden=done===0;
@@ -92,6 +94,8 @@ $('shopCreateStore').addEventListener('click',()=>{
  selected=api().ensure(name).id;$('shopNewStore').value='';render();status('Store list ready. Set a pin for arrival alerts.');
 });
 $('shopArrivalToggle').addEventListener('change',e=>{api().setAlerts(e.target.checked);render();});
+// Keep the purchased-items cleanup accessible even though purchases are grouped by store.
+$('shopPending').insertAdjacentElement('afterend',$('shopClearChecked'));
 $('shopClearChecked').addEventListener('click',()=>{const n=rows.filter(x=>x.done).length;if(n&&confirm('Remove '+n+' purchased items?'))write(rows.filter(x=>!x.done));});
 $('shopReset').addEventListener('click',()=>{if(rows.length&&confirm('Delete all shopping items? Store lists will remain.'))write([]);});
 function openStore(id){selected=id||'';render();const x=[...document.querySelectorAll('[data-shop-store-id]')].find(x=>x.dataset.shopStoreId===selected);if(x)x.open=true;return x;}

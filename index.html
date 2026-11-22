@@ -889,6 +889,7 @@ function isExplicitTodo(s){
 function isExplicitShopping(s){return /^(?:please\s+)?(?:i\s+(?:need|have)\s+to\s+(?:buy|purchase|pick\s+up)\b|(?:add|put)\b.+\bshopping\s+list\b)/i.test(String(s||'').trim());}
 function currentEntryTab(){return window.RunningTabView?.current?.()||document.querySelector('.tab-switch.active')?.dataset.view||'money';}
 function classifyEntry(raw){
+ if(window.MyDayStores?.parseDestination(raw)?.storeName)return 'shopping';
  if(NoteParser.isNote(raw))return 'note';
  if(isExplicitMoney(raw))return 'money';
  if(isExplicitTodo(raw))return 'todo';
