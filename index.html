@@ -19,9 +19,9 @@
 <script src="./backup.js" defer></script>
 <script src="./repeat.js?v=54" defer></script>
 <script src="./todo-panel.js?v=54" defer></script>
-<script src="./stores.js?v=58" defer></script>
-<script src="./shopping-panel.js?v=58" defer></script>
-<script src="./view.js?v=49" defer></script>
+<script src="./stores.js?v=60" defer></script>
+<script src="./shopping-panel.js?v=60" defer></script>
+<script src="./view.js?v=60" defer></script>
 <script src="./calendar.js" defer></script>
 <script src="./reminders.js?v=54" defer></script>
 <style>
@@ -30,7 +30,7 @@
 .head{display:flex;align-items:center;gap:11px;margin:3px 0 17px}.mark{background:#163b59;color:white;border-radius:13px;display:grid;place-items:center;width:46px;height:46px;font-weight:900;font-size:26px}.muted{color:#607386}.hint{font-size:13px;color:#607386;margin:7px 0}.card{background:#fff;border:1px solid #dde6ec;border-radius:17px;padding:17px;margin-bottom:14px;box-shadow:0 1px 3px #163b5908}.label{display:block;font-size:13px;color:#41586a;font-weight:700;margin:0 0 6px}.actions{display:flex;gap:9px;align-items:center;margin-top:11px;flex-wrap:wrap}.actions .primary{flex:1}.callout{background:#eef5f9;border:1px solid #cadae5;border-radius:11px;padding:12px;margin:13px 0 9px;font-size:14px;white-space:pre-line}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.field{margin-top:11px}.field.wide{grid-column:1/-1}.hide{display:none!important}.totals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:14px}.stat{background:#fff;border:1px solid #dce5eb;border-radius:15px;padding:14px}.stat .label{color:#62778a;font-weight:600}.number{font-size:clamp(21px,5vw,29px);font-weight:800;letter-spacing:-.5px}.pos{color:#0b765d}.neg{color:#a33b43}.info{font-size:13px;color:#5b7081}.person{border:1px solid #dce5ec;border-radius:12px;margin-bottom:9px;background:#fcfdfe;overflow:hidden}.person summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:12px;align-items:center;padding:13px}.person summary::-webkit-details-marker{display:none}.person .who{font-weight:800;overflow-wrap:anywhere}.person .right{text-align:right;flex-shrink:0}.person .amount{font-size:17px;font-weight:800}.person .detail{padding:0 13px 12px}.person .meta{border-top:1px solid #e8eef2;padding-top:10px;font-size:13px;color:#607486}.entry{padding:11px 0;display:flex;align-items:flex-start;justify-content:space-between;border-top:1px solid #e7edf2;gap:9px}.entry:nth-child(1){border-top:0}.entry-name{font-weight:700}.entry-notes{font-size:13px;color:#597085;overflow-wrap:anywhere}.entry-right{min-width:90px;text-align:right}.entry-right strong{display:block;white-space:nowrap}.small{font-size:12px;min-height:32px;padding:5px 8px;margin-top:4px}.tag{background:#fff2e4;color:#8d511d;font-size:12px;padding:3px 6px;border-radius:6px;font-weight:700}.notice{margin-top:12px;padding:9px 11px;border-radius:9px;background:#eff8f1;color:#216b44;font-size:14px}.notice.bad{background:#fff0ef;color:#932a31}.bottom{margin-top:25px;text-align:center}.bottom button{font-size:12px}.foot{font-size:12px;text-align:center;color:#718494;margin-top:8px}@media(max-width:430px){main{padding:12px 10px 32px}.card{padding:14px}.grid{grid-template-columns:1fr}.field.wide{grid-column:auto}.stat{padding:12px 10px}.person summary{padding:12px}}
 .tabs{display:flex;gap:8px;margin-bottom:15px}.tabs a{flex:1;background:white;border:1px solid #cbdbe4;border-radius:12px;padding:11px;text-align:center;text-decoration:none;color:#163b59;font-weight:800}.tabs a.active{background:#163b59;border-color:#163b59;color:white}
 </style>
-<link rel="stylesheet" href="./app.css?v=58">
+<link rel="stylesheet" href="./app.css?v=60">
 </head>
 <body>
 <section id="webAuthGate" class="web-auth-gate" hidden aria-label="MyDay Google account sign-in">
@@ -149,11 +149,14 @@
       </div>
    </form>
    <form id="shoppingReviewForm" class="hide">
-    <h2 style="margin:15px 0 8px">Review Shopping List</h2>
+    <h2 style="margin:15px 0 8px">Review Shopping Items</h2>
     <div class="callout" id="shoppingSummary" aria-live="polite"></div>
     <p class="info">Edit, add, or remove shopping items below before saving.</p>
       <div class="actions review-actions"><button type="submit" class="primary">Confirm &amp; save to Shopping</button><button type="button" class="secondary" id="shoppingCancel">Change sentence</button></div>
-    <div class="field"><label class="label" for="shoppingStore">Shopping list</label><select id="shoppingStore"><option value="">General Shopping</option></select></div>
+    <div class="field"><div class="label">Store tags (optional)</div>
+     <div id="shoppingTagOptions" class="shop-tag-choices" role="group" aria-label="Stores where items can be purchased"></div>
+     <p class="info">Leave untagged for your general list. Tagged items can trigger store arrival alerts.</p>
+    </div>
     <div class="field"><label class="label" for="shoppingItems">Shopping items (one per line)</label>
      <textarea id="shoppingItems" rows="4" maxlength="3000" required placeholder="Milk&#10;Bread&#10;Eggs"></textarea></div>
     
@@ -195,13 +198,15 @@
        <div class="shop-store-new"><input id="shopNewStore" maxlength="100" placeholder="New store name" aria-label="New store"><button type="button" class="secondary small" id="shopCreateStore">+ Add</button></div>
        <label class="reminder-check"><input id="shopArrivalToggle" type="checkbox"> Remind me when I arrive at a store</label>
        <p class="info" id="shopLocationStatus">Store reminders require the Android app.</p>
+       <div id="shopStoreSettings" class="shop-store-settings"></div>
       </div>
      </details>
- <div id="shopPending"><p class="task-empty">No shopping items yet.</p></div>
-     <details><summary id="shopDoneCount">Purchased (0)</summary>
+     <div id="shopFilters" class="shop-filters" role="group" aria-label="Filter shopping by store"></div>
+     <div id="shopPending"><p class="task-empty">No shopping items yet.</p></div>
+     <details id="shopPurchasedDetails"><summary id="shopDoneCount">Purchased (0)</summary>
       <div id="shopCompleted"></div>
-      <button type="button" id="shopClearChecked" class="secondary small" hidden>Clear purchased items</button>
      </details>
+     <button type="button" id="shopClearChecked" class="secondary small" hidden>Clear purchased items</button>
     </section>
     <div id="shopStatus" class="todo-status" role="status" aria-live="polite"></div>
    </section>
@@ -856,30 +861,58 @@ function parseShopping(s){
  }
  return {items};
 }
+function shoppingSelection(){
+ return [...document.querySelectorAll('#shoppingTagOptions input[type="checkbox"]:checked')].map(x=>x.value);
+}
 function shoppingSummary(){
  const items=$('shoppingItems').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
- $('shoppingSummary').textContent=($('shoppingStore').selectedOptions[0]?.textContent||'General Shopping')+' · '+items.length+' item'+(items.length===1?'':'s')+' to add:\n'+(items.length?items.map(x=>'• '+x).join('\n'):'(No items)');
+ const selected=[...document.querySelectorAll('#shoppingTagOptions input[type="checkbox"]:checked')]
+  .map(x=>x.parentElement?.textContent?.trim()).filter(Boolean);
+ $('shoppingSummary').textContent='Master list · '+items.length+' item'+(items.length===1?'':'s')+
+  ' to add\nStore tags: '+(selected.length?selected.join(' · '):'None (any store)')+
+  '\n'+(items.length?items.map(x=>'• '+x).join('\n'):'(No items)');
 }
 $('shoppingItems').addEventListener('input',shoppingSummary);
-$('shoppingStore').addEventListener('change',shoppingSummary);
+$('shoppingTagOptions').addEventListener('change',shoppingSummary);
 $('shoppingCancel').addEventListener('click',()=>{hideForm();feedback('');$('words').focus();});
 $('shoppingReviewForm').addEventListener('submit',event=>{
  event.preventDefault();
  const names=$('shoppingItems').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
- if(!names.length||names.length>30||names.some(x=>x.length>160)){feedback('Enter 1–30 shopping items, one per line (max 160 characters each).','bad');return;}
+ if(!names.length||names.length>30||names.some(x=>x.length>160)){
+  feedback('Enter 1–30 shopping items, one per line (max 160 characters each).','bad');return;
+ }
  let items=[];
  try{const saved=JSON.parse(localStorage.getItem(SHOP_STORE)||'[]');if(Array.isArray(saved))items=saved;}
  catch(e){feedback('Could not read Shopping. Nothing saved.','bad');return;}
- const keys=new Set(),namesUnique=names.filter(name=>{
-  const key=name.toLocaleLowerCase();if(keys.has(key))return false;keys.add(key);return true;
+ const keys=new Set(),unique=names.filter(name=>{
+  const key=name.trim().toLocaleLowerCase().replace(/\s+/g,' ');
+  if(keys.has(key))return false;keys.add(key);return true;
  });
+ const tagValues=shoppingSelection(),api=window.MyDayStores;
+ const storeIds=api?.resolveTagValues(tagValues)||[];
  const now=new Date().toISOString();
- const choice=$('shoppingStore').value;
- const storeId=choice.startsWith('new:')?window.MyDayStores?.ensure(choice.slice(4))?.id:choice;
- const newItems=namesUnique.map(name=>({storeId:storeId||null,id:(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),name,done:false,created:now}));
- try{localStorage.setItem(SHOP_STORE,JSON.stringify([...items,...newItems]));}
+ let added=0,tagged=0;
+ const next=[...items];
+ for(const name of unique){
+  const normalized=name.trim().toLocaleLowerCase().replace(/\s+/g,' ');
+  const matches=next.filter(x=>!x.done&&String(x.name||'').trim().toLocaleLowerCase().replace(/\s+/g,' ')===normalized);
+  // Reuse one existing unpurchased item, rather than creating another copy for each store.
+  if(matches.length===1){
+   const current=matches[0],oldTags=api?.tags(current)||[];
+   const merged=[...new Set([...oldTags,...storeIds])];
+   if(merged.length!==oldTags.length){
+    const at=next.findIndex(x=>x.id===current.id);
+    next[at]=api.setTags(current,merged);tagged++;
+   }
+  }else{
+   next.push({id:(crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random()),
+    name,done:false,storeIds,storeId:null,created:now,updatedAt:now});added++;
+  }
+ }
+ try{localStorage.setItem(SHOP_STORE,JSON.stringify(next));}
  catch(e){feedback('Could not save shopping items in this browser.','bad');return;}
- $('words').value='';hideForm();feedback('Added '+newItems.length+' item'+(newItems.length===1?'':'s')+' to Shopping.');
+ $('words').value='';hideForm();
+ feedback('Added '+added+' item'+(added===1?'':'s')+(tagged?' · updated tags on '+tagged+' existing item'+(tagged===1?'':'s'):'')+'.');
  window.dispatchEvent(new Event('runningtab:shopping-changed'));
  window.RunningTabView?.show('shopping');finishSuccessfulSave();
 });
@@ -997,12 +1030,12 @@ $('review').addEventListener('click',()=>{
   return;
  }
  if(intent==='shopping'){
-  const dest=window.MyDayStores?.parseDestination(raw)||{text:raw,storeName:null};
+  const dest=window.MyDayStores?.parseDestination(raw)||{text:raw,storeNames:[]};
   const result=parseShopping(dest.text);
   if(result.error){hideForm();feedback(result.error,'bad');return;}
   hideForm();
   $('shoppingItems').value=result.items.join('\n');
-  window.MyDayStores?.fillSelect($('shoppingStore'),'',dest.storeName);
+  window.MyDayStores?.fillTagChoices($('shoppingTagOptions'),dest.storeNames||[]);
   $('shoppingReviewForm').classList.remove('hide');
   $('entryType').textContent='🛒 Shopping items';
   shoppingSummary();

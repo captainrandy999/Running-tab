@@ -1,6 +1,6 @@
 // Offline shell. Transactions stay in this browser's localStorage.
-const CACHE='myday-shopping-compact-v58';
-const SHELL=['./','./index.html','./todo.html','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./app.css?v=58','./web-auth-config.js','./web-auth.js','./web-drive-sync.js?v=56','./install.js','./backup.js','./repeat.js?v=54','./todo-panel.js?v=54','./view.js?v=49','./stores.js?v=58','./shopping-panel.js?v=58','./calendar.js','./reminders.js?v=54'];
+const CACHE='myday-shopping-tags-v60';
+const SHELL=['./','./index.html','./todo.html','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./app.css?v=60','./web-auth-config.js','./web-auth.js','./web-drive-sync.js?v=56','./install.js','./backup.js','./repeat.js?v=54','./todo-panel.js?v=54','./view.js?v=60','./stores.js?v=60','./shopping-panel.js?v=60','./calendar.js','./reminders.js?v=54'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(names=>Promise.all(names.filter(name=>name!==CACHE).map(name=>caches.delete(name)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',event=>{if(event.request.method!=='GET'||new URL(event.request.url).origin!==self.location.origin)return;event.respondWith(fetch(event.request).then(response=>{if(response.ok){const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));}return response;}).catch(()=>caches.match(event.request).then(found=>found||caches.match('./index.html'))));});

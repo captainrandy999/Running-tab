@@ -72,11 +72,13 @@ function openItem(name,itemKey){
    }
   }else{
    if(key.startsWith('store:'))item=window.RunningTabShopping?.openStore(key.slice(6)==='general'?'':key.slice(6));
+   if(!key.startsWith('store:'))window.RunningTabShopping?.openStore('all');
    const checkbox=[...document.querySelectorAll('#shoppingPanel input[data-shop-toggle]')]
     .find(el=>el.dataset.shopToggle===key);
    if(checkbox){
     item=checkbox.closest('.shop-item');
-    const group=item.closest('[data-shop-store-id]');if(group)group.open=true;
+    const itemStore=window.MyDayStores?.tags?.(window.MyDayStores?.items?.()?.find(x=>x.id===key))||[];
+    if(itemStore.length&&window.RunningTabShopping?.selectedStore?.()!=='all')window.RunningTabShopping?.openStore('all');
     if(item.closest('#shopCompleted'))document.querySelector('#shoppingPanel #shopDoneCount')?.closest('details')?.setAttribute('open','');
    }
   }

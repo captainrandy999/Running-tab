@@ -808,3 +808,33 @@ html[data-theme="dark"] .shop-store-body .shop-move-option:active{background:#27
 html[data-theme="dark"] #shoppingPanel .shop-setup{background:#1e3443;border-color:#426171}
 html[data-theme="dark"] #shoppingPanel .shop-setup>summary{color:#d3e6ef}
 html[data-theme="dark"] #shoppingPanel .shop-store-tools{border-color:#476171}
+
+
+/* One master Shopping list with compact store filters and inline tag editor. */
+#shoppingPanel .shop-filters{display:flex;gap:6px;overflow-x:auto;overscroll-behavior-x:contain;padding:5px 1px 10px;scrollbar-width:thin}
+#shoppingPanel .shop-filter-option{white-space:nowrap;flex:none;font-size:12px;min-height:35px;padding:6px 10px;
+ border:1px solid #b4d0dc;background:#edf4f8;color:#26475c;border-radius:10px}
+#shoppingPanel .shop-filter-option.active{background:#2abcae;color:#102f39;border-color:#2abcae}
+#shoppingPanel .shop-filter-option span{font-size:11px;opacity:.75}
+#shoppingPanel .shop-master-item{padding-bottom:3px}
+#shoppingPanel .shop-master-item .shop-item{display:flex;align-items:center;gap:6px;margin:5px 0;padding:9px}
+#shoppingPanel .shop-master-item .task-main{flex:1;min-width:0}
+#shoppingPanel .shop-master-item .shop-item button{font-size:11px;min-height:33px;padding:6px 7px}
+#shoppingPanel .shop-tag-summary{font-size:11px;color:#607a88;margin-top:3px;overflow-wrap:anywhere}
+#shoppingPanel .shop-tag-editor{margin:0 1px 9px 30px;border:1px solid #b8d3dd;background:#f0f7f9;border-radius:10px;padding:10px}
+#shoppingPanel .shop-tag-editor[hidden]{display:none!important}
+#shoppingPanel .shop-tag-editor strong{font-size:13px}
+#shoppingPanel .shop-tag-editor p{font-size:11px;margin:4px 0 9px}
+.shop-tag-choices{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0}
+.shop-tag-choice{display:flex;align-items:center;gap:7px;border:1px solid #b5d0da;border-radius:10px;padding:6px 9px;background:#eaf3f7;
+ font-size:12px;min-height:35px;cursor:pointer}
+.shop-tag-choice input{display:inline-block;width:17px;min-height:17px;height:17px;margin:0;accent-color:#19a998;flex:none}
+#shoppingPanel .shop-store-settings{display:grid;gap:6px;margin-top:10px}
+#shoppingPanel .shop-store-settings .shop-store-tools{margin:0}
+#shoppingPanel #shopPurchasedDetails>summary{font-size:13px;padding:8px 0}
+#shoppingPanel #shopClearChecked{margin-top:8px;font-size:12px;min-height:35px}
+html[data-theme="dark"] #shoppingPanel .shop-filter-option{background:#293e50;color:#dcebf3;border-color:#416075}
+html[data-theme="dark"] #shoppingPanel .shop-filter-option.active{background:#2ac4b2;color:#062e35}
+html[data-theme="dark"] #shoppingPanel .shop-tag-editor{background:#213a49;border-color:#426377}
+html[data-theme="dark"] .shop-tag-choice{background:#294453;color:#e5f3f8;border-color:#456879}
+html[data-theme="dark"] #shoppingPanel .shop-tag-summary{color:#aac3d1}
