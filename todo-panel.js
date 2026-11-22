@@ -87,7 +87,8 @@ function rows(items,completed=false,expandedNoteId=null){
    +'<summary class="task-name">'+title+'</summary>'
    +(hasBody?'<div class="note-body" data-note-body>'+esc(body)+'</div>'
       :'<div class="note-empty" data-note-body>No details added yet.</div>')
-   +'<button type="button" class="secondary small note-edit-trigger" data-edit-note="'+esc(t.id)+'">'+(hasBody?'Edit note':'Add note')+'</button>'
+   +'<div class="todo-item-edit-actions"><button type="button" class="secondary small note-edit-trigger" data-edit-note="'+esc(t.id)+'">'+(hasBody?'Edit note':'Add note')+'</button>'
+   +'<button type="button" class="danger small" data-remove="'+esc(t.id)+'">Delete</button></div>'
    +'<form class="note-edit-form" data-note-edit-form="'+esc(t.id)+'" hidden>'
    +'<label>Note details<textarea maxlength="12000" data-note-editor aria-label="Edit note for '+title+'" placeholder="Add details, follow-up information, or updates…">'+esc(body)+'</textarea></label>'
    +'<div class="note-edit-actions"><button type="button" class="secondary small" data-note-dictate>🎤 Dictate</button>'
@@ -110,8 +111,8 @@ function rows(items,completed=false,expandedNoteId=null){
      +'<div class="info">Calendar events are added separately. Phone alerts require the updated Android app.</div>'
      +'<div class="task-reminder-actions"><button type="submit" class="primary small">Save date & alert</button>'
      +'<button type="button" class="secondary small" data-reminder-cancel="'+esc(t.id)+'">Cancel</button></div></form>':'');
-  const deleteButton='<button type="button" class="danger small" data-remove="'+esc(t.id)+'">Delete</button>';
-  return '<div class="task todo-item todo-item--'+appearance.tone+(t.done?' done':'')+' note-task'+(isNote?' saved-note':'')+'"><input type="checkbox" data-toggle="'+esc(t.id)+'" '+(t.done?'checked':'')+' aria-label="Mark '+title+(t.done?' not done':' complete')+'"><div class="task-main">'+content+'</div>'+deleteButton+'</div>';
+  
+  return '<div class="task todo-item todo-item--'+appearance.tone+(t.done?' done':'')+' note-task'+(isNote?' saved-note':'')+'"><input type="checkbox" data-toggle="'+esc(t.id)+'" '+(t.done?'checked':'')+' aria-label="Mark '+title+(t.done?' not done':' complete')+'"><div class="task-main">'+content+'</div>'+'</div>';
  }).join('');
 }
 function render(expandedNoteId=null){
