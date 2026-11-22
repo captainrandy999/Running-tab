@@ -112,3 +112,17 @@ test('Android no longer requests location permissions or registers store geofenc
  assert.doesNotMatch(cleaner,/addGeofences|getCurrentLocation/);
  assert.match(widget,/optJSONArray\("storeIds"\)/);
 });
+
+test('previous location settings are discarded without changing tags or store identities',()=>{
+ const {api,db}=fixture();
+ const original={id:'existing',name:'Home Hardware',created:'2026-01-01',
+  lat:49.7,lon:-112.8,radius:150,enabled:true,arrivalMode:'arrival',locationLabel:'old pin'};
+ db.set('running-tab-stores-v1',JSON.stringify([original]));
+ const result=api.read();
+ assert.equal(result[0].id,original.id);
+ assert.equal(result[0].name,original.name);
+ assert.equal(result[0].created,original.created);
+ assert.equal(result[0].lat,undefined);
+ assert.equal(result[0].enabled,undefined);
+ assert.equal(JSON.parse(db.get('running-tab-stores-v1'))[0].lon,undefined);
+});

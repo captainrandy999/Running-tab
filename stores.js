@@ -2,7 +2,27 @@
 (()=>{
 'use strict';
 const K='running-tab-stores-v1',S='running-tab-shopping-v1';
-const read=()=>{try{const v=JSON.parse(localStorage.getItem(K)||'[]');return Array.isArray(v)?v:[];}catch(e){return [];}};
+// Permanently turn off previous location-based alerts, including for old APKs.
+// The native upgrade additionally cancels previously registered geofences.
+try{localStorage.removeItem('running-tab-store-alerts-v1');}catch(e){}
+const GEO_KEYS=['lat','lon','radius','enabled','arrivalMode','locationLabel','searchQuery'];
+const read=()=>{
+ try{
+  const data=JSON.parse(localStorage.getItem(K)||'[]');
+  if(!Array.isArray(data))return [];
+  let changed=false;
+  const cleaned=data.map(store=>{
+   if(!store||typeof store!=='object')return store;
+   if(!GEO_KEYS.some(key=>Object.prototype.hasOwnProperty.call(store,key)))return store;
+   changed=true;
+   const clean={...store};
+   for(const key of GEO_KEYS)delete clean[key];
+   return clean;
+  });
+  if(changed)localStorage.setItem(K,JSON.stringify(cleaned));
+  return cleaned;
+ }catch(e){return [];}
+};
 const items=()=>{try{const v=JSON.parse(localStorage.getItem(S)||'[]');return Array.isArray(v)?v:[];}catch(e){return [];}};
 const notify=()=>window.dispatchEvent(new Event('runningtab:stores-changed'));
 const save=v=>{localStorage.setItem(K,JSON.stringify(v));notify();};
