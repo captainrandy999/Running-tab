@@ -750,3 +750,22 @@ html[data-theme="dark"] .myday-sync-record{background:#1a2e3c;border-color:#4561
 html[data-theme="dark"] .myday-sync-version{background:#283f4d;border-color:#476171}
 html[data-theme="dark"] .myday-sync-field{border-color:#496273}
 html[data-theme="dark"] .myday-sync-field b,html[data-theme="dark"] .myday-sync-hint{color:#b5cad7}
+
+.shop-setup{padding:7px 0 12px}
+.shop-store-new{display:flex;gap:7px;margin-bottom:8px}
+.shop-store-new input{min-width:0;flex:1}
+.shop-store-new button{flex:none}
+.shop-store-group{margin:10px 0;border:1px solid #b7d0dc;border-radius:13px;background:#f5fafc;overflow:hidden}
+.shop-store-group>summary{display:flex;align-items:center;justify-content:space-between;gap:9px;padding:13px;cursor:pointer}
+.shop-store-group>summary strong{overflow-wrap:anywhere}
+.shop-store-group>summary span{font-size:12px;white-space:nowrap}
+.shop-store-body{padding:0 9px 12px}
+.shop-store-body .shop-item{display:flex;gap:6px;align-items:center}
+.shop-store-body .shop-item .task-main{min-width:0;flex:1}
+.shop-store-body .shop-item button{font-size:11px;padding:5px 7px;min-height:31px}
+.shop-store-tools{margin-top:11px;border-top:1px solid #bdd1dc;padding:10px 0}
+.shop-store-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:7px 0}
+.shop-store-buttons{display:flex;flex-wrap:wrap;gap:5px}
+.shop-store-buttons button{font-size:12px;padding:6px 8px}
+html[data-theme="dark"] .shop-store-group{background:#203444;border-color:#476171}
+html[data-theme="dark"] .shop-store-tools{border-color:#476171}

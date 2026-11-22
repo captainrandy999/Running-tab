@@ -2,7 +2,7 @@
 (()=>{
  'use strict';
  const $=id=>document.getElementById(id);
- const KEYS={money:'running-tab-simple-v1',todos:'running-tab-todo-v1',shopping:'running-tab-shopping-v1'};
+ const KEYS={money:'running-tab-simple-v1',todos:'running-tab-todo-v1',shopping:'running-tab-shopping-v1',stores:'running-tab-stores-v1'};
  const message=$('backupStatus');
  if(!$('downloadBackup')||!$('restoreBackup'))return;
  if(location.hash==='#dataTools'){
@@ -15,11 +15,12 @@
    &&typeof x.reason==='string'&&typeof x.date==='string';
  const validTodo=x=>x&&typeof x.id==='string'&&typeof x.title==='string'
    &&['none','month','day'].includes(x.dueType)&&typeof x.due==='string'&&typeof x.done==='boolean';
+ const validStore=x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&x.name.length<=100;
  const validShopping=x=>x&&typeof x.id==='string'&&typeof x.name==='string'
    &&x.name.trim().length>0&&x.name.length<=160&&typeof x.done==='boolean';
  function validate(name,items){
   if(!Array.isArray(items)||items.length>100000)throw Error('Invalid '+name+' records.');
-  const checks={money:validMoney,todos:validTodo,shopping:validShopping};
+  const checks={money:validMoney,todos:validTodo,shopping:validShopping,stores:validStore};
   if(!items.every(checks[name]))throw Error('Some '+name+' records are invalid.');
   return items;
  }
@@ -28,8 +29,8 @@
   return validate(name,contents?JSON.parse(contents):[]);
  }
  function makeBackup(){
-  const money=readList('money'),todos=readList('todos'),shopping=readList('shopping');
-  const payload={format:'running-tab-backup',version:2,exportedAt:new Date().toISOString(),money,todos,shopping};
+  const money=readList('money'),todos=readList('todos'),shopping=readList('shopping'),stores=readList('stores');
+  const payload={format:'running-tab-backup',version:3,exportedAt:new Date().toISOString(),money,todos,shopping,stores};
   const name='myday-backup-'+new Date().toISOString().slice(0,10)+'.json';
   return {text:JSON.stringify(payload,null,2),name,counts:[money.length,todos.length,shopping.length]};
  }
@@ -143,16 +144,17 @@
   return restorePayload(d);
  }
  function restorePayload(d){
- if(!d||d.format!=='running-tab-backup'||![1,2].includes(d.version))throw Error('Not a supported MyDay backup.');
+ if(!d||d.format!=='running-tab-backup'||![1,2,3].includes(d.version))throw Error('Not a supported MyDay backup.');
     const money=validate('money',d.money),todos=validate('todos',d.todos);
-    const shopping=d.version===2?validate('shopping',d.shopping):null;
+    const shopping=d.version>=2?validate('shopping',d.shopping):null;
+    const stores=d.version>=3?validate('stores',d.stores):null;
     const extra=shopping===null?' Your current shopping list will stay unchanged.':' and '+shopping.length+' shopping items';
     const question='Restore '+money.length+' money entries and '+todos.length+' reminders'+extra+'? This REPLACES those saved lists on this phone.';
     if(!confirm(question))return;
-    const names=shopping===null?['money','todos']:['money','todos','shopping'];
+    const names=shopping===null?['money','todos']:stores===null?['money','todos','shopping']:['money','todos','shopping','stores'];
     const previous=Object.fromEntries(names.map(name=>[name,localStorage.getItem(KEYS[name])]));
     try{
-     const values={money,todos,shopping};
+     const values={money,todos,shopping,stores};
      for(const name of names)localStorage.setItem(KEYS[name],JSON.stringify(values[name]));
     }catch(err){
      for(const name of names){

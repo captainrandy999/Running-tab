@@ -9,7 +9,7 @@
  const button=document.getElementById('webSyncNow');
  const reconnect=document.getElementById('webGoogleReconnect');
  if(!label||!button)return;
- const KEYS={money:'running-tab-simple-v1',todos:'running-tab-todo-v1',shopping:'running-tab-shopping-v1'};
+ const KEYS={money:'running-tab-simple-v1',todos:'running-tab-todo-v1',shopping:'running-tab-shopping-v1',stores:'running-tab-stores-v1'};
  const NAMES=Object.keys(KEYS);
  const FILENAME='running-tab-cloud-v1.json';
  const BASE_KEY='running-tab-google-sync-base-v1:';
@@ -17,7 +17,7 @@
  const UPLOAD='https://www.googleapis.com/upload/drive/v3/files';
  const MAX=10000000;
  let running=false,pending=false,changed=0,silent=false,timer=null;
- const blank=()=>({money:[],todos:[],shopping:[]});
+ const blank=()=>({money:[],todos:[],shopping:[],stores:[]});
  const account=()=>window.RunningTabWebAuth?.getAccount?.();
  const token=()=>window.RunningTabWebAuth?.getAccessToken?.();
  function status(message,error=false){
@@ -46,6 +46,10 @@
      ['day','month','none'].includes(item.dueType)&&
      typeof item.due==='string'&&typeof item.done==='boolean'))
     throw Error('Invalid To-Do entry.');
+   if(kind==='stores'&&!(typeof item.name==='string'&&item.name.trim()&&item.name.length<=100&&
+      (item.lat===undefined||(typeof item.lat==='number'&&Math.abs(item.lat)<=90))&&
+      (item.lon===undefined||(typeof item.lon==='number'&&Math.abs(item.lon)<=180))))
+    throw Error('Invalid Store entry.');
    if(kind==='shopping'&&!(typeof item.name==='string'&&typeof item.done==='boolean'))
     throw Error('Invalid Shopping entry.');
   }
@@ -56,7 +60,7 @@
   if(cloudFile&&(value.format!=='running-tab-cloud-sync'||value.version!==1))
    throw Error('Google Drive has an unfamiliar MyDay sync file.');
   const copy=blank();
-  for(const name of NAMES)copy[name]=check(name,value[name]);
+  for(const name of NAMES)copy[name]=check(name,value[name]??(name==='stores'?[]:undefined));
   return copy;
  }
  function readLocal(){
@@ -121,6 +125,7 @@
  let reviewState=null,reviewOpen=false;
  const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const fieldNames={
+  stores:{name:'Store',lat:'Latitude',lon:'Longitude',radius:'Radius',enabled:'Arrival alerts',arrivalMode:'Arrival mode'},
   money:{person:'Person',direction:'Who owes whom',cents:'Amount',reason:'Description',date:'Date',settled:'Settled',body:'Notes'},
   todos:{title:'Task',due:'Date',remindTime:'Time',notify:'Phone alert',repeat:'Repeat',repeatPaused:'Paused',done:'Completed',body:'Notes'},
   shopping:{name:'Item',done:'Purchased'}
@@ -173,7 +178,7 @@
    for(const item of s.items){
     const choice=s.choices.get(item.key)||'';
     html+='<article class="myday-sync-record"><h4>'+escapeHTML(
-     ({money:'Money',todos:'To-Do / Notes',shopping:'Shopping'}[item.name]||item.name)+' · '+reviewTitle(item))+
+     ({money:'Money',todos:'To-Do / Notes',shopping:'Shopping',stores:'Stores'}[item.name]||item.name)+' · '+reviewTitle(item))+
      '</h4><div class="myday-sync-versions">'+
      formatVersion(item.name,item.mine,item.theirs,'This device')+
      formatVersion(item.name,item.theirs,item.mine,'Google Drive')+'</div>'+

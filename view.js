@@ -71,10 +71,12 @@ function openItem(name,itemKey){
     if(completedGroup)document.querySelector('#todoPanel #doneCount')?.closest('details')?.setAttribute('open','');
    }
   }else{
+   if(key.startsWith('store:'))item=window.RunningTabShopping?.openStore(key.slice(6)==='general'?'':key.slice(6));
    const checkbox=[...document.querySelectorAll('#shoppingPanel input[data-shop-toggle]')]
     .find(el=>el.dataset.shopToggle===key);
    if(checkbox){
     item=checkbox.closest('.shop-item');
+    const group=item.closest('[data-shop-store-id]');if(group)group.open=true;
     if(item.closest('#shopCompleted'))document.querySelector('#shoppingPanel #shopDoneCount')?.closest('details')?.setAttribute('open','');
    }
   }
