@@ -84,7 +84,8 @@ function render(){
  if(filter!=='all'&&filter!=='anywhere'&&!stores.some(x=>x.id===filter))filter='all';
  const pending=rows.filter(x=>!x.done),finished=rows.filter(x=>x.done);
  $('shopCount').textContent=pending.length+' to buy';
- const visible=pending.filter(matches),visibleDone=finished.filter(matches);
+ const visible=pending.filter(matches);
+ const visibleDone=finished.filter(matches);
  let chips=filterButton('All','all',pending.length)+
   filterButton('Untagged','anywhere',pending.filter(x=>api().tags(x).length===0).length);
  for(const s of stores)chips+=filterButton(s.name,s.id,pending.filter(x=>api().tags(x).includes(s.id)).length);
