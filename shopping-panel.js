@@ -1,67 +1,104 @@
-/* Shopping is independent of Money and dated To-Do tasks. */
+/* Store lists preserve all existing unassigned shopping items. */
 (()=>{
- 'use strict';
- const $=id=>document.getElementById(id);
- const STORE='running-tab-shopping-v1';
- const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- const valid=r=>r&&typeof r.id==='string'&&typeof r.name==='string'&&typeof r.done==='boolean';
- let items=[];
- function status(message,bad=false){
-  const el=$('shopStatus');if(!el)return;
-  el.textContent=message;
-  el.className=message?'notice'+(bad?' bad':''):'';
+'use strict';
+const $=id=>document.getElementById(id),api=()=>window.MyDayStores;
+const K='running-tab-shopping-v1';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let rows=[],selected='';
+const status=(s,bad=false)=>{const el=$('shopStatus');if(el){el.textContent=s;el.className=s?'notice'+(bad?' bad':''):'';}};
+function read(){try{const a=JSON.parse(localStorage.getItem(K)||'[]');return Array.isArray(a)?a.filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&typeof x.done==='boolean'):[];}catch(e){return [];}}
+function write(a){try{localStorage.setItem(K,JSON.stringify(a));window.dispatchEvent(new Event('runningtab:shopping-changed'));return true;}catch(e){status('Unable to save shopping.',true);return false;}}
+function row(item){
+ return '<div class="task shop-item shop-item--'+(item.done?'purchased done':'needed')+'">'+
+ '<input type="checkbox" data-shop-toggle="'+esc(item.id)+'"'+(item.done?' checked':'')+'>'+
+ '<div class="task-main"><div class="task-name">'+esc(item.name)+'</div></div>'+
+ '<button class="secondary small" type="button" data-shop-move="'+esc(item.id)+'">Move</button>'+
+ '<button class="danger small" type="button" data-shop-delete="'+esc(item.id)+'">Delete</button></div>';
+}
+function section(store){
+ const key=store?.id||'',list=rows.filter(x=>(x.storeId||'')===key),needed=list.filter(x=>!x.done),done=list.filter(x=>x.done);
+ let html='<details class="shop-store-group" data-shop-store-id="'+esc(key)+'"'+(selected===key?' open':'')+'>'+
+ '<summary><strong>🛒 '+esc(store?.name||'General Shopping')+'</strong> <span>'+needed.length+' to buy</span></summary>'+
+ '<div class="shop-store-body">'+(needed.length?needed.map(row).join(''):'<p class="info">No items to buy.</p>')+
+ (done.length?'<details><summary>Purchased ('+done.length+')</summary>'+done.map(row).join('')+'</details>':'');
+ if(store){
+  html+='<div class="shop-store-tools" data-store-id="'+esc(key)+'">'+
+  '<strong>Store location & reminders</strong><p class="info">Pin: '+(Number.isFinite(store.lat)&&Number.isFinite(store.lon)?store.lat.toFixed(5)+', '+store.lon.toFixed(5):'Not set')+'</p>'+
+  '<label class="reminder-check"><input type="checkbox" data-store-enabled'+(store.enabled?' checked':'')+'> Notify me when I arrive with items to buy</label>'+
+  '<div class="shop-store-grid"><label>Radius (m)<input data-store-radius type="number" min="150" max="1000" step="50" value="'+esc(store.radius||200)+'"></label>'+
+  '<label>Arrival<select data-store-mode><option value="arrival"'+(store.arrivalMode==='dwell'?'':' selected')+'>On arrival</option>'+
+  '<option value="dwell"'+(store.arrivalMode==='dwell'?' selected':'')+'>After a few minutes</option></select></label></div>'+
+  '<div class="shop-store-buttons"><button type="button" class="secondary small" data-store-pin="'+esc(key)+'">📍 Pin current location</button>'+
+  '<button type="button" class="secondary small" data-store-coords="'+esc(key)+'">Enter coordinates</button>'+
+  '<button type="button" class="danger small" data-store-delete="'+esc(key)+'">Delete store</button></div></div>';
  }
- function refresh(){
-  try{
-   const saved=JSON.parse(localStorage.getItem(STORE)||'[]');
-   if(Array.isArray(saved)){items=saved.filter(valid);render();}
-  }catch(e){status('Could not load the shopping list.',true);}
+ return html+'</div></details>';
+}
+function render(){
+ const stores=api().read(),needed=rows.filter(x=>!x.done).length,done=rows.filter(x=>x.done).length;
+ $('shopCount').textContent=needed+' to buy';
+ $('shopDoneCount').textContent='Purchased ('+done+')';
+ $('shopPending').innerHTML=[null,...stores].map(section).join('');
+ $('shopCompleted').innerHTML='';
+ $('shopDoneCount').closest('details').hidden=true;
+ $('shopClearChecked').hidden=done===0;
+ const toggle=$('shopArrivalToggle');
+ toggle.checked=api().alerts();toggle.disabled=!window.RunningTabAndroid?.shoppingStores;
+ $('shopLocationStatus').textContent=!window.RunningTabAndroid?.shoppingStores?
+  'Arrival alerts require the updated Android APK. Shopping lists work on both devices.':
+  api().permission()?'Location access ready; only enabled stores with unpurchased items are monitored.':
+  'Location access not yet allowed. Enable alerts and follow the Android permission steps.';
+ window.RunningTabView?.adjust?.();
+}
+function refresh(){rows=read();render();}
+$('shopPending').addEventListener('click',e=>{
+ const b=e.target.closest('button');if(!b)return;
+ const del=b.dataset.shopDelete,move=b.dataset.shopMove;
+ if(del){const rec=rows.find(x=>x.id===del);if(rec&&confirm('Remove '+rec.name+'?'))write(rows.filter(x=>x.id!==del));return;}
+ if(move){
+  const rec=rows.find(x=>x.id===move);if(!rec)return;
+  const names=['General Shopping',...api().read().map(s=>s.name)];
+  const answer=prompt('Move '+rec.name+' to which list? '+names.join(' / '),api().label(rec.storeId));
+  if(answer===null)return;
+  const to=answer.trim().toLowerCase()==='general shopping'?'':api().find(answer)?.id;
+  if(to===undefined){status('Please use an existing store name.',true);return;}
+  write(rows.map(x=>x.id===move?{...x,storeId:to||null}:x));return;
  }
- function persist(next){
-  try{localStorage.setItem(STORE,JSON.stringify(next));items=next;return true;}
-  catch(e){status('Could not save shopping changes on this device.',true);return false;}
+ if(b.dataset.storePin){if(window.RunningTabAndroid?.pinStoreHere)window.RunningTabAndroid.pinStoreHere(b.dataset.storePin);
+  else status('Pinning requires the updated Android app.',true);return;}
+ if(b.dataset.storeCoords){
+  const store=api().read().find(x=>x.id===b.dataset.storeCoords);if(!store)return;
+  const input=prompt('Latitude, longitude from Google Maps',Number.isFinite(store.lat)?store.lat+', '+store.lon:'');
+  if(input===null)return;
+  const coords=input.split(/[,;\s]+/).filter(Boolean).map(Number);
+  if(coords.length!==2||!Number.isFinite(coords[0])||!Number.isFinite(coords[1])||Math.abs(coords[0])>90||Math.abs(coords[1])>180){status('Invalid coordinates.',true);return;}
+  api().update(store.id,{lat:coords[0],lon:coords[1]});status('Store pin updated.');return;
  }
- function row(item){
-  return '<div class="task shop-item shop-item--'+(item.done?'purchased':'needed')+(item.done?' done':'')+'">'+
-   '<input type="checkbox" data-shop-toggle="'+escape(item.id)+'" '+(item.done?'checked':'')+
-   ' aria-label="'+escape(item.done?'Mark '+item.name+' needed again':'Mark '+item.name+' purchased')+'">'+
-   '<div class="task-main"><div class="task-name">'+escape(item.name)+'</div>'
-   +'<div class="task-meta"><span class="task-status-pill task-status-pill--'+(item.done?'complete':'needed')+'">'
-   +(item.done?'Purchased':'To buy')+'</span></div></div>'+
-   '<button type="button" class="danger small" data-shop-delete="'+escape(item.id)+'" aria-label="Delete '+escape(item.name)+'">Delete</button></div>';
- }
- function render(){
-  const needed=items.filter(i=>!i.done),purchased=items.filter(i=>i.done);
-  $('shopCount').textContent=needed.length+' to buy';
-  $('shopDoneCount').textContent='Purchased ('+purchased.length+')';
-  $('shopPending').innerHTML=needed.length?needed.map(row).join(''):'<p class="task-empty">Nothing on your shopping list. Try “I need to buy milk and eggs”.</p>';
-  $('shopCompleted').innerHTML=purchased.length?purchased.map(row).join(''):'<p class="info">Nothing checked off yet.</p>';
-  $('shopClearChecked').hidden=purchased.length===0;
-  for(const root of ['shopPending','shopCompleted']){
-   $(root).querySelectorAll('[data-shop-toggle]').forEach(checkbox=>checkbox.addEventListener('change',()=>{
-    const next=items.map(item=>item.id===checkbox.dataset.shopToggle?{...item,done:checkbox.checked,completedAt:checkbox.checked?new Date().toISOString():null}:item);
-    if(persist(next)){render();status(checkbox.checked?'Marked purchased.':'Back on your shopping list.');window.RunningTabView?.adjust();}
-    else checkbox.checked=!checkbox.checked;
-   }));
-   $(root).querySelectorAll('[data-shop-delete]').forEach(button=>button.addEventListener('click',()=>{
-    const item=items.find(x=>x.id===button.dataset.shopDelete);
-    if(!item||!confirm('Remove "'+item.name+'" from your shopping list?'))return;
-    if(persist(items.filter(x=>x.id!==item.id))){render();status('Item removed.');window.RunningTabView?.adjust();}
-   }));
-  }
-  window.RunningTabView?.adjust();
- }
- $('shopClearChecked').addEventListener('click',()=>{
-  const amount=items.filter(x=>x.done).length;
-  if(!amount||!confirm('Remove '+amount+' purchased item'+(amount===1?'':'s')+' from the shopping list?'))return;
-  if(persist(items.filter(x=>!x.done))){render();status('Purchased items cleared.');}
- });
- $('shopReset').addEventListener('click',()=>{
-  if(!items.length)return;
-  if(!confirm('Permanently delete the entire shopping list? Money and To-Do records will not be affected.'))return;
-  if(persist([])){render();status('Shopping list cleared.');}
- });
- window.addEventListener('runningtab:shopping-changed',refresh);
- window.addEventListener('storage',e=>{if(e.key===STORE)refresh();});
- refresh();
+ if(b.dataset.storeDelete)api().remove(b.dataset.storeDelete);
+});
+$('shopPending').addEventListener('change',e=>{
+ const el=e.target;
+ if(el.dataset.shopToggle){write(rows.map(x=>x.id===el.dataset.shopToggle?{...x,done:el.checked,completedAt:el.checked?new Date().toISOString():null}:x));return;}
+ const group=el.closest('[data-store-id]');if(!group)return;
+ const id=group.dataset.storeId,radius=Number(group.querySelector('[data-store-radius]').value);
+ if(!Number.isFinite(radius)||radius<150||radius>1000){status('Radius must be 150–1000 metres.',true);return;}
+ const enabled=group.querySelector('[data-store-enabled]').checked;
+ api().update(id,{radius,enabled,arrivalMode:group.querySelector('[data-store-mode]').value});
+ if(enabled&&!api().permission())window.RunningTabAndroid?.enableStoreLocations?.();
+});
+$('shopCreateStore').addEventListener('click',()=>{
+ const name=$('shopNewStore').value.trim();
+ if(!name||name.length>100){status('Enter a store name.',true);return;}
+ selected=api().ensure(name).id;$('shopNewStore').value='';render();status('Store list ready. Set a pin for arrival alerts.');
+});
+$('shopArrivalToggle').addEventListener('change',e=>{api().setAlerts(e.target.checked);render();});
+$('shopClearChecked').addEventListener('click',()=>{const n=rows.filter(x=>x.done).length;if(n&&confirm('Remove '+n+' purchased items?'))write(rows.filter(x=>!x.done));});
+$('shopReset').addEventListener('click',()=>{if(rows.length&&confirm('Delete all shopping items? Store lists will remain.'))write([]);});
+function openStore(id){selected=id||'';render();const x=[...document.querySelectorAll('[data-shop-store-id]')].find(x=>x.dataset.shopStoreId===selected);if(x)x.open=true;return x;}
+window.RunningTabShopping={selectedStore:()=>selected,openStore,refresh};
+window.addEventListener('runningtab:shopping-changed',refresh);
+window.addEventListener('runningtab:stores-changed',refresh);
+window.addEventListener('storage',e=>{if([K,'running-tab-stores-v1'].includes(e.key))refresh();});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
+refresh();
 })();
