@@ -19,7 +19,7 @@
 <script src="./backup.js" defer></script>
 <script src="./repeat.js?v=54" defer></script>
 <script src="./todo-cleanup.js?v=65" defer></script>
-<script src="./todo-panel.js?v=65" defer></script>
+<script src="./todo-panel.js?v=67" defer></script>
 <script src="./stores.js?v=64" defer></script>
 <script src="./shopping-panel.js?v=65" defer></script>
 <script src="./view.js?v=60" defer></script>
@@ -166,11 +166,13 @@
     <section class="card">
      <div class="list-head"><h2>To-Do list</h2><span class="tag" id="count">0 remaining</span></div>
      <div id="pending"><p class="task-empty">No tasks yet.</p></div>
-     <details id="todoCompletedDetails"><summary id="doneCount">Completed (0)</summary><div id="completed"></div></details>
+     <details id="todoCompletedDetails">
+      <summary id="doneCount">Completed (0)</summary>
+      <div id="completed"></div>
       <div class="todo-list-actions">
-       <button type="button" id="todoClearCompleted" class="secondary small" hidden>Clear completed</button>
-       <button type="button" id="todoDeleteAll" class="danger small">Delete all</button>
+       <button type="button" id="todoClearCompleted" class="secondary small" hidden>Clear all</button>
       </div>
+     </details>
     </section>
     <div id="todoStatus" class="todo-status" role="status" aria-live="polite"></div>
    </section>
