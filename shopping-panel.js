@@ -5,8 +5,15 @@ const $=id=>document.getElementById(id),api=()=>window.MyDayStores;
 const KEY='running-tab-shopping-v1';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let rows=[],filter='all',editing=null;
+let statusTimer=null;
 const status=(message,bad=false)=>{
- const x=$('shopStatus');if(x){x.textContent=message;x.className=message?'notice'+(bad?' bad':''):'';}
+ const x=$('shopStatus');if(!x)return;
+ clearTimeout(statusTimer);statusTimer=null;
+ x.textContent=message;x.className=message?'notice'+(bad?' bad':''):'';
+ if(message&&!bad)statusTimer=setTimeout(()=>{
+  if(x.textContent===message){x.textContent='';x.className='';}
+  statusTimer=null;
+ },4000);
 };
 function read(){
  try{const x=JSON.parse(localStorage.getItem(KEY)||'[]');
