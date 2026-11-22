@@ -1,5 +1,5 @@
 // Offline shell. Transactions stay in this browser's localStorage.
-const CACHE='myday-store-find-v61';
+const CACHE='myday-shopping-list-first-v62';
 const SHELL=['./','./index.html','./todo.html','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./app.css?v=61','./web-auth-config.js','./web-auth.js','./web-drive-sync.js?v=56','./install.js','./backup.js','./repeat.js?v=54','./todo-panel.js?v=54','./view.js?v=60','./stores.js?v=60','./shopping-panel.js?v=61','./calendar.js','./reminders.js?v=54'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(names=>Promise.all(names.filter(name=>name!==CACHE).map(name=>caches.delete(name)))).then(()=>self.clients.claim()));});

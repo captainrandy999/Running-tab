@@ -192,6 +192,12 @@
    <section id="shoppingPanel" class="view-panel" role="tabpanel" aria-labelledby="tabShopping" aria-hidden="true" inert>
     <section class="card">
      <div class="list-head"><h2>Shopping list</h2><span class="tag" id="shopCount">0 to buy</span></div>
+     <div id="shopFilters" class="shop-filters" role="group" aria-label="Filter shopping by store"></div>
+     <div id="shopPending"><p class="task-empty">No shopping items yet.</p></div>
+     <details id="shopPurchasedDetails"><summary id="shopDoneCount">Purchased (0)</summary>
+      <div id="shopCompleted"></div>
+     </details>
+     <button type="button" id="shopClearChecked" class="secondary small" hidden>Clear purchased items</button>
      <details class="shop-setup" id="shopSetupDetails">
       <summary>⚙ Stores &amp; arrival reminders</summary>
       <div class="shop-setup-inner">
@@ -201,12 +207,6 @@
        <div id="shopStoreSettings" class="shop-store-settings"></div>
       </div>
      </details>
-     <div id="shopFilters" class="shop-filters" role="group" aria-label="Filter shopping by store"></div>
-     <div id="shopPending"><p class="task-empty">No shopping items yet.</p></div>
-     <details id="shopPurchasedDetails"><summary id="shopDoneCount">Purchased (0)</summary>
-      <div id="shopCompleted"></div>
-     </details>
-     <button type="button" id="shopClearChecked" class="secondary small" hidden>Clear purchased items</button>
     </section>
     <div id="shopStatus" class="todo-status" role="status" aria-live="polite"></div>
    </section>
