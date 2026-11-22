@@ -75,6 +75,7 @@ jobs:
             echo "::notice::INITIAL_PREVIEW_SIGNING_FINGERPRINT=$FINGERPRINT"
             echo "::warning::Pin this fingerprint in android/preview-signing.sha256 before publishing any later builds."
           fi
+      # Validate the master-list and multi-store tag schema before packaging the Android geofences.
       - name: Verify store shopping parser
         run: node --test tests/shopping-stores.test.cjs
       - name: Compile Android app and widget
