@@ -41,3 +41,9 @@ test('To-Do and Shopping notices dismiss and list actions exist',()=>{
  assert.match(html,/id="todoRetentionDays"/);
  assert.match(todo,/data-remove/);
 });
+test('older completed history receives a first-install grace period',()=>{
+ const old=[{id:'prior',done:true,completedAt:age(60)}];
+ const installed=now;
+ assert.equal(policy.prune(old,'7',now,installed).removed.length,0);
+ assert.equal(policy.prune(old,'7',now+8*86400000,installed).removed.length,1);
+});

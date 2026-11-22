@@ -45,8 +45,16 @@ function retention(){
  let saved=null;try{saved=localStorage.getItem(cleanup().KEY);}catch(e){}
  return cleanup().normalize(saved===null?cleanup().DEFAULT:saved);
 }
+const GRACE_KEY='myday-completed-todo-cleanup-activated-v1';
+function firstEnabled(){
+ try{
+  const previous=Number(localStorage.getItem(GRACE_KEY));
+  if(Number.isFinite(previous)&&previous>0)return previous;
+  const start=Date.now();localStorage.setItem(GRACE_KEY,String(start));return start;
+ }catch(e){return Date.now();} // storage unavailable: never bulk-delete old history
+}
 function pruneCompleted(){
- const {keep,removed}=cleanup().prune(tasks,retention());
+ const {keep,removed}=cleanup().prune(tasks,retention(),Date.now(),firstEnabled());
  if(!removed.length)return 0;
  return persist(keep)?removed.length:0;
 }
