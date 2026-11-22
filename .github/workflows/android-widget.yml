@@ -78,6 +78,8 @@ jobs:
       # Validate master shopping and verify that location tracking has been removed.
       - name: Verify store shopping parser
         run: node --test tests/shopping-stores.test.cjs
+      - name: Verify To-Do cleanup and recurring reminder behavior
+        run: node --test tests/todo-cleanup.test.cjs tests/recurring-reminders.test.cjs
       - name: Compile Android app and widget
         working-directory: android
         run: gradle :app:assembleDebug --stacktrace --no-daemon
