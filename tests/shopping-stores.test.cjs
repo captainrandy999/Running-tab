@@ -2,20 +2,22 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
-const code=fs.readFileSync(require('node:path').join(__dirname,'../stores.js'),'utf8');
+const path=require('node:path');
+const code=fs.readFileSync(path.join(__dirname,'../stores.js'),'utf8');
 function fixture(){
  const db=new Map(),events=[],context={
-   window:{dispatchEvent:e=>events.push(e.type)},
-   localStorage:{getItem:k=>db.get(k)||null,setItem:(k,v)=>db.set(k,v)},
-   crypto:{randomUUID:(()=>{let n=0;return ()=>'id-'+(++n)})()},
-   Event:class Event{constructor(type){this.type=type}},
-   confirm:()=>true,document:{getElementById:()=>null},Number,Date,
-   Option:class Option{constructor(a,b){this.textContent=a;this.value=b}}
+  window:{dispatchEvent:e=>events.push(e.type),alert:()=>{}},
+  localStorage:{getItem:k=>db.get(k)||null,setItem:(k,v)=>db.set(k,v)},
+  crypto:{randomUUID:(()=>{let n=0;return ()=>'id-'+(++n)})()},
+  Event:class Event{constructor(type){this.type=type}},
+  confirm:()=>true,document:{getElementById:()=>null},
+  Number,Date,Option:class Option{constructor(text,value){this.text=text;this.value=value}}
  };
  vm.runInNewContext(code,context);
  return {api:context.window.MyDayStores,db,events};
 }
-test('store creation is idempotent and updates are immutable',()=>{
+const json=value=>JSON.parse(JSON.stringify(value));
+test('store creation is idempotent and location properties stay intact',()=>{
  const {api}=fixture();
  const a=api.ensure('Home Hardware'),b=api.ensure(' home hardware ');
  assert.equal(a.id,b.id);
@@ -23,44 +25,73 @@ test('store creation is idempotent and updates are immutable',()=>{
  assert.equal(api.read().length,1);
  assert.equal(api.read()[0].lat,49.7);
 });
-test('spoken store list targets a store and preserves other text',()=>{
+test('generic commands select no tags, even when named stores exist',()=>{
  const {api}=fixture();
  api.ensure('Costco');
- const d=api.parseDestination('add coffee and paper towels to my Costco list');
- assert.equal(d.text,'add coffee and paper towels');
- assert.equal(d.storeName,'Costco');
- const generic=api.parseDestination('add milk to my shopping list');
- assert.equal(generic.storeName,null);
+ for(const phrase of ['add bread to my shopping list','add bread to my general shopping list','buy bread']){
+  const value=api.parseDestination(phrase);
+  assert.equal(value.storeName,null,phrase);
+  assert.deepEqual(json(value.storeNames),[],phrase);
+ }
+ assert.equal(api.parseDestination('add bread to my shopping list').text,'add bread');
 });
-test('existing unassigned shopping items remain intact and deleting a store reassigns',()=>{
- const {api,db}=fixture();
- const s=api.ensure('Costco');
- db.set('running-tab-shopping-v1',JSON.stringify([{id:'old',name:'Milk',done:false},{id:'new',name:'Coffee',storeId:s.id,done:false}]));
- api.remove(s.id);
- assert.equal(api.read().length,0);
- const items=JSON.parse(db.get('running-tab-shopping-v1'));
- assert.equal(items.length,2);
- assert.equal(items[0].name,'Milk');
- assert.equal(items[1].storeId,null);
-});
-
-test('general shopping requests never inherit the selected store',()=>{
+test('voice can add multiple named tags to a single item',()=>{
  const {api}=fixture();
- api.ensure('Home Hardware');
- const generic=api.parseDestination('add screws to my shopping list');
- assert.equal(generic.text,'add screws');
- assert.equal(generic.storeName,null);
- const named=api.parseDestination('add screws to my Home Hardware list');
- assert.equal(named.storeName,'Home Hardware');
- const noStore=api.parseDestination('buy milk');
- assert.equal(noStore.storeName,null);
- const index=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
- assert.match(index,/fillSelect\(\$\('shoppingStore'\),'',dest\.storeName\)/);
+ api.ensure('Costco');api.ensure('Local Grocery');
+ const a=api.parseDestination('add bread to Costco and Local Grocery lists');
+ assert.equal(a.text,'add bread');
+ assert.deepEqual(json(a.storeNames),['Costco','Local Grocery']);
+ const b=api.parseDestination('add plywood to Costco');
+ assert.deepEqual(json(b.storeNames),['Costco']);
+ const c=api.parseDestination('add bread to a Home Hardware list');
+ assert.deepEqual(json(c.storeNames),['Home Hardware']);
 });
-test('store configuration is collapsible without hiding active shopping items',()=>{
- const html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
- const panel=fs.readFileSync(require('node:path').join(__dirname,'../shopping-panel.js'),'utf8');
- assert.match(html,/<details class="shop-setup" id="shopSetupDetails">/);
- assert.match(panel,/details class="shop-store-tools"/);
- assert.match(panel,/openSettings/);
+test('old one-store records are read as a single tag without bulk migration',()=>{
+ const {api,db}=fixture(),store=api.ensure('Home Hardware');
+ const old={id:'a',name:'Glue',done:false,storeId:store.id};
+ db.set('running-tab-shopping-v1',JSON.stringify([old]));
+ assert.deepEqual(json(api.tags(old)),[store.id]);
+ assert.equal(db.get('running-tab-shopping-v1'),JSON.stringify([old]));
+ const updated=api.setTags(old,[store.id,'second',store.id]);
+ assert.deepEqual(json(api.tags(updated)),[store.id,'second']);
+ assert.equal(updated.storeId,null);
+ assert.equal(old.storeId,store.id);
+});
+test('deleting one store only removes that tag and preserves other tags and items',()=>{
+ const {api,db}=fixture();
+ const home=api.ensure('Home Hardware'),other=api.ensure('Challenger');
+ db.set('running-tab-shopping-v1',JSON.stringify([
+  {id:'old',name:'Spray foam',done:false,storeId:home.id},
+  {id:'multi',name:'Deck screws',done:false,storeIds:[home.id,other.id],storeId:null},
+  {id:'untagged',name:'Milk',done:false}
+ ]));
+ api.remove(home.id);
+ const updated=JSON.parse(db.get('running-tab-shopping-v1'));
+ assert.equal(updated.length,3);
+ assert.deepEqual(json(api.tags(updated[0])),[]);
+ assert.deepEqual(json(api.tags(updated[1])),[other.id]);
+ assert.deepEqual(json(api.tags(updated[2])),[]);
+ assert.equal(api.read().length,1);
+});
+test('shopping page is one list with tag filters and controls',()=>{
+ const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+ const panel=fs.readFileSync(path.join(__dirname,'../shopping-panel.js'),'utf8');
+ const view=fs.readFileSync(path.join(__dirname,'../view.js'),'utf8');
+ assert.match(html,/id="shopFilters"/);
+ assert.match(html,/id="shopStoreSettings"/);
+ assert.match(html,/id="shoppingTagOptions"/);
+ assert.doesNotMatch(html,/id="shoppingStore"/);
+ assert.match(panel,/data-shop-edit-tags/);
+ assert.match(panel,/data-shop-item-tag/);
+ assert.match(panel,/const visible=pending\.filter\(matches\)/);
+ assert.match(panel,/const visibleDone=finished\.filter\(matches\)/);
+ assert.match(view,/openStore/);
+});
+test('Android geofencing and widget both understand tag arrays and legacy storeId',()=>{
+ const geofence=fs.readFileSync(path.join(__dirname,'../android/app/src/main/java/ca/runningtab/widget/StoreGeofenceManager.java'),'utf8');
+ const widget=fs.readFileSync(path.join(__dirname,'../android/app/src/main/java/ca/runningtab/widget/WidgetData.java'),'utf8');
+ assert.match(geofence,/itemTagged/);
+ assert.match(geofence,/optJSONArray\("storeIds"\)/);
+ assert.match(widget,/optJSONArray\("storeIds"\)/);
+ assert.match(widget,/Flat master list/);
 });
