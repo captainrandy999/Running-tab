@@ -853,3 +853,11 @@ html[data-theme="dark"] #shoppingPanel .shop-tag-management-row{border-color:#45
 #todoPanel .todo-list-actions button{font-size:12px;min-height:36px;padding:7px 10px}
 #todoPanel .todo-list-actions button[hidden]{display:none!important}
 #todoHousekeepingSection select{max-width:260px;font-size:14px}
+
+/* Keep uncommon item controls tucked into the item's expanded details. */
+#shoppingPanel .shop-item-editor-actions,
+#todoPanel .todo-item-edit-actions{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap;margin-top:9px}
+#shoppingPanel .shop-item-editor-actions button,
+#todoPanel .todo-item-edit-actions button{font-size:12px;min-height:34px;padding:6px 10px}
+#shoppingPanel #shopClearChecked{margin:9px 0 4px;font-size:12px;min-height:35px}
+#shoppingPanel #shopClearChecked[hidden]{display:none!important}
