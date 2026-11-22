@@ -120,7 +120,7 @@ function render(expandedNoteId=null){
  $('count').textContent=open.length+' remaining';
  $('doneCount').textContent='Completed ('+done.length+')';
  $('todoClearCompleted').hidden=done.length===0;
- $('todoClearCompleted').textContent='Clear completed ('+done.length+')';
+ $('todoClearCompleted').textContent='Clear all ('+done.length+')';
  $('pending').innerHTML=open.length?rows(open,false,expandedNoteId):'<p class="empty">Nothing outstanding.</p>';
  $('completed').innerHTML=done.length?rows(done,true,expandedNoteId):'<p class="info">No completed items.</p>';
  for(const root of ['pending','completed']){
@@ -185,7 +185,6 @@ function deleteEverything(){
  if(persist([])){render();status('All To-Dos and Notes deleted.');notifyChange();}
 }
 $('todoReset').addEventListener('click',deleteEverything);
-$('todoDeleteAll').addEventListener('click',deleteEverything);
 $('todoClearCompleted').addEventListener('click',()=>{
  const finished=tasks.filter(t=>t.done);
  if(!finished.length)return;
