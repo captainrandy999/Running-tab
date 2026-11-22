@@ -29,8 +29,28 @@ function label(t){
  const d=new Date((repeat().currentOrNext(t)||t.due)+'T12:00:00');
  return Number.isNaN(d.getTime())?'Check date':d.toLocaleDateString('en-CA',{weekday:'short',month:'short',day:'numeric',year:'numeric'});
 }
-function status(message,bad=false){const el=$('todoStatus');if(!el)return;el.textContent=message;el.className=message?'notice'+(bad?' bad':''):'';}
+let statusTimer=null;
+function status(message,bad=false){
+ const el=$('todoStatus');if(!el)return;
+ clearTimeout(statusTimer);statusTimer=null;
+ el.textContent=message;el.className=message?'notice'+(bad?' bad':''):'';
+ if(message&&!bad)statusTimer=setTimeout(()=>{
+  if(el.textContent===message){el.textContent='';el.className='';}
+  statusTimer=null;
+ },4000);
+}
 function persist(next){try{localStorage.setItem(STORE,JSON.stringify(next));tasks=next;return true;}catch(e){status('Could not save the change on this device.',true);return false;}}
+const cleanup=()=>window.MyDayTodoCleanup;
+function retention(){
+ let saved=null;try{saved=localStorage.getItem(cleanup().KEY);}catch(e){}
+ return cleanup().normalize(saved===null?cleanup().DEFAULT:saved);
+}
+function pruneCompleted(){
+ const {keep,removed}=cleanup().prune(tasks,retention());
+ if(!removed.length)return 0;
+ return persist(keep)?removed.length:0;
+}
+function notifyChange(){window.dispatchEvent(new Event('runningtab:todo-changed'));}
 function sortKey(t){return t.dueType==='none'?'9999-12-31':t.dueType==='month'?t.due+'-32':repeat().currentOrNext(t);}
 function taskAppearance(t){
  if(t.done)return {tone:'complete',text:'Completed'};
@@ -82,7 +102,7 @@ function rows(items,completed=false,expandedNoteId=null){
      +'<div class="info">Calendar events are added separately. Phone alerts require the updated Android app.</div>'
      +'<div class="task-reminder-actions"><button type="submit" class="primary small">Save date & alert</button>'
      +'<button type="button" class="secondary small" data-reminder-cancel="'+esc(t.id)+'">Cancel</button></div></form>':'');
-  const deleteButton=completed?'<button type="button" class="danger small" data-remove="'+esc(t.id)+'">Delete</button>':'';
+  const deleteButton='<button type="button" class="danger small" data-remove="'+esc(t.id)+'">Delete</button>';
   return '<div class="task todo-item todo-item--'+appearance.tone+(t.done?' done':'')+' note-task'+(isNote?' saved-note':'')+'"><input type="checkbox" data-toggle="'+esc(t.id)+'" '+(t.done?'checked':'')+' aria-label="Mark '+title+(t.done?' not done':' complete')+'"><div class="task-main">'+content+'</div>'+deleteButton+'</div>';
  }).join('');
 }
@@ -91,6 +111,8 @@ function render(expandedNoteId=null){
  const done=tasks.filter(t=>t.done).sort((a,b)=>String(b.completedAt||'').localeCompare(String(a.completedAt||'')));
  $('count').textContent=open.length+' remaining';
  $('doneCount').textContent='Completed ('+done.length+')';
+ $('todoClearCompleted').hidden=done.length===0;
+ $('todoClearCompleted').textContent='Clear completed ('+done.length+')';
  $('pending').innerHTML=open.length?rows(open,false,expandedNoteId):'<p class="empty">Nothing outstanding.</p>';
  $('completed').innerHTML=done.length?rows(done,true,expandedNoteId):'<p class="info">No completed items.</p>';
  for(const root of ['pending','completed']){
@@ -141,24 +163,48 @@ function render(expandedNoteId=null){
     if(persist(next)){render();status(el.checked?(original?.repeat?'Occurrence completed; next date scheduled.':'Completed.'):'Moved back to the To-Do list.');window.dispatchEvent(new Event('runningtab:todo-changed'));}
     else el.checked=!el.checked;
   }));
-  if(root==='completed')$(root).querySelectorAll('[data-remove]').forEach(el=>el.addEventListener('click',()=>{
+  $(root).querySelectorAll('[data-remove]').forEach(el=>el.addEventListener('click',()=>{
     const task=tasks.find(t=>t.id===el.dataset.remove);
     if(!task||!confirm('Delete "'+task.title+'"?'))return;
-    if(persist(tasks.filter(t=>t.id!==task.id))){render();status(task.kind==='note'?'Note deleted.':'Reminder deleted.');}
+    if(persist(tasks.filter(t=>t.id!==task.id))){render();status(task.kind==='note'?'Note deleted.':'To-Do deleted.');notifyChange();}
   }));
  }
 }
-$('todoReset').addEventListener('click',()=>{
- if(!tasks.length)return;
- if(!confirm('Permanently delete ALL To-Do items stored on this phone? Money entries will not be affected.'))return;
- if(persist([])){render();status('Test To-Dos cleared.');}
+function deleteEverything(){
+ if(!tasks.length){status('There is nothing to delete.');return;}
+ const notes=tasks.filter(t=>t.kind==='note').length;
+ if(!confirm('Permanently delete ALL '+tasks.length+' To-Dos and Notes'+(notes?' (including '+notes+' saved Notes)':'')+' on this device? These deletions will also sync to Google Drive when connected.'))return;
+ if(persist([])){render();status('All To-Dos and Notes deleted.');notifyChange();}
+}
+$('todoReset').addEventListener('click',deleteEverything);
+$('todoDeleteAll').addEventListener('click',deleteEverything);
+$('todoClearCompleted').addEventListener('click',()=>{
+ const finished=tasks.filter(t=>t.done);
+ if(!finished.length)return;
+ const notes=finished.filter(t=>t.kind==='note').length;
+ if(!confirm('Permanently delete '+finished.length+' completed items'+(notes?' including '+notes+' saved Notes':'')+'? Deletions will sync to Google Drive when connected.'))return;
+ if(persist(tasks.filter(t=>!t.done))){render();status('Completed items cleared.');notifyChange();}
 });
-window.addEventListener('storage',e=>{if(e.key!==STORE)return;try{const x=JSON.parse(e.newValue||'[]');if(Array.isArray(x)){tasks=x;render();}}catch(err){}});
+const retentionSelect=$('todoRetentionDays');
+if(retentionSelect){
+ retentionSelect.value=retention();
+ retentionSelect.addEventListener('change',()=>{
+  const value=cleanup().normalize(retentionSelect.value);
+  try{localStorage.setItem(cleanup().KEY,value);}
+  catch(e){status('Could not save cleanup setting.',true);retentionSelect.value=retention();return;}
+  const count=pruneCompleted();
+  render();
+  status(value==='off'?'Automatic cleanup turned off.':'Completed To-Dos will be removed after '+value+' days.'+
+   (count?' '+count+' older To-Do'+(count===1?' was':'s were')+' removed.':''));
+ });
+}
+window.addEventListener('storage',e=>{if(e.key!==STORE)return;try{const x=JSON.parse(e.newValue||'[]');if(Array.isArray(x)){tasks=x;pruneCompleted();render();}}catch(err){}});
 function refreshFromStorage(){
  try {
   const found=JSON.parse(localStorage.getItem(STORE)||'[]');
   if(Array.isArray(found)){
    tasks=found.filter(x=>x&&typeof x.id==='string'&&typeof x.title==='string'&&['day','month','none'].includes(x.dueType));
+   pruneCompleted();
    render();
   }
  } catch(e){status('Could not refresh reminders from local storage.',true);}
@@ -167,7 +213,14 @@ window.addEventListener('runningtab:todo-changed',refreshFromStorage);
 document.addEventListener('visibilitychange',()=>{
  if(document.hidden || document.querySelector('.note-edit-form:not([hidden]), .task-reminder-form:not([hidden])'))return;
  const expanded=document.querySelector('#pending .note-details[open] [data-edit-note]');
+ pruneCompleted();
  render(expanded?.dataset.editNote||null);
 });
+window.addEventListener('focus',()=>{
+ if(document.querySelector('.note-edit-form:not([hidden]), .task-reminder-form:not([hidden])'))return;
+ if(pruneCompleted())render();
+});
+setInterval(()=>{if(!document.hidden&&pruneCompleted())render();},60*60*1000);
+pruneCompleted();
 render();
 })();
