@@ -113,7 +113,7 @@ function resolveTagValues(values){
 function isPreciseAddress(label){
  if(typeof label!=='string'||label.length>600)return false;
  const road=/\b(?:street|st\.?|avenue|ave\.?|road|rd\.?|drive|dr\.?|boulevard|blvd\.?|lane|ln\.?|trail|tr\.?|crescent|cres\.?|court|ct\.?|way|place|pl\.?|highway|hwy\.?|parkway|pkwy\.?|close)\b/i;
- const streetSegment=/^\s*(?:unit\s*[a-z0-9-]+[ ,]+|suite\s*[a-z0-9-]+[ ,]+)?\d{1,6}[a-z]?(?:\s*[-/]\s*\d{1,6})?\s+\S+/i;
+ const streetSegment=/^\s*(?:unit\s*[a-z0-9-]+[ ,]+|suite\s*[a-z0-9-]+[ ,]+)?\d{1,6}[a-z]?(?:\s*[-/]\s*\d{1,6})?\s+\S+\s+\S+/i;
  return label.split(',').some(segment=>streetSegment.test(segment)&&road.test(segment));
 }
 function onCurrentLocation(storeId,lat,lon){
