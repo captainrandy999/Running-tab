@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+ android:id="@+id/rowRoot" android:layout_width="match_parent" android:layout_height="wrap_content"
+ android:orientation="vertical" android:padding="10dp"
+ android:background="@drawable/widget_tab_idle">
+ <TextView android:id="@+id/rowTitle" android:layout_width="match_parent"
+  android:layout_height="wrap_content" android:textSize="14sp"
+  android:textColor="#203348" android:textStyle="bold" android:maxLines="2"
+  android:ellipsize="end"/>
+ <TextView android:id="@+id/rowSubtitle" android:layout_width="match_parent"
+  android:layout_height="wrap_content" android:layout_marginTop="3dp"
+  android:textSize="11sp" android:textColor="#536C7D"
+  android:maxLines="2" android:ellipsize="end"/>
+</LinearLayout>

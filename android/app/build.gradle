@@ -1,0 +1,37 @@
+plugins {
+    id 'com.android.application'
+}
+android {
+    namespace 'ca.runningtab.widget'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'ca.runningtab.widget'
+        minSdk 26
+        targetSdk 34
+        versionCode 20
+        versionName '2.8'
+    }
+    // This test-build key is generated once in CI, cached, and fingerprint-pinned.
+    // Missing or changed keys must abort CI rather than silently rotate the signer.
+    signingConfigs {
+        preview {
+            storeFile file(System.getProperty('user.home') + '/.android/running-tab-preview.keystore')
+            storePassword 'android'
+            keyAlias 'running-tab'
+            keyPassword 'android'
+        }
+    }
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.preview
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'com.google.android.gms:play-services-auth:22.0.0'
+}
