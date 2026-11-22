@@ -51,30 +51,12 @@
 
  <section class="card" id="entry" aria-label="Quick entry">
    <textarea id="words" aria-label="Type or dictate an entry for the selected tab" placeholder="Customer $75 for materials"></textarea>
-   <div class="quick-entry-tip" id="entryHint" aria-live="polite">Type directly for the selected tab; no command phrase needed.</div>
-   <details class="prompt-guide">
-    <summary>💡 How to say it</summary>
-    <div class="prompt-examples">
-     <div><b>Money:</b> “Customer owes me $200 for materials”</div>
-     <div><b>To-Do:</b> “Remind me to call the supplier by Saturday”</div>
-     <div><b>To-Do:</b> “Remind me tomorrow to call the supplier” or “Remind me the day after tomorrow to follow up”</div>
-     <div><b>To-Do:</b> “In 2 days, remind me to follow up with Henry about payment”</div>
-     <div><b>To-Do:</b> “Remind me in 3 days that I need to check the invoice”</div>
-     <div><b>Navigation:</b> “Get me to Home Depot in Lethbridge” (opens Google Maps driving navigation)</div>
-     <div><b>Shopping:</b> “I need to buy milk and eggs”</div>
-     <div><b>Shopping:</b> “Add bread and coffee to my shopping list”</div>
-     <div><b>Notes:</b> “Take a note that the shed roof needs new flashing”</div>
-     <div><b>Named notes:</b> “Make a note called Roof Inspection that the shingles need replacing”</div>
-     <div><b>Named notes:</b> “Record a note called Supplies, pick up more 2×4 lumber”</div>
-    </div>
-   </details>
    <div class="actions entry-actions"><button type="button" class="secondary" id="mic" aria-label="Dictate using the microphone" aria-pressed="false">🎤 Dictate</button><button type="button" class="primary" id="review">Review</button><button type="button" class="outline" id="clear">Clear field</button></div>
 <div class="hint" id="micStatus" role="status" aria-live="polite"></div>
    <div id="feedback" aria-live="polite"></div>
    <div id="entryType" class="info" aria-live="polite"></div>
    <form id="reviewForm" class="hide">
       <div class="callout" id="summary" aria-live="polite"></div>
-      <div class="info">If something needs correcting, edit the details below before saving.</div>
       <div class="actions review-actions"><button class="primary" type="submit" id="confirm">Confirm &amp; save</button><button type="button" class="secondary" id="cancel">Change sentence</button></div>
       <div class="grid">
         <div class="field"><label class="label" for="direction">Who owes whom?</label><select id="direction"><option value="to_me">They owe me</option><option value="i_owe">I owe them</option></select></div>
@@ -88,7 +70,6 @@
    <form id="todoReviewForm" class="hide">
       <h2 id="todoReviewHeading" style="margin:15px 0 8px">Review To-Do</h2>
       <div class="callout" id="todoSummary" aria-live="polite"></div>
-      <div class="info" id="todoReviewHelp">Check the reminder and date. You can edit them below before saving.</div>
       <div class="actions review-actions"><button type="submit" class="primary" id="todoSaveButton">Confirm &amp; save to To-Do</button><button type="button" class="secondary" id="todoCancel">Change sentence</button></div>
       <input type="hidden" id="todoKind" value="todo">
       <div class="field"><label class="label" id="todoTitleLabel" for="todoTitle">Task</label><input id="todoTitle" type="text" maxlength="300" required></div>
@@ -99,6 +80,7 @@
        <input id="todoDueDay" type="hidden">
        <input id="todoDueMonth" type="hidden">
        <button type="button" class="calendar-trigger" id="todoDateButton" aria-controls="dueCalendar" aria-expanded="false" aria-haspopup="dialog">📅 Choose a due date</button>
+        <div id="todoReviewHelp" class="notice bad" role="alert" hidden></div>
        <div id="dueCalendar" class="calendar-popup" role="dialog" aria-label="Choose a reminder date" hidden>
         <div class="calendar-top">
          <button type="button" class="calendar-arrow" id="calPrev" aria-label="Previous month">‹</button>
@@ -117,7 +99,7 @@
        <label class="label" for="todoRemindTime">Reminder / calendar event time (defaults to 8:00 AM)</label>
        <input id="todoRemindTime" type="time" value="08:00" step="60">
        <label class="reminder-check"><input id="todoNotify" type="checkbox"> 🔔 Notify me on my phone</label>
-       <div class="info" id="todoNotifyHelp">Phone notifications require the updated Android app and permission in Settings. You can still add this To-Do to your calendar.</div>
+       <div class="info" id="todoNotifyHelp" hidden></div>
       </div>
       <div class="field" id="todoRepeatOptions">
        <label class="label" for="todoRepeat">🔁 Repeat reminder</label>
@@ -146,17 +128,15 @@
         <label for="todoRepeatMinutes">Repeat every (minutes)</label>
         <input id="todoRepeatMinutes" type="number" inputmode="numeric" min="1" max="1440" step="1" value="5">
        </div>
-       <p class="info" id="todoRepeatHint">Daily, weekly and monthly alerts continue automatically, even if you don't tap Done. Done acknowledges the current occurrence. Minute reminders keep alerting until Done, Pause or Stop.</p>
+       <p class="info" id="todoRepeatHint" hidden>Daily, weekly and monthly alerts continue automatically, even if you don't tap Done. Done acknowledges the current occurrence. Minute reminders keep alerting until Done, Pause or Stop.</p>
       </div>
    </form>
    <form id="shoppingReviewForm" class="hide">
     <h2 style="margin:15px 0 8px">Review Shopping Items</h2>
     <div class="callout" id="shoppingSummary" aria-live="polite"></div>
-    <p class="info">Edit, add, or remove shopping items below before saving.</p>
       <div class="actions review-actions"><button type="submit" class="primary">Confirm &amp; save to Shopping</button><button type="button" class="secondary" id="shoppingCancel">Change sentence</button></div>
     <div class="field"><div class="label">Store tags (optional)</div>
      <div id="shoppingTagOptions" class="shop-tag-choices" role="group" aria-label="Stores where items can be purchased"></div>
-     <p class="info">Leave untagged for a general item, or select one or more stores to organize your list.</p>
     </div>
     <div class="field"><label class="label" for="shoppingItems">Shopping items (one per line)</label>
      <textarea id="shoppingItems" rows="4" maxlength="3000" required placeholder="Milk&#10;Bread&#10;Eggs"></textarea></div>
@@ -763,6 +743,7 @@ function todoRepeatChange(adjustDate=true){
  $('todoRepeatWeekFields').hidden=!nth;
  $('todoRepeatMonthFields').hidden=type!=='months';
  $('todoRepeatMinuteFields').hidden=type!=='minutes';
+ $('todoRepeatHint').hidden=type==='none';
  if(adjustDate&&type!=='none'){
   const day=$('todoDueDay').value||today(),d=new Date(day+'T12:00:00');
   if((weekly||nth)&&!Number.isNaN(d.getTime()))$('todoRepeatWeekday').value=String(d.getDay());
@@ -782,7 +763,8 @@ function setTodoKind(kind){
  const note=kind==='note';
  $('todoKind').value=note?'note':'todo';
  $('todoReviewHeading').textContent=note?'Review Note':'Review To-Do';
- $('todoReviewHelp').textContent=note?'Check the suggested topic and full note. Edit either before saving.':'Check the reminder and date. You can edit them below before saving.';
+ $('todoReviewHelp').textContent='';
+ $('todoReviewHelp').hidden=true;
  $('todoTitleLabel').textContent=note?'Suggested topic':'Task';
  $('noteBodyField').classList.toggle('hide',!note);
  $('noteBody').required=note;
@@ -793,11 +775,13 @@ function todoDueChange(){
  const type=$('todoDueType').value;
  $('todoReminderOptions').hidden=type!=='day';
  if(type!=='day')$('todoNotify').checked=false;
+ if(!$('todoReviewHelp').hidden){$('todoReviewHelp').hidden=true;$('todoReviewHelp').textContent='';}
  const nativeReady=typeof window.RunningTabAndroid?.enableNotifications==='function';
  $('todoNotify').disabled=!nativeReady;
  $('todoNotifyHelp').textContent=nativeReady
   ?'Allow notifications in Settings to receive alerts even when MyDay is closed.'
   :'Phone alerts require the updated Android APK; calendar events can provide alerts in the browser version.';
+ $('todoNotifyHelp').hidden=type!=='day'||(nativeReady&&!$('todoNotify').checked);
  todoSummary();window.RunningTabCalendar?.sync();
 }
 
@@ -967,14 +951,14 @@ function parseMoneyShorthand(input){
  return {direction:'to_me',person,cents:amount.cents,reason:(m[3]||'').replace(/^(?:for|because(?:\s+of)?|regarding|towards?)\s+/i,'').trim(),date:today()};
 }
 const entryExamples={
- money:{placeholder:'Customer $75 for materials',hint:'Money: e.g. Customer $75 for materials. Defaults to “They owe me”; check Review.'},
- todo:{placeholder:'Call the supplier tomorrow',hint:'To-Do: e.g. Call the supplier tomorrow. No “remind me” needed.'},
- shopping:{placeholder:'Milk, eggs, bread',hint:'Shopping: e.g. Milk, eggs, bread. No command needed.'}
+ money:{placeholder:'Customer $75 for materials'},
+ todo:{placeholder:'Call the supplier tomorrow'},
+ shopping:{placeholder:'Milk, eggs, bread'}
 };
 function updateEntryCue(){
  const example=entryExamples[currentEntryTab()]||entryExamples.money;
  $('words').placeholder=example.placeholder;
- $('entryHint').textContent=example.hint;
+ 
 }
 window.addEventListener('runningtab:view-changed',updateEntryCue);
 updateEntryCue();
@@ -1067,13 +1051,17 @@ $('review').addEventListener('click',()=>{
   $('todoDueMonth').value=result.dueType==='month'?result.due:'';
   setTodoRepeat(result.repeat);
   $('todoReviewForm').classList.remove('hide');$('entryType').textContent='✓ To-Do entry';todoDueChange();
-  feedback(result.unrecognized?'Date not recognized. Please correct it before confirming.':'');
+  if(result.unrecognized){
+   $('todoReviewHelp').textContent='I couldn’t understand the date. Tap Due date to choose one, or select No deadline.';
+   $('todoReviewHelp').hidden=false;
+  }
+  feedback('');
   bringReviewIntoView('todoReviewForm');
   return;
  }
  let result=interpret(raw);
  if(result.error&&currentEntryTab()==='money'&&!isExplicitMoney(raw))result=parseMoneyShorthand(raw)||result;
- if(result.error){hideForm();feedback(result.error+' Tip: select To-Do for a plain reminder, or type “Customer $75 for materials” on Money.','bad');return;}
+ if(result.error){hideForm();feedback(result.error,'bad');return;}
  const existing=records.find(x=>caseKey(x.person)===caseKey(result.person));
  if(existing)result.person=existing.person;
  hideForm();showForm(result);$('entryType').textContent='💰 Money entry';feedback('');bringReviewIntoView('reviewForm');
@@ -1081,6 +1069,7 @@ $('review').addEventListener('click',()=>{
 $('todoCancel').addEventListener('click',()=>{hideForm();feedback('');$('words').focus();});
 $('todoDueType').addEventListener('change',todoDueChange);
 for(const id of ['todoTitle','todoDueDay','todoDueMonth','noteBody','todoRemindTime','todoNotify'])$(id).addEventListener('input',todoSummary);
+ $('todoNotify').addEventListener('change',todoDueChange);
 for(const id of ['todoRepeat','todoRepeatWeekday','todoRepeatWeek','todoRepeatMonths','todoRepeatMinutes'])$(id).addEventListener('change',()=>todoRepeatChange(id==='todoRepeat'));
 $('todoReviewForm').addEventListener('submit',event=>{
  event.preventDefault();
@@ -1088,6 +1077,7 @@ $('todoReviewForm').addEventListener('submit',event=>{
  const body=kind==='note'?$('noteBody').value.trim():'';
  const due=type==='day'?$('todoDueDay').value:type==='month'?$('todoDueMonth').value:'';
  if(!title||title.length>300){feedback('Enter a short '+(kind==='note'?'topic':'task')+'.','bad');return;}
+  if(!$('todoReviewHelp').hidden){feedback('Choose a due date or No deadline before saving.','bad');$('todoDateButton').focus();return;}
  if(kind==='note'&&(!body||body.length>12000)){feedback('Enter your note (12,000 characters maximum).','bad');return;}
  if(type!=='none'&&!due){feedback('Choose a deadline or select No date.','bad');return;}
  let tasks=[];
