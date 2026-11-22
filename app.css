@@ -785,3 +785,26 @@ html[data-theme="dark"] .shop-store-tools{border-color:#476171}
 html[data-theme="dark"] .shop-move-panel{background:#274453;border-color:#548091;color:#e9f5fa}
 html[data-theme="dark"] .shop-store-body .shop-move-option{background:#344e60;color:#e9f4fb;border-color:#537c8e}
 html[data-theme="dark"] .shop-store-body .shop-move-option:active{background:#276e6d}
+
+/* Compact Shopping navigation: show the lists first, tuck configuration into details. */
+#shoppingPanel .shop-setup{padding:0;margin:6px 0 12px;border:1px solid #b7d0dc;border-radius:11px;background:#f3f8fa}
+#shoppingPanel .shop-setup>summary{cursor:pointer;padding:9px 12px;font-size:13px;font-weight:700;color:#395c6e}
+#shoppingPanel .shop-setup-inner{padding:3px 11px 11px}
+#shoppingPanel .shop-setup-inner .info{font-size:12px;line-height:1.35;margin:6px 0 0}
+#shoppingPanel .shop-setup-inner .reminder-check{font-size:13px}
+#shoppingPanel .shop-store-group{margin:7px 0}
+#shoppingPanel .shop-store-group>summary{padding:10px 12px;font-size:14px}
+#shoppingPanel .shop-store-body{padding:0 8px 9px}
+#shoppingPanel .shop-store-tools{margin:7px 2px 2px;padding:0;border:1px solid #bcd2da;border-radius:9px}
+#shoppingPanel .shop-store-tools>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;
+ cursor:pointer;padding:8px 9px;font-size:12px;font-weight:700}
+#shoppingPanel .shop-store-state{font-weight:500;font-size:11px;white-space:nowrap;opacity:.8}
+#shoppingPanel .shop-store-config{padding:0 9px 10px}
+#shoppingPanel .shop-store-config .reminder-check{font-size:12px}
+#shoppingPanel .shop-store-grid{gap:7px;margin:7px 0}
+#shoppingPanel .shop-store-grid input,#shoppingPanel .shop-store-grid select{padding:7px;font-size:13px}
+#shoppingPanel .shop-store-buttons button{font-size:12px;padding:5px 8px;min-height:34px}
+#shoppingPanel .shop-store-body .shop-item button{font-size:11px;min-height:32px;padding:5px 7px}
+html[data-theme="dark"] #shoppingPanel .shop-setup{background:#1e3443;border-color:#426171}
+html[data-theme="dark"] #shoppingPanel .shop-setup>summary{color:#d3e6ef}
+html[data-theme="dark"] #shoppingPanel .shop-store-tools{border-color:#476171}

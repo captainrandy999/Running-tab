@@ -38,25 +38,30 @@ function section(store){
  '<div class="shop-store-body">'+(needed.length?needed.map(row).join(''):'<p class="info">No items to buy.</p>')+
  (done.length?'<details><summary>Purchased ('+done.length+')</summary>'+done.map(row).join('')+'</details>':'');
  if(store){
-  html+='<div class="shop-store-tools" data-store-id="'+esc(key)+'">'+
-  '<strong>Store location & reminders</strong><p class="info">Pin: '+(Number.isFinite(store.lat)&&Number.isFinite(store.lon)?store.lat.toFixed(5)+', '+store.lon.toFixed(5):'Not set')+'</p>'+
-  '<label class="reminder-check"><input type="checkbox" data-store-enabled'+(store.enabled?' checked':'')+'> Notify me when I arrive with items to buy</label>'+
+  const pinned=Number.isFinite(store.lat)&&Number.isFinite(store.lon);
+  html+='<details class="shop-store-tools" data-store-id="'+esc(key)+'">'+
+  '<summary>⚙ Store settings <span class="shop-store-state">'+(store.enabled&&pinned?'📍 Arrival on':store.enabled?'Needs a pin':pinned?'Pin saved':'Set location')+'</span></summary>'+
+  '<div class="shop-store-config">'+
+  '<label class="reminder-check"><input type="checkbox" data-store-enabled'+(store.enabled?' checked':'')+'> Remind me when I arrive here</label>'+
   '<div class="shop-store-grid"><label>Radius (m)<input data-store-radius type="number" min="150" max="1000" step="50" value="'+esc(store.radius||200)+'"></label>'+
-  '<label>Arrival<select data-store-mode><option value="arrival"'+(store.arrivalMode==='dwell'?'':' selected')+'>On arrival</option>'+
+  '<label>Notification<select data-store-mode><option value="arrival"'+(store.arrivalMode==='dwell'?'':' selected')+'>On arrival</option>'+
   '<option value="dwell"'+(store.arrivalMode==='dwell'?' selected':'')+'>After a few minutes</option></select></label></div>'+
-  '<div class="shop-store-buttons"><button type="button" class="secondary small" data-store-pin="'+esc(key)+'">📍 Pin current location</button>'+
-  '<button type="button" class="secondary small" data-store-coords="'+esc(key)+'">Enter coordinates</button>'+
-  '<button type="button" class="danger small" data-store-delete="'+esc(key)+'">Delete store</button></div></div>';
+  '<p class="info">Location: '+(pinned?store.lat.toFixed(5)+', '+store.lon.toFixed(5):'Not set')+'</p>'+
+  '<div class="shop-store-buttons"><button type="button" class="secondary small" data-store-pin="'+esc(key)+'">📍 Pin here</button>'+
+  '<button type="button" class="secondary small" data-store-coords="'+esc(key)+'">Coordinates</button>'+
+  '<button type="button" class="danger small" data-store-delete="'+esc(key)+'">Delete store</button></div></div></details>';
  }
  return html+'</div></details>';
 }
 function render(){
  const opened=[...document.querySelectorAll('#shopPending .shop-store-group[open]')].map(x=>x.dataset.shopStoreId);
+ const openSettings=[...document.querySelectorAll('#shopPending .shop-store-tools[open]')].map(x=>x.dataset.storeId);
  const stores=api().read(),needed=rows.filter(x=>!x.done).length,done=rows.filter(x=>x.done).length;
  $('shopCount').textContent=needed+' to buy';
  $('shopDoneCount').textContent='Purchased ('+done+')';
  $('shopPending').innerHTML=[null,...stores].map(section).join('');
  for(const id of opened){const group=[...document.querySelectorAll('#shopPending .shop-store-group')].find(x=>x.dataset.shopStoreId===id);if(group)group.open=true;}
+ for(const id of openSettings){const settings=[...document.querySelectorAll('#shopPending .shop-store-tools')].find(x=>x.dataset.storeId===id);if(settings)settings.open=true;}
  $('shopCompleted').innerHTML='';
  $('shopDoneCount').closest('details').hidden=true;
  $('shopClearChecked').hidden=done===0;
@@ -119,7 +124,7 @@ $('shopPending').addEventListener('change',e=>{
 $('shopCreateStore').addEventListener('click',()=>{
  const name=$('shopNewStore').value.trim();
  if(!name||name.length>100){status('Enter a store name.',true);return;}
- selected=api().ensure(name).id;$('shopNewStore').value='';render();status('Store list ready. Set a pin for arrival alerts.');
+ selected=api().ensure(name).id;$('shopNewStore').value='';render();$('shopSetupDetails').open=false;status('Store list ready. Add a location under Store settings if you want arrival reminders.');
 });
 $('shopArrivalToggle').addEventListener('change',e=>{api().setAlerts(e.target.checked);render();});
 // Keep the purchased-items cleanup accessible even though purchases are grouped by store.

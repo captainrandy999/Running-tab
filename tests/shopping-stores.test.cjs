@@ -43,3 +43,24 @@ test('existing unassigned shopping items remain intact and deleting a store reas
  assert.equal(items[0].name,'Milk');
  assert.equal(items[1].storeId,null);
 });
+
+test('general shopping requests never inherit the selected store',()=>{
+ const {api}=fixture();
+ api.ensure('Home Hardware');
+ const generic=api.parseDestination('add screws to my shopping list');
+ assert.equal(generic.text,'add screws');
+ assert.equal(generic.storeName,null);
+ const named=api.parseDestination('add screws to my Home Hardware list');
+ assert.equal(named.storeName,'Home Hardware');
+ const noStore=api.parseDestination('buy milk');
+ assert.equal(noStore.storeName,null);
+ const index=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
+ assert.match(index,/fillSelect\(\$\('shoppingStore'\),'',dest\.storeName\)/);
+});
+test('store configuration is collapsible without hiding active shopping items',()=>{
+ const html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
+ const panel=fs.readFileSync(require('node:path').join(__dirname,'../shopping-panel.js'),'utf8');
+ assert.match(html,/<details class="shop-setup" id="shopSetupDetails">/);
+ assert.match(panel,/details class="shop-store-tools"/);
+ assert.match(panel,/openSettings/);
+});

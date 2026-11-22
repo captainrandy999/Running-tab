@@ -27,6 +27,9 @@ function remove(id){
 }
 function parseDestination(raw){
  const text=String(raw||'').trim();
+ // Explicit generic-list requests always select General, regardless of the last opened store.
+ const generic=text.match(/^(.*?)\s+(?:to|on|for|at)\s+(?:(?:my|the)\s+)?(?:general(?:\s+shopping)?|shopping)\s+list\s*$/i);
+ if(generic)return {text:generic[1],storeName:null};
  const m=text.match(/^(.*?)\s+(?:to|for|at)\s+(?:(?:my|the)\s+)?(.+?)\s+(?:shopping\s+)?list\s*$/i);
  if(m&&m[2]&&!/^(?:shopping|general)$/i.test(m[2]))return {text:m[1],storeName:m[2].trim()};
  for(const store of read()){
