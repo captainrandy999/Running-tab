@@ -4,16 +4,32 @@
 const $=id=>document.getElementById(id),api=()=>window.MyDayStores;
 const K='running-tab-shopping-v1';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let rows=[],selected='';
+let rows=[],selected='',moveId=null;
 const status=(s,bad=false)=>{const el=$('shopStatus');if(el){el.textContent=s;el.className=s?'notice'+(bad?' bad':''):'';}};
 function read(){try{const a=JSON.parse(localStorage.getItem(K)||'[]');return Array.isArray(a)?a.filter(x=>x&&typeof x.id==='string'&&typeof x.name==='string'&&typeof x.done==='boolean'):[];}catch(e){return [];}}
 function write(a){try{localStorage.setItem(K,JSON.stringify(a));window.dispatchEvent(new Event('runningtab:shopping-changed'));return true;}catch(e){status('Unable to save shopping.',true);return false;}}
 function row(item){
- return '<div class="task shop-item shop-item--'+(item.done?'purchased done':'needed')+'">'+
- '<input type="checkbox" data-shop-toggle="'+esc(item.id)+'"'+(item.done?' checked':'')+'>'+
+ const destinations=[{id:'',name:'General Shopping'},...api().read()];
+ const choices=destinations.filter(x=>x.id!==(item.storeId||''));
+ const expanded=moveId===item.id;
+ const id=esc(item.id);
+ const options=choices.length?choices.map(x=>
+  '<button type="button" class="shop-move-option" data-shop-destination="'+esc(x.id)+'" data-shop-item="'+id+'">'+
+  '🛒 '+esc(x.name)+'</button>').join(''):
+  '<span class="info">Create another store list above to move this item.</span>';
+ return '<div class="shop-item-wrap" data-shop-entry-id="'+id+'">'+
+ '<div class="task shop-item shop-item--'+(item.done?'purchased done':'needed')+'">'+
+ '<input type="checkbox" data-shop-toggle="'+id+'"'+(item.done?' checked':'')+
+ ' aria-label="'+esc(item.done?'Mark '+item.name+' needed again':'Mark '+item.name+' purchased')+'">'+
  '<div class="task-main"><div class="task-name">'+esc(item.name)+'</div></div>'+
- '<button class="secondary small" type="button" data-shop-move="'+esc(item.id)+'">Move</button>'+
- '<button class="danger small" type="button" data-shop-delete="'+esc(item.id)+'">Delete</button></div>';
+ '<button class="secondary small shop-move-trigger" type="button" data-shop-move="'+id+
+ '" aria-expanded="'+expanded+'" aria-controls="shop-move-picker-'+id+'">Move</button>'+
+ '<button class="danger small" type="button" data-shop-delete="'+id+'">Delete</button></div>'+
+ '<div class="shop-move-panel" id="shop-move-picker-'+id+'"'+(expanded?'':' hidden')+'>'+
+ '<div class="shop-move-heading">Move to which list?</div>'+
+ '<div class="shop-move-options">'+options+'</div>'+
+ '<button type="button" class="shop-move-cancel secondary small" data-shop-move-cancel="'+id+'">Cancel</button>'+
+ '</div></div>';
 }
 function section(store){
  const key=store?.id||'',list=rows.filter(x=>(x.storeId||'')===key),needed=list.filter(x=>!x.done),done=list.filter(x=>x.done);
@@ -52,19 +68,31 @@ function render(){
   'Location access not yet allowed. Enable alerts and follow the Android permission steps.';
  window.RunningTabView?.adjust?.();
 }
-function refresh(){rows=read();render();}
+function refresh(){rows=read();if(moveId&&!rows.some(x=>x.id===moveId))moveId=null;render();}
 $('shopPending').addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b)return;
  const del=b.dataset.shopDelete,move=b.dataset.shopMove;
  if(del){const rec=rows.find(x=>x.id===del);if(rec&&confirm('Remove '+rec.name+'?'))write(rows.filter(x=>x.id!==del));return;}
  if(move){
-  const rec=rows.find(x=>x.id===move);if(!rec)return;
-  const names=['General Shopping',...api().read().map(s=>s.name)];
-  const answer=prompt('Move '+rec.name+' to which list? '+names.join(' / '),api().label(rec.storeId));
-  if(answer===null)return;
-  const to=answer.trim().toLowerCase()==='general shopping'?'':api().find(answer)?.id;
-  if(to===undefined){status('Please use an existing store name.',true);return;}
-  write(rows.map(x=>x.id===move?{...x,storeId:to||null}:x));return;
+  moveId=moveId===move?null:move;
+  render();
+  const picker=moveId&&[...document.querySelectorAll('#shopPending .shop-move-panel')].find(x=>x.id==='shop-move-picker-'+moveId);
+  if(picker)picker.querySelector('.shop-move-option')?.focus({preventScroll:true});
+  return;
+ }
+ if(b.dataset.shopMoveCancel){moveId=null;render();return;}
+ if(b.hasAttribute('data-shop-destination')){
+  const itemId=b.dataset.shopItem;
+  const destination=b.dataset.shopDestination;
+  const rec=rows.find(x=>x.id===itemId);
+  const allowed=destination===''||api().read().some(x=>x.id===destination);
+  if(!rec||!allowed){status('That shopping list is no longer available.',true);return;}
+  const destName=api().label(destination);
+  moveId=null;
+  selected=destination;
+  if(write(rows.map(x=>x.id===itemId?{...x,storeId:destination||null}:x)))
+   status('Moved "'+rec.name+'" to '+destName+'.');
+  return;
  }
  if(b.dataset.storePin){if(window.RunningTabAndroid?.pinStoreHere)window.RunningTabAndroid.pinStoreHere(b.dataset.storePin);
   else status('Pinning requires the updated Android app.',true);return;}

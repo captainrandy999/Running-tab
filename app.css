@@ -769,3 +769,19 @@ html[data-theme="dark"] .myday-sync-field b,html[data-theme="dark"] .myday-sync-
 .shop-store-buttons button{font-size:12px;padding:6px 8px}
 html[data-theme="dark"] .shop-store-group{background:#203444;border-color:#476171}
 html[data-theme="dark"] .shop-store-tools{border-color:#476171}
+
+/* One-tap shopping move picker; uses the app's styling instead of Android prompt. */
+.shop-item-wrap{min-width:0}
+.shop-move-panel[hidden]{display:none!important}
+.shop-move-panel{margin:0 3px 10px 30px;padding:12px;border:1px solid #b9d2db;border-radius:12px;
+ background:#eaf5f7;box-shadow:0 4px 12px #1236}
+.shop-move-heading{font-weight:700;font-size:13px;margin-bottom:9px}
+.shop-move-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:8px}
+.shop-store-body .shop-move-option{background:#fff;color:#16445b;border:1px solid #9cc9d2;
+ border-radius:10px;min-height:44px;padding:10px 12px;font-weight:700;font-size:14px;
+ text-align:left;white-space:normal;overflow-wrap:anywhere}
+.shop-store-body .shop-move-option:active{background:#ccebe9}
+.shop-store-body .shop-move-cancel{margin-top:10px}
+html[data-theme="dark"] .shop-move-panel{background:#274453;border-color:#548091;color:#e9f5fa}
+html[data-theme="dark"] .shop-store-body .shop-move-option{background:#344e60;color:#e9f4fb;border-color:#537c8e}
+html[data-theme="dark"] .shop-store-body .shop-move-option:active{background:#276e6d}
