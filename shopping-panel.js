@@ -51,13 +51,14 @@ function itemRow(item){
   '<div class="task-main"><div class="task-name">'+esc(item.name)+'</div>'+
   '<div class="shop-tag-summary">'+esc(tagSummary(item))+'</div></div>'+
   '<button type="button" class="secondary small" data-shop-edit-tags="'+key+
-  '" aria-expanded="'+String(expanded)+'">Tags</button>'+
-  '<button type="button" class="danger small" data-shop-delete="'+key+'">Delete</button></div>'+
+  '" aria-expanded="'+String(expanded)+'" aria-label="Edit store tags or delete '+esc(item.name)+'">Tags</button></div>'+
   '<div class="shop-tag-editor"'+(expanded?'':' hidden')+'>'+
-  '<strong>Where can you buy this?</strong><p class="info">Leave all unchecked to keep this item untagged.</p>'+
+  '<strong>Store tags</strong>'+
   '<div class="shop-tag-choices">'+(choices||'<p class="info">Add stores under Manage store tags.</p>')+'</div>'+
+  '<div class="shop-item-editor-actions">'+
   '<button type="button" class="secondary small" data-shop-close-tags="'+key+'">Done</button>'+
-  '</div></div>';
+  '<button type="button" class="danger small" data-shop-delete="'+key+'">Delete item</button>'+
+  '</div></div></div>';
 }
 function storeTools(store){
  const key=esc(store.id);
@@ -77,9 +78,13 @@ function render(){
  $('shopCount').textContent=pending.length+' to buy';
  const visible=pending.filter(matches);
  const visibleDone=finished.filter(matches);
- let chips=filterButton('All','all',pending.length)+
-  filterButton('Untagged','anywhere',pending.filter(x=>api().tags(x).length===0).length);
- for(const s of stores)chips+=filterButton(s.name,s.id,pending.filter(x=>api().tags(x).includes(s.id)).length);
+ let chips=filterButton('All','all',pending.length);
+ const untagged=pending.filter(x=>api().tags(x).length===0).length;
+ if(untagged>0||filter==='anywhere')chips+=filterButton('Untagged','anywhere',untagged);
+ for(const store of stores){
+  const count=pending.filter(x=>api().tags(x).includes(store.id)).length;
+  if(count>0||filter===store.id)chips+=filterButton(store.name,store.id,count);
+ }
  $('shopFilters').innerHTML=chips;
  $('shopPending').innerHTML=visible.length?visible.map(itemRow).join(''):
   '<p class="task-empty">No unpurchased items in this view.</p>';
@@ -88,7 +93,7 @@ function render(){
  $('shopDoneCount').textContent='Purchased ('+visibleDone.length+')';
  $('shopPurchasedDetails').hidden=visibleDone.length===0;
  $('shopClearChecked').hidden=finished.length===0;
- $('shopClearChecked').textContent='Clear purchased ('+finished.length+')';
+ $('shopClearChecked').textContent='Clear all purchased ('+finished.length+')';
  $('shopStoreSettings').innerHTML=stores.length?stores.map(storeTools).join(''):
   '<p class="info">No store tags yet. Add one above.</p>';
  window.RunningTabView?.adjust?.();
