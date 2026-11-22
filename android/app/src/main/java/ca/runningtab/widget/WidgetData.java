@@ -167,15 +167,32 @@ final class WidgetData {
     }
 
     private static List<Row> shoppingRows(Context context) {
-        JSONArray records = SnapshotStore.read(context, SnapshotStore.SHOPPING);
-        List<Row> rows = new ArrayList<>();
-        for (int i = 0; i < records.length(); i++) {
-            JSONObject item = records.optJSONObject(i);
-            if (item != null && !item.optBoolean("done", false)) {
-                String name = item.optString("name", "").trim();
-                if (!name.isEmpty()) rows.add(new Row(name, "To buy", item.optString("id", "")));
+        JSONArray items=SnapshotStore.read(context,SnapshotStore.SHOPPING);
+        JSONArray stores=SnapshotStore.read(context,SnapshotStore.STORES);
+        List<Row> out=new ArrayList<>();
+        List<String> ids=new ArrayList<>();
+        List<String> names=new ArrayList<>();
+        ids.add("");names.add("General Shopping");
+        for(int i=0;i<stores.length();i++){
+            JSONObject s=stores.optJSONObject(i);
+            if(s!=null){ids.add(s.optString("id"));names.add(s.optString("name"));}
+        }
+        for(int i=0;i<ids.size();i++){
+            String id=ids.get(i),name=names.get(i);int count=0;
+            List<Row> group=new ArrayList<>();
+            for(int j=0;j<items.length();j++){
+                JSONObject item=items.optJSONObject(j);
+                if(item==null||item.optBoolean("done",false))continue;
+                if(!id.equals(item.optString("storeId","")))continue;
+                String title=item.optString("name","").trim();
+                if(title.isEmpty())continue;
+                count++;group.add(new Row(title,name,item.optString("id","")));
+            }
+            if(i>0||count>0){
+                out.add(new Row("🛒 "+name,count+" to buy","store:"+(id.isEmpty()?"general":id)));
+                out.addAll(group);
             }
         }
-        return rows;
+        return out;
     }
 }

@@ -2,6 +2,9 @@ package ca.runningtab.widget;
 
 import android.app.Activity;
 import android.Manifest;
+import android.provider.Settings;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.content.IntentSender;
@@ -50,6 +53,8 @@ public class MainActivity extends Activity {
     private static final int RESTORE_PICKER = 2004;
     private static final int GOOGLE_AUTH_PICKER = 2005;
     private static final int ALERT_PERMISSION = 2006;
+    private static final int STORE_LOCATION_PERMISSION = 2007;
+    private String pendingStorePin = null;
     private static final String GOOGLE_AUTH_PREF = "google_drive_connected";
     private static final List<Scope> GOOGLE_SCOPES = Arrays.asList(
         new Scope("openid"), new Scope("email"),
@@ -219,7 +224,8 @@ public class MainActivity extends Activity {
     @Override protected void onResume() {
         super.onResume();
         if (loaded && web != null) {
-            web.evaluateJavascript("window.__rtWidgetSnapshot?.();", null);
+            web.evaluateJavascript("window.__rtWidgetSnapshot?.();window.RunningTabShopping?.refresh?.();", null);
+            StoreGeofenceManager.refresh(this);
             if (getPreferences(MODE_PRIVATE).getBoolean(GOOGLE_AUTH_PREF, false))
                 web.postDelayed(() -> authorizeGoogle(false), 400);
         }
@@ -237,6 +243,14 @@ public class MainActivity extends Activity {
 
     @Override public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(requestCode==STORE_LOCATION_PERMISSION){
+            String pin=pendingStorePin;pendingStorePin=null;
+            if(pin!=null&&StoreGeofenceManager.hasForeground(this))pinStoreHere(pin);
+            else if(StoreGeofenceManager.hasForeground(this))guideBackgroundStorePermission();
+            else Toast.makeText(this,"Allow precise location to use store arrival reminders.",Toast.LENGTH_LONG).show();
+            if(web!=null)web.evaluateJavascript("window.RunningTabShopping?.refresh?.();",null);
+            return;
+        }
         if (requestCode != ALERT_PERMISSION) return;
         if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
             ReminderManager.restore(this);
@@ -245,6 +259,49 @@ public class MainActivity extends Activity {
             Toast.makeText(this, "Phone alerts are off. You can enable them in Android Settings → Apps → MyDay → Notifications.", Toast.LENGTH_LONG).show();
         }
         alertPermissionChanged();
+    }
+
+    private void askStoreForeground(){
+        if(Build.VERSION.SDK_INT>=31)
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,Manifest.permission.ACCESS_COARSE_LOCATION},STORE_LOCATION_PERMISSION);
+        else requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},STORE_LOCATION_PERMISSION);
+    }
+    private void enableStoreLocations(){
+        if(!StoreGeofenceManager.hasForeground(this)){askStoreForeground();return;}
+        if(!StoreGeofenceManager.hasBackground(this)){guideBackgroundStorePermission();return;}
+        StoreGeofenceManager.refresh(this);
+        Toast.makeText(this,"Store arrival reminders are allowed.",Toast.LENGTH_SHORT).show();
+        if(web!=null)web.evaluateJavascript("window.RunningTabShopping?.refresh?.();",null);
+    }
+    private void guideBackgroundStorePermission(){
+        new AlertDialog.Builder(this).setTitle("Allow store arrival reminders")
+            .setMessage("To notify you while MyDay is closed, open MyDay permissions, choose Location, select Allow all the time, and enable Precise location. Only stores you enable with unpurchased items are monitored.")
+            .setNegativeButton("Not now",(d,w)->{})
+            .setPositiveButton("Open app settings",(d,w)->{
+                Intent i=new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                i.setData(Uri.parse("package:"+getPackageName()));
+                startActivity(i);
+            }).show();
+    }
+    private void pinStoreHere(String id){
+        if(id==null||id.isEmpty())return;
+        if(!StoreGeofenceManager.hasForeground(this)){
+            pendingStorePin=id;askStoreForeground();return;
+        }
+        LocationServices.getFusedLocationProviderClient(this)
+            .getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY,null)
+            .addOnSuccessListener(this,location->{
+                if(web==null)return;
+                if(location==null){
+                    web.evaluateJavascript("window.MyDayStores?.locationError('Location unavailable. Enable device location and try again.');",null);
+                    return;
+                }
+                web.evaluateJavascript("window.MyDayStores?.onCurrentLocation("+
+                    JSONObject.quote(id)+","+location.getLatitude()+","+location.getLongitude()+");",null);
+            })
+            .addOnFailureListener(this,error->{
+                if(web!=null)web.evaluateJavascript("window.MyDayStores?.locationError('Unable to get location. Try again.');",null);
+            });
     }
 
     private void alertPermissionChanged() {
@@ -259,6 +316,21 @@ public class MainActivity extends Activity {
                 SnapshotStore.save(MainActivity.this, money, todo, shopping);
                 ReminderManager.sync(MainActivity.this, todo);
             });
+        }
+        @JavascriptInterface public void shoppingStores(String stores,String shopping,boolean enabled){
+            runOnUiThread(()->{
+                SnapshotStore.saveStores(MainActivity.this,stores);
+                StoreGeofenceManager.snapshot(MainActivity.this,stores,shopping,enabled);
+            });
+        }
+        @JavascriptInterface public boolean storeLocationPermissionGranted(){
+            return StoreGeofenceManager.hasBackground(MainActivity.this);
+        }
+        @JavascriptInterface public void enableStoreLocations(){
+            runOnUiThread(MainActivity.this::enableStoreLocations);
+        }
+        @JavascriptInterface public void pinStoreHere(String id){
+            runOnUiThread(()->MainActivity.this.pinStoreHere(id));
         }
         @JavascriptInterface public void dictate() {
             runOnUiThread(MainActivity.this::startDictation);
@@ -307,13 +379,17 @@ public class MainActivity extends Activity {
                window.__rtWidgetSnapshot?.(); return;
              }
              window.__rtBridgeReady=true;
-             const keys=['running-tab-simple-v1','running-tab-todo-v1','running-tab-shopping-v1'];
+             const keys=['running-tab-simple-v1','running-tab-todo-v1','running-tab-shopping-v1','running-tab-stores-v1','running-tab-store-alerts-v1'];
              const sync=()=>{
                try {
                  window.RunningTabAndroid.snapshot(
                    localStorage.getItem(keys[0])||'[]',
                    localStorage.getItem(keys[1])||'[]',
                    localStorage.getItem(keys[2])||'[]');
+                 window.RunningTabAndroid.shoppingStores(
+                   localStorage.getItem(keys[3])||'[]',
+                   localStorage.getItem(keys[2])||'[]',
+                   localStorage.getItem(keys[4])==='true');
                } catch(e){}
              };
              window.__rtWidgetSnapshot=sync;

@@ -41,6 +41,7 @@ public final class ReminderReceiver extends BroadcastReceiver {
                 || Intent.ACTION_TIME_CHANGED.equals(action)
                 || Intent.ACTION_TIMEZONE_CHANGED.equals(action)) {
             ReminderManager.restore(context);
+            StoreGeofenceManager.refresh(context);
         }
     }
 }

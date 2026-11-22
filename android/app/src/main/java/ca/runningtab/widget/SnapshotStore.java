@@ -12,6 +12,7 @@ final class SnapshotStore {
     static final String MONEY = "money";
     static final String TODO = "todo";
     static final String SHOPPING = "shopping";
+    static final String STORES = "stores";
     private SnapshotStore() {}
 
     static SharedPreferences prefs(Context context) {
@@ -34,6 +35,13 @@ final class SnapshotStore {
                 && shopping.equals(p.getString(SHOPPING, "[]"))) return;
         p.edit().putString(MONEY, money).putString(TODO, todo)
                 .putString(SHOPPING, shopping).apply();
+        RunningTabWidget.refreshAll(context);
+    }
+
+    static void saveStores(Context context,String json){
+        try{new JSONArray(json);}catch(Exception ex){return;}
+        if(json.equals(prefs(context).getString(STORES,"[]")))return;
+        prefs(context).edit().putString(STORES,json).apply();
         RunningTabWidget.refreshAll(context);
     }
 
