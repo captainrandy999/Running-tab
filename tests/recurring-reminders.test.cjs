@@ -133,3 +133,14 @@ test('spoken reminder wording does not become part of the task title',()=>{
  const weekly=p.interpret('Remind me every Friday at 4 PM to submit my hours');
  assert.equal(weekly.repeat.type,'weekly');
 });
+
+test('spoken time defaults infer AM or PM but explicit phrasing wins',()=>{
+ const p=parser();
+ const cases=[["Remind me tomorrow at 3 to call the Mountain Store","15:00"],["Remind me tomorrow at 3 o’clock to call the Mountain Store","15:00"],["Remind me tomorrow at 3 o'clock to call the Mountain Store","15:00"],["Remind me tomorrow at 3:00 to call the Mountain Store","15:00"],["Remind me tomorrow at 8 to call the Mountain Store","08:00"],["Remind me tomorrow at 8 oclock to call the Mountain Store","08:00"],["Remind me tomorrow at 8:30 to call the Mountain Store","08:30"],["Remind me tomorrow at 6 to call the Mountain Store","18:00"],["Remind me tomorrow at 7 to call the Mountain Store","07:00"],["Remind me tomorrow at 12 to call the Mountain Store","12:00"],["Remind me tomorrow at 3 AM to call the Mountain Store","03:00"],["Remind me tomorrow at 8 PM to call the Mountain Store","20:00"],["Remind me tomorrow at 3 in the morning to call the Mountain Store","03:00"],["Remind me tomorrow afternoon at 3 to call the Mountain Store","15:00"],["Remind me tomorrow at 9 in the evening to call the Mountain Store","21:00"],["Remind me tomorrow at 03:00 to call the Mountain Store","03:00"],["Remind me tomorrow at 15:00 to call the Mountain Store","15:00"],["Remind me tomorrow at noon to call the Mountain Store","12:00"],["Remind me tomorrow at midnight to call the Mountain Store","00:00"]];
+ for(const [phrase,expected] of cases){
+  const result=p.interpret(phrase);
+  assert.equal(result.remindTime,expected,phrase);
+  assert.equal(result.dueType,'day',phrase);
+  assert.equal(result.title,'Call the Mountain Store',phrase);
+ }
+});

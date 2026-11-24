@@ -378,9 +378,9 @@ function interpret(input){
   s=(s.slice(0,duration.index)+' '+s.slice(duration.index+duration[0].length))
    .replace(/\s+/g,' ').replace(/^[\s,;:]+|[\s,;:]+$/g,'').trim();
  }
- // Spoken times also accept "tomorrow morning at 9" (9 AM) and "at 3 in
- // the afternoon" (3 PM). Dates without a spoken time default to 8 AM.
- const spokenTime=!relativeAlarm&&s.match(/(?:^|\s+)at\s+((?:1[0-2]|0?[1-9])(?::[0-5]\d)?\s*(?:a\.?m\.?|p\.?m\.?)|(?:[01]?\d|2[0-3]):[0-5]\d|(?:1[0-2]|0?[1-9])|noon|midnight)(?:\s+(?:in\s+the\s+)?(morning|afternoon|evening|night))?(?=$|[\s,;.!?])/i);
+ // Infer 1–6 PM, 7–11 AM, and 12 noon when no period is spoken.
+ // Explicit AM/PM, dayparts and 24-hour notation always override.
+ const spokenTime=!relativeAlarm&&s.match(/(?:^|\s+)at\s+((?:1[0-2]|0?[1-9])(?::[0-5]\d)?\s*(?:a\.?m\.?|p\.?m\.?)|(?:[01]?\d|2[0-3]):[0-5]\d|(?:1[0-2]|0?[1-9])|noon|midnight)(?:\s+o['’]?clock)?(?:\s+(?:in\s+the\s+)?(morning|afternoon|evening|night))?(?=$|[\s,;.!?])/i);
  if(spokenTime){
   const value=spokenTime[1].toLowerCase().replace(/\./g,'').replace(/\s+/g,'');
   const period=(spokenTime[2]||s.match(/\b(morning|afternoon|evening|night)\b/i)?.[1]||'').toLowerCase();
@@ -392,9 +392,11 @@ function interpret(input){
    hours=Number(clock[0])%12+(afternoon?12:0);minutes=Number(clock[1]||0);
   }else{
    const clock=value.split(':');hours=Number(clock[0]);minutes=Number(clock[1]||0);
-   if(!value.includes(':')){
+   const military=/^0\d:/.test(value)||hours>12;
+   if(!military){
     if(/afternoon|evening|night/.test(period))hours=hours%12+12;
-    else if(period==='morning'&&hours===12)hours=0;
+    else if(period==='morning')hours=hours===12?0:hours;
+    else if(hours>=1&&hours<=6)hours+=12;
    }
   }
   remindTime=pad(hours)+':'+pad(minutes);
