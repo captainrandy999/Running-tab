@@ -156,8 +156,17 @@ test('swiping store filters scrolls chips instead of navigating the app carousel
 test('Shopping filter choices lay out in two compact horizontally scrollable rows',()=>{
  const css=fs.readFileSync(require('node:path').join(__dirname,'../app.css'),'utf8');
  const last=css.slice(css.lastIndexOf('/* Two neat rows of smaller Shopping store filters'));
- assert.match(last,/grid-template-rows:repeat\(2,minmax\(36px,auto\)\)/);
+ assert.match(last,/grid-template-rows:repeat\(2,minmax\(32px,auto\)\)/);
  assert.match(last,/grid-auto-flow:column/);
  assert.match(last,/overflow-x:auto/);
  assert.match(last,/touch-action:pan-x/);
+});
+
+test('Slim store filters retain horizontal width while reducing height',()=>{
+ const css=fs.readFileSync(require('node:path').join(__dirname,'../app.css'),'utf8');
+ const block=css.slice(css.lastIndexOf('/* Two neat rows of smaller Shopping store filters'));
+ assert.match(block,/min-height:32px/);
+ assert.match(block,/padding:2px 7px/);
+ assert.match(block,/font-size:10\.5px/);
+ assert.match(block,/grid-auto-columns:max-content/);
 });

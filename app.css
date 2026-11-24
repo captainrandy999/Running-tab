@@ -910,7 +910,7 @@ html[data-theme="dark"] .myday-tag-footer{border-color:#456377}
 /* Two neat rows of smaller Shopping store filters. */
 #shoppingPanel #shopFilters{
  display:grid;
- grid-template-rows:repeat(2,minmax(36px,auto));
+ grid-template-rows:repeat(2,minmax(32px,auto));
  grid-auto-flow:column;
  grid-auto-columns:max-content;
  align-content:start;
@@ -926,8 +926,8 @@ html[data-theme="dark"] .myday-tag-footer{border-color:#456377}
 }
 #shoppingPanel #shopFilters .shop-filter-option{
  align-self:stretch;
- min-height:36px;
- padding:5px 7px;
+ min-height:32px;
+ padding:2px 7px;
  font-size:10.5px;
  line-height:1.15;
  border-radius:8px;
