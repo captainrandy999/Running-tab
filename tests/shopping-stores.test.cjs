@@ -81,7 +81,8 @@ test('shopping page is one list with tag filters and controls',()=>{
  assert.match(html,/id="shoppingTagOptions"/);
  assert.doesNotMatch(html,/id="shoppingStore"/);
  assert.match(panel,/data-shop-edit-tags/);
- assert.match(panel,/data-shop-item-tag/);
+ assert.match(panel,/MyDayTagPicker\?\.open/);
+ assert.match(panel,/api\(\)\.setTags/);
  assert.match(panel,/const visible=pending\.filter\(matches\)/);
  assert.match(panel,/const visibleDone=finished\.filter\(matches\)/);
  assert.match(view,/openStore/);
