@@ -907,16 +907,16 @@ html[data-theme="dark"] .myday-tag-footer{border-color:#456377}
 .myday-tag-options{touch-action:pan-y}
 
 
-/* Two rows of compact Shopping store filters; more stores scroll sideways. */
+/* Two neat rows of smaller Shopping store filters. */
 #shoppingPanel #shopFilters{
  display:grid;
- grid-template-rows:repeat(2,minmax(38px,auto));
+ grid-template-rows:repeat(2,minmax(36px,auto));
  grid-auto-flow:column;
  grid-auto-columns:max-content;
  align-content:start;
  justify-content:start;
- gap:5px 6px;
- padding:4px 1px 8px;
+ gap:4px 5px;
+ padding:3px 1px 7px;
  overflow-x:auto;
  overflow-y:hidden;
  touch-action:pan-x;
@@ -926,11 +926,11 @@ html[data-theme="dark"] .myday-tag-footer{border-color:#456377}
 }
 #shoppingPanel #shopFilters .shop-filter-option{
  align-self:stretch;
- min-height:38px;
- padding:6px 9px;
- font-size:11px;
+ min-height:36px;
+ padding:5px 7px;
+ font-size:10.5px;
  line-height:1.15;
- border-radius:9px;
+ border-radius:8px;
  white-space:nowrap;
 }
 #shoppingPanel #shopFilters .shop-filter-option span{font-size:10px}

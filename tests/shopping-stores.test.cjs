@@ -155,8 +155,8 @@ test('swiping store filters scrolls chips instead of navigating the app carousel
 
 test('Shopping filter choices lay out in two compact horizontally scrollable rows',()=>{
  const css=fs.readFileSync(require('node:path').join(__dirname,'../app.css'),'utf8');
- const last=css.slice(css.lastIndexOf('/* Two rows of compact Shopping store filters'));
- assert.match(last,/grid-template-rows:repeat\(2,minmax\(38px,auto\)\)/);
+ const last=css.slice(css.lastIndexOf('/* Two neat rows of smaller Shopping store filters'));
+ assert.match(last,/grid-template-rows:repeat\(2,minmax\(36px,auto\)\)/);
  assert.match(last,/grid-auto-flow:column/);
  assert.match(last,/overflow-x:auto/);
  assert.match(last,/touch-action:pan-x/);
