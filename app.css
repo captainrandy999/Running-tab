@@ -905,3 +905,32 @@ html[data-theme="dark"] .myday-tag-footer{border-color:#456377}
  border-radius:11px;font-size:12px;line-height:1.2;white-space:nowrap}
 .myday-tag-sheet,.myday-tag-options{overscroll-behavior:contain}
 .myday-tag-options{touch-action:pan-y}
+
+
+/* Two rows of compact Shopping store filters; more stores scroll sideways. */
+#shoppingPanel #shopFilters{
+ display:grid;
+ grid-template-rows:repeat(2,minmax(38px,auto));
+ grid-auto-flow:column;
+ grid-auto-columns:max-content;
+ align-content:start;
+ justify-content:start;
+ gap:5px 6px;
+ padding:4px 1px 8px;
+ overflow-x:auto;
+ overflow-y:hidden;
+ touch-action:pan-x;
+ overscroll-behavior-x:contain;
+ -webkit-overflow-scrolling:touch;
+ scrollbar-width:none;
+}
+#shoppingPanel #shopFilters .shop-filter-option{
+ align-self:stretch;
+ min-height:38px;
+ padding:6px 9px;
+ font-size:11px;
+ line-height:1.15;
+ border-radius:9px;
+ white-space:nowrap;
+}
+#shoppingPanel #shopFilters .shop-filter-option span{font-size:10px}
