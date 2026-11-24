@@ -4,7 +4,7 @@
 const $=id=>document.getElementById(id),api=()=>window.MyDayStores;
 const KEY='running-tab-shopping-v1';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let rows=[],filter='all',editing=null;
+let rows=[],filter='all';
 let statusTimer=null;
 const status=(message,bad=false)=>{
  const x=$('shopStatus');if(!x)return;
@@ -38,12 +38,7 @@ function tagSummary(item){
  return names.length?'🏷 '+names.join(' · '):'Any store';
 }
 function itemRow(item){
- const key=esc(item.id),expanded=editing===item.id,selectedTags=api().tags(item);
- const choices=api().read().map(store=>{
-  const checked=selectedTags.includes(store.id);
-  return '<label class="shop-tag-choice"><input type="checkbox" data-shop-item-tag="'+key+
-   '" value="'+esc(store.id)+'"'+(checked?' checked':'')+'><span>'+esc(store.name)+'</span></label>';
- }).join('');
+ const key=esc(item.id);
  return '<div class="shop-master-item" data-shop-entry-id="'+key+'">'+
   '<div class="task shop-item shop-item--'+(item.done?'purchased done':'needed')+'">'+
   '<input type="checkbox" data-shop-toggle="'+key+'" '+(item.done?'checked ':'')+
@@ -51,14 +46,7 @@ function itemRow(item){
   '<div class="task-main"><div class="task-name">'+esc(item.name)+'</div>'+
   '<div class="shop-tag-summary">'+esc(tagSummary(item))+'</div></div>'+
   '<button type="button" class="secondary small" data-shop-edit-tags="'+key+
-  '" aria-expanded="'+String(expanded)+'" aria-label="Edit store tags or delete '+esc(item.name)+'">Tags</button></div>'+
-  '<div class="shop-tag-editor"'+(expanded?'':' hidden')+'>'+
-  '<strong>Store tags</strong>'+
-  '<div class="shop-tag-choices">'+(choices||'<p class="info">Add stores under Manage store tags.</p>')+'</div>'+
-  '<div class="shop-item-editor-actions">'+
-  '<button type="button" class="secondary small" data-shop-close-tags="'+key+'">Done</button>'+
-  '<button type="button" class="danger small" data-shop-delete="'+key+'">Delete item</button>'+
-  '</div></div></div>';
+  '" aria-label="Choose store tags for '+esc(item.name)+'">Tags</button></div></div>';
 }
 function storeTools(store){
  const key=esc(store.id);
@@ -98,8 +86,8 @@ function render(){
   '<p class="info">No store tags yet. Add one above.</p>';
  window.RunningTabView?.adjust?.();
 }
-function refresh(){rows=read();if(editing&&!rows.some(x=>x.id===editing))editing=null;render();}
-function selectFilter(next){filter=next;editing=null;render();}
+function refresh(){rows=read();render();}
+function selectFilter(next){filter=next;render();}
 function openStore(id){
  selectFilter(id||'anywhere');
  return [...document.querySelectorAll('#shopFilters [data-shop-filter]')].find(x=>x.dataset.shopFilter===filter)||null;
@@ -109,17 +97,27 @@ $('shopFilters').addEventListener('click',event=>{
 });
 function onItemClick(event){
  const b=event.target.closest('button');if(!b)return;
- const id=b.dataset.shopDelete||b.dataset.shopEditTags||b.dataset.shopCloseTags;
- const item=rows.find(x=>x.id===id);
- if(b.dataset.shopDelete&&item){
-  if(confirm('Delete '+item.name+'?'))save(rows.filter(x=>x.id!==id));
- }else if(b.dataset.shopEditTags&&item){
-  editing=editing===id?null:id;render();
- }else if(b.dataset.shopCloseTags){editing=null;render();}
+ const id=b.dataset.shopEditTags,item=rows.find(x=>x.id===id);
+ if(!id||!item)return;
+ window.MyDayTagPicker?.open({
+  title:'Tags · '+item.name,
+  choices:api().read().map(s=>({value:s.id,label:s.name})),
+  selected:api().tags(item),
+  onToggle:(storeId,on)=>{
+   const current=rows.find(x=>x.id===id);if(!current)return false;
+   const currentTags=api().tags(current);
+   const next=on?[...currentTags,storeId]:currentTags.filter(x=>x!==storeId);
+   return save(rows.map(x=>x.id===id?api().setTags(x,next):x));
+  },
+  onDelete:()=>{
+   const current=rows.find(x=>x.id===id);
+   if(current&&confirm('Delete '+current.name+'?'))save(rows.filter(x=>x.id!==id));
+  }
+ });
 }
 function onItemChange(event){
  const el=event.target;
- const id=el.dataset.shopToggle||el.dataset.shopItemTag;
+ const id=el.dataset.shopToggle;
  if(!id)return;
  const item=rows.find(x=>x.id===id);if(!item)return;
  if(el.hasAttribute('data-shop-toggle')){
@@ -127,11 +125,7 @@ function onItemChange(event){
   save(rows.map(x=>x.id===id?{...x,done:el.checked,completedAt:el.checked?now:null,updatedAt:now}:x));
   return;
  }
- if(el.hasAttribute('data-shop-item-tag')){
-  const values=api().tags(item);
-  const next=el.checked?[...values,el.value]:values.filter(x=>x!==el.value);
-  save(rows.map(x=>x.id===id?api().setTags(x,next):x));
- }
+
 }
 for(const id of ['shopPending','shopCompleted']){
  $(id).addEventListener('click',onItemClick);

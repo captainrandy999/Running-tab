@@ -126,3 +126,16 @@ test('previous location settings are discarded without changing tags or store id
  assert.equal(result[0].enabled,undefined);
  assert.equal(JSON.parse(db.get('running-tab-stores-v1'))[0].lon,undefined);
 });
+
+test('store tag picker keeps the same review selection and item save pathways',()=>{
+ const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+ const panel=fs.readFileSync(path.join(__dirname,'../shopping-panel.js'),'utf8');
+ const picker=fs.readFileSync(path.join(__dirname,'../tag-picker.js'),'utf8');
+ assert.match(html,/id="shoppingChooseTags"/);
+ assert.match(html,/shoppingTagOptions/);
+ assert.match(panel,/MyDayTagPicker\?\.open/);
+ assert.match(panel,/api\(\)\.setTags/);
+ assert.match(picker,/aria-modal/);
+ assert.match(picker,/data-tag-dismiss/);
+ assert.match(picker,/myday-tag-footer/);
+});

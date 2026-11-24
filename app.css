@@ -865,3 +865,33 @@ html[data-theme="dark"] #shoppingPanel .shop-tag-management-row{border-color:#45
 /* Hide empty completed groups and blank note placeholders. */
 #todoPanel #todoCompletedDetails[hidden]{display:none!important}
 #todoPanel .todo-details .note-empty:empty{display:none!important}
+
+
+/* Compact, thumb-friendly shared store tag selector. */
+.myday-tag-sheet[hidden]{display:none!important}
+.myday-tag-sheet{position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-end;justify-content:center}
+.myday-tag-scrim{position:absolute;inset:0;background:rgba(4,13,22,.65)}
+.myday-tag-drawer{position:relative;width:100%;max-width:650px;max-height:min(75dvh,650px);display:flex;flex-direction:column;min-height:180px;border-radius:22px 22px 0 0;background:#f3f9fc;color:#183849;border:1px solid #9cbecb;border-bottom:none;box-shadow:0 -12px 40px rgba(0,0,0,.3);padding:8px 14px max(12px,env(safe-area-inset-bottom))}
+.myday-tag-handle{height:5px;width:42px;border-radius:10px;background:#9db4c1;align-self:center;margin:2px 0 11px}
+.myday-tag-header{display:flex;align-items:start;justify-content:space-between;gap:8px}
+.myday-tag-header h2{font-size:18px;margin:0 0 3px;line-height:1.3}
+.myday-tag-header p{font-size:12px;margin:0 0 9px;color:#597181}
+.myday-tag-close{border:0;background:transparent;color:inherit;font-size:28px;min-height:42px;min-width:42px;line-height:1}
+.myday-tag-options{display:flex;flex-wrap:wrap;align-content:flex-start;gap:7px;padding:3px 0 14px;overflow-y:auto;overscroll-behavior:contain}
+.myday-tag-pill{border:1px solid #a3c4d0;border-radius:12px;background:#e5f0f5;color:#213e50;padding:7px 10px;min-height:44px;font-size:13px;font-weight:650;display:inline-flex;align-items:center;gap:5px;max-width:100%;white-space:normal;overflow-wrap:anywhere;text-align:left}
+.myday-tag-pill.is-selected{background:#2ac4b2;color:#0e3035;border-color:#168f83}
+.myday-tag-check{display:inline-flex;align-items:center;justify-content:center;min-width:13px;font-size:15px;font-weight:800}
+.myday-tag-footer{display:flex;gap:8px;border-top:1px solid #c2d3dd;padding-top:11px;background:inherit;flex:none}
+.myday-tag-done{flex:1;border:0;border-radius:12px;background:#196a7e;color:#fff;font-size:15px;font-weight:700;min-height:48px}
+.myday-tag-danger{border:1px solid #ae6d78;color:#a83345;background:transparent;border-radius:12px;min-height:48px;padding:0 12px}
+.myday-tag-danger[hidden]{display:none!important}
+body.myday-tag-sheet-open{overflow:hidden}
+.myday-review-tag-trigger{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;min-height:44px;font-size:14px;padding:9px 12px}
+#shoppingSelectedTags{font-size:12px;font-weight:600;opacity:.8}
+#shoppingTagOptions[hidden]{display:none!important}
+html[data-theme="dark"] .myday-tag-drawer{background:#192f3e;color:#edf6f9;border-color:#42677c}
+html[data-theme="dark"] .myday-tag-pill{background:#294657;border-color:#4b7385;color:#e9f3f9}
+html[data-theme="dark"] .myday-tag-pill.is-selected{background:#26bdab;color:#082c33;border-color:#33d8c1}
+html[data-theme="dark"] .myday-tag-header p{color:#b8ccd8}
+html[data-theme="dark"] .myday-tag-footer{border-color:#456377}
+@media(prefers-reduced-motion:no-preference){.myday-tag-drawer{animation:mydayTagUp .16s ease-out}@keyframes mydayTagUp{from{transform:translateY(25px);opacity:.7}to{transform:translateY(0);opacity:1}}}

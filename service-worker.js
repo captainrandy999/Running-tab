@@ -1,6 +1,6 @@
 // Offline shell. Transactions stay in this browser's localStorage.
-const CACHE='myday-time-inference-v72';
-const SHELL=['./','./index.html','./todo.html','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./app.css?v=69','./web-auth-config.js','./web-auth.js','./web-drive-sync.js?v=56','./install.js','./backup.js','./repeat.js?v=54','./todo-cleanup.js?v=65','./todo-panel.js?v=69','./view.js?v=60','./stores.js?v=64','./shopping-panel.js?v=68','./calendar.js','./reminders.js?v=54'];
+const CACHE='myday-thumb-tags-v73';
+const SHELL=['./','./index.html','./todo.html','./manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./app.css?v=73','./web-auth-config.js','./web-auth.js','./web-drive-sync.js?v=56','./install.js','./backup.js','./repeat.js?v=54','./todo-cleanup.js?v=65','./todo-panel.js?v=69','./view.js?v=60','./stores.js?v=64','./tag-picker.js?v=73','./shopping-panel.js?v=73','./calendar.js','./reminders.js?v=54'];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(names=>Promise.all(names.filter(name=>name!==CACHE).map(name=>caches.delete(name)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',event=>{if(event.request.method!=='GET'||new URL(event.request.url).origin!==self.location.origin)return;event.respondWith(fetch(event.request).then(response=>{if(response.ok){const copy=response.clone();caches.open(CACHE).then(cache=>cache.put(event.request,copy));}return response;}).catch(()=>caches.match(event.request).then(found=>found||caches.match('./index.html'))));});
