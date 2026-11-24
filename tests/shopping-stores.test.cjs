@@ -140,3 +140,15 @@ test('store tag picker keeps the same review selection and item save pathways',(
  assert.match(picker,/data-tag-dismiss/);
  assert.match(picker,/myday-tag-footer/);
 });
+
+test('swiping store filters scrolls chips instead of navigating the app carousel',()=>{
+ const controller=fs.readFileSync(path.join(__dirname,'../view.js'),'utf8');
+ const page=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+ const style=fs.readFileSync(path.join(__dirname,'../app.css'),'utf8');
+ assert.match(controller,/handlesOwnHorizontalGesture/);
+ assert.match(controller,/#shopFilters/);
+ assert.match(controller,/MyDayTagPicker\?\.isOpen/);
+ assert.match(controller,/touchcancel/);
+ assert.match(page,/id="shopFilters"[^>]*data-no-page-swipe/);
+ assert.match(style,/touch-action:pan-x/);
+});

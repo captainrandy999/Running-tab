@@ -895,3 +895,13 @@ html[data-theme="dark"] .myday-tag-pill.is-selected{background:#26bdab;color:#08
 html[data-theme="dark"] .myday-tag-header p{color:#b8ccd8}
 html[data-theme="dark"] .myday-tag-footer{border-color:#456377}
 @media(prefers-reduced-motion:no-preference){.myday-tag-drawer{animation:mydayTagUp .16s ease-out}@keyframes mydayTagUp{from{transform:translateY(25px);opacity:.7}to{transform:translateY(0);opacity:1}}}
+
+
+/* Shopping filters are a compact horizontal scroller, never a page-swipe trigger. */
+#shoppingPanel #shopFilters{display:flex;gap:5px;padding:5px 1px 9px;overflow-x:auto;overflow-y:hidden;
+ width:100%;max-width:100%;touch-action:pan-x;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+#shoppingPanel #shopFilters::-webkit-scrollbar{display:none}
+#shoppingPanel #shopFilters .shop-filter-option{flex:none;min-height:38px;padding:6px 9px;
+ border-radius:11px;font-size:12px;line-height:1.2;white-space:nowrap}
+.myday-tag-sheet,.myday-tag-options{overscroll-behavior:contain}
+.myday-tag-options{touch-action:pan-y}

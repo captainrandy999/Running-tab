@@ -111,13 +111,28 @@ tabs.forEach(tab=>{
   }
  });
 });
+// Swiping store chips is horizontal SCROLL, not a request to switch app sections.
+// Also keep active tag sheets, their controls, and future nested scroll areas safe.
 let start=null;
+function handlesOwnHorizontalGesture(target){
+ if(window.MyDayTagPicker?.isOpen?.())return true;
+ if(!(target instanceof Element))return false;
+ if(target.closest('#shopFilters, #shoppingTagOptions, .myday-tag-sheet, [data-no-page-swipe]'))return true;
+ for(let el=target;el&&el!==viewport;el=el.parentElement){
+  if(el.scrollWidth>el.clientWidth+3){
+   const style=getComputedStyle(el);
+   if(['auto','scroll'].includes(style.overflowX))return true;
+  }
+ }
+ return false;
+}
 viewport.addEventListener('touchstart',event=>{
- if(event.touches.length!==1){start=null;return;}
+ if(event.touches.length!==1||handlesOwnHorizontalGesture(event.target)){start=null;return;}
  const touch=event.touches[0];start={x:touch.clientX,y:touch.clientY};
 },{passive:true});
+viewport.addEventListener('touchcancel',()=>{start=null;},{passive:true});
 viewport.addEventListener('touchend',event=>{
- if(!start||event.changedTouches.length!==1){start=null;return;}
+ if(!start||event.changedTouches.length!==1||handlesOwnHorizontalGesture(event.target)){start=null;return;}
  const t=event.changedTouches[0],dx=t.clientX-start.x,dy=t.clientY-start.y;
  start=null;
  if(Math.abs(dx)>75&&Math.abs(dx)>Math.abs(dy)*1.5){
