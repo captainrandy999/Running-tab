@@ -134,13 +134,12 @@
    <form id="shoppingReviewForm" class="hide">
     <h2 style="margin:15px 0 8px">Review Shopping Items</h2>
     <div class="callout" id="shoppingSummary" aria-live="polite"></div>
-      <div class="actions review-actions"><button type="submit" class="primary">Confirm &amp; save to Shopping</button><button type="button" class="secondary" id="shoppingCancel">Change sentence</button></div>
+    <div class="field"><label class="label" for="shoppingItems">Shopping items (one per line)</label>
+     <textarea id="shoppingItems" rows="4" maxlength="3000" required placeholder="Milk&#10;Bread&#10;Eggs"></textarea></div>
     <div class="field"><div class="label">Store tags (optional)</div>
      <div id="shoppingTagOptions" class="shop-tag-choices" role="group" aria-label="Stores where items can be purchased"></div>
     </div>
-    <div class="field"><label class="label" for="shoppingItems">Shopping items (one per line)</label>
-     <textarea id="shoppingItems" rows="4" maxlength="3000" required placeholder="Milk&#10;Bread&#10;Eggs"></textarea></div>
-    
+    <div class="actions review-actions"><button type="submit" class="primary">Confirm &amp; save to Shopping</button><button type="button" class="secondary" id="shoppingCancel">Change sentence</button></div>
    </form>
  </section>
  <div class="top-nav">
