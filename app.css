@@ -934,3 +934,18 @@ html[data-theme="dark"] .myday-tag-footer{border-color:#456377}
  white-space:nowrap;
 }
 #shoppingPanel #shopFilters .shop-filter-option span{font-size:10px}
+
+/* Quiet date-group dividers; keep the existing To-Do cards and controls. */
+#todoPanel #pending .todo-date-heading{
+ display:flex;align-items:center;gap:7px;
+ margin:10px 0 5px;padding:0 2px;
+ font-size:10px;font-weight:700;line-height:1.25;
+ letter-spacing:.045em;text-transform:uppercase;color:#607386;
+}
+#todoPanel #pending .todo-date-heading:first-child{margin-top:2px}
+#todoPanel #pending .todo-date-heading::after{
+ content:"";flex:1;height:1px;background:currentColor;opacity:.4;
+}
+#todoPanel #pending .todo-date-heading--urgent{color:var(--rt-amber-text)}
+#todoPanel #pending .todo-date-heading--upcoming{color:var(--rt-blue-text)}
+html[data-theme="dark"] #todoPanel #pending .todo-date-heading--undated{color:#aebdca}
