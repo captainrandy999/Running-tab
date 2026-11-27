@@ -32,6 +32,16 @@ public class WidgetListService extends RemoteViewsService {
             if (position < 0 || position >= items.size()) return null;
             WidgetData.Row item = items.get(position);
             RemoteViews row = new RemoteViews(context.getPackageName(), R.layout.widget_row);
+            row.setViewVisibility(R.id.rowDateHeading, item.dateGroup >= 0 ? android.view.View.VISIBLE : android.view.View.GONE);
+            if (item.dateGroup >= 0) {
+                String[] headings = {"TODAY & OVERDUE", "UPCOMING", "UNDATED"};
+                int[] colors = dark ? new int[]{0xfff0d19a, 0xffb4ddfa, 0xffaebdca}
+                        : new int[]{0xff885b19, 0xff2d6489, 0xff607386};
+                int color = colors[item.dateGroup];
+                row.setTextViewText(R.id.rowDateHeadingText, headings[item.dateGroup]);
+                row.setTextColor(R.id.rowDateHeadingText, color);
+                row.setInt(R.id.rowDateHeadingLine, "setBackgroundColor", (color & 0x00ffffff) | 0x66000000);
+            }
             row.setInt(R.id.rowRoot, "setBackgroundResource",
                     dark ? R.drawable.widget_tab_dark_idle : R.drawable.widget_tab_idle);
             row.setTextColor(R.id.rowTitle, dark

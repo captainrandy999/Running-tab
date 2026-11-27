@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
- android:id="@+id/rowRoot" android:layout_width="match_parent" android:layout_height="wrap_content"
+ android:layout_width="match_parent" android:layout_height="wrap_content"
+ android:orientation="vertical">
+ <LinearLayout android:id="@+id/rowDateHeading" android:layout_width="match_parent"
+  android:layout_height="wrap_content" android:orientation="horizontal"
+  android:gravity="center_vertical" android:paddingStart="2dp" android:paddingEnd="2dp"
+  android:paddingTop="5dp" android:paddingBottom="3dp" android:visibility="gone">
+  <TextView android:id="@+id/rowDateHeadingText" android:layout_width="wrap_content"
+   android:layout_height="wrap_content" android:textSize="9sp" android:textStyle="bold"
+   android:letterSpacing="0.04" android:includeFontPadding="false" android:maxLines="1"/>
+  <TextView android:id="@+id/rowDateHeadingLine" android:layout_width="0dp"
+   android:layout_weight="1" android:layout_height="1dp" android:layout_marginStart="6dp"
+   android:importantForAccessibility="no"/>
+ </LinearLayout>
+ <LinearLayout android:id="@+id/rowRoot" android:layout_width="match_parent" android:layout_height="wrap_content"
  android:orientation="vertical" android:padding="10dp"
  android:background="@drawable/widget_tab_idle">
  <TextView android:id="@+id/rowTitle" android:layout_width="match_parent"
@@ -11,4 +24,5 @@
   android:layout_height="wrap_content" android:layout_marginTop="3dp"
   android:textSize="11sp" android:textColor="#536C7D"
   android:maxLines="2" android:ellipsize="end"/>
+</LinearLayout>
 </LinearLayout>

@@ -23,10 +23,15 @@ final class WidgetData {
         final String title;
         final String subtitle;
         final String itemKey;
+        final int dateGroup; // -1: no heading; 0: urgent; 1: upcoming; 2: undated
         Row(String title, String subtitle, String itemKey) {
+            this(title, subtitle, itemKey, -1);
+        }
+        Row(String title, String subtitle, String itemKey, int dateGroup) {
             this.title = title;
             this.subtitle = subtitle;
             this.itemKey = itemKey;
+            this.dateGroup = dateGroup;
         }
     }
     static final class Summary {
@@ -115,18 +120,25 @@ final class WidgetData {
             JSONObject record = records.optJSONObject(i);
             if (record != null && !record.optBoolean("done", false)) pending.add(record);
         }
-        pending.sort(Comparator.comparing(WidgetData::sortKey));
+        long now = System.currentTimeMillis();
+        String today = LocalDate.ofInstant(Instant.ofEpochMilli(now), ZoneId.systemDefault()).toString();
+        Map<JSONObject, String> keys = new HashMap<>();
+        for (JSONObject r : pending) keys.put(r, sortKey(r, now));
+        pending.sort(Comparator.comparingInt((JSONObject r) -> dateGroup(r, keys.get(r), today))
+                .thenComparing(r -> keys.get(r))
+                .thenComparing(r -> r.optString("created", "")));
         List<Row> rows = new ArrayList<>();
+        int previousGroup = -1;
         for (JSONObject r : pending) {
+            int group = dateGroup(r, keys.get(r), today);
+            int heading = group == previousGroup ? -1 : group;
+            previousGroup = group;
             String title = r.optString("title", "Untitled reminder");
             String type = r.optString("dueType", "none");
             String due = r.optString("due", "");
             JSONObject recurrence = r.optJSONObject("repeat");
             boolean shortRepeat = recurrence != null && "minutes".equals(recurrence.optString("type"));
-            if (recurrence != null && !shortRepeat && "day".equals(type)) {
-                long next = ReminderManager.nextCalendarAlarm(r, System.currentTimeMillis());
-                if (next > 0) due = LocalDate.ofInstant(Instant.ofEpochMilli(next), ZoneId.systemDefault()).toString();
-            }
+            if ("day".equals(type) && !"9999-12-31".equals(keys.get(r))) due = keys.get(r);
             String detail = "No deadline";
             try {
                 if (shortRepeat) {
@@ -134,9 +146,11 @@ final class WidgetData {
                 } else if ("day".equals(type) && !due.isEmpty()) {
                     LocalDate d = LocalDate.parse(due);
                     detail = d.format(DAY);
-                    if (d.isBefore(LocalDate.now())) detail = "Overdue · " + detail;
+                    if (due.compareTo(today) < 0) detail = "Overdue · " + detail;
+                    else if (due.equals(today)) detail = "Today · " + detail;
                 } else if ("month".equals(type) && !due.isEmpty()) {
                     detail = LocalDate.parse(due + "-01").format(MONTH) + " (whole month)";
+                    if (group == 0) detail = "Overdue · " + detail;
                 }
             } catch (DateTimeParseException ignored) { detail = "Check date"; }
             if (r.optJSONObject("repeat") != null) {
@@ -147,17 +161,27 @@ final class WidgetData {
                 String preview = body.length() > 68 ? body.substring(0, 67) + "…" : body;
                 detail = "📝 Note · " + detail + (preview.isEmpty() ? "" : " · " + preview);
             }
-            rows.add(new Row(title, detail, r.optString("id", "")));
+            rows.add(new Row(title, detail, r.optString("id", ""), heading));
         }
         return rows;
     }
 
-    private static String sortKey(JSONObject r) {
+    private static int dateGroup(JSONObject r, String key, String today) {
+        String type = r.optString("dueType", "none");
+        if ("none".equals(type) || "9999-12-31".equals(key)) return 2;
+        if ("month".equals(type)) return r.optString("due", "").compareTo(today.substring(0, 7)) < 0 ? 0 : 1;
+        JSONObject recurrence = r.optJSONObject("repeat");
+        boolean activeShortRepeat = recurrence != null && "minutes".equals(recurrence.optString("type"))
+                && !r.optBoolean("repeatPaused", false);
+        return activeShortRepeat || key.compareTo(today) <= 0 ? 0 : 1;
+    }
+
+    private static String sortKey(JSONObject r, long now) {
         String type = r.optString("dueType", "none"), d = r.optString("due", "");
         if ("day".equals(type) && d.length() == 10) {
             JSONObject recurrence = r.optJSONObject("repeat");
             if (recurrence != null && !"minutes".equals(recurrence.optString("type"))) {
-                long next = ReminderManager.nextCalendarAlarm(r, System.currentTimeMillis());
+                long next = ReminderManager.nextCalendarAlarm(r, now);
                 if (next > 0) return LocalDate.ofInstant(Instant.ofEpochMilli(next), ZoneId.systemDefault()).toString();
             }
             return d;
