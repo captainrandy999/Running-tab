@@ -37,7 +37,10 @@ test('To-Do and Shopping notices dismiss and list actions exist',()=>{
  assert.match(todo,/statusTimer=setTimeout/);
  assert.match(shop,/statusTimer=setTimeout/);
  assert.match(html,/id="todoClearCompleted"/);
- assert.match(html,/id="todoDeleteAll"/);
+ // Bulk deletion was moved out of the task list and into Settings.
+ assert.doesNotMatch(html,/id="todoDeleteAll"/);
+ assert.match(html,/id="todoReset"/);
+ assert.match(todo,/\$\('todoReset'\)\.addEventListener\('click',deleteEverything\)/);
  assert.match(html,/id="todoRetentionDays"/);
  assert.match(todo,/data-remove/);
 });

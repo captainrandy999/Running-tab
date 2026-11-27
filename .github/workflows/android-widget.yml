@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - 'android/**'
+      - 'tests/**'
       - '.github/workflows/android-widget.yml'
   workflow_dispatch:
 
