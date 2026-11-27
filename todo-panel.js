@@ -59,7 +59,21 @@ function pruneCompleted(){
  return persist(keep)?removed.length:0;
 }
 function notifyChange(){window.dispatchEvent(new Event('runningtab:todo-changed'));}
-function sortKey(t){return t.dueType==='none'?'9999-12-31':t.dueType==='month'?t.due+'-32':repeat().currentOrNext(t);}
+function sortKey(t,reference=new Date()){return t.dueType==='none'?'9999-12-31':t.dueType==='month'?t.due+'-32':repeat().currentOrNext(t,reference)||'9999-12-31';}
+function localDay(reference=new Date()){return [reference.getFullYear(),String(reference.getMonth()+1).padStart(2,'0'),String(reference.getDate()).padStart(2,'0')].join('-');}
+function dueGroup(t,today,key){
+ if(t.dueType==='none'||key==='9999-12-31')return 'undated';
+ if(t.dueType==='month')return String(t.due)<today.slice(0,7)?'urgent':'upcoming';
+ return t.repeat?.type==='minutes'&&!t.repeatPaused||key<=today?'urgent':'upcoming';
+}
+function groupedRows(items,expandedNoteId,reference){
+ const today=localDay(reference),groups={urgent:[],upcoming:[],undated:[]};
+ for(const t of items)groups[dueGroup(t,today,sortKey(t,reference))].push(t);
+ return [['urgent','Today & overdue'],['upcoming','Upcoming'],['undated','Undated']].map(([key,heading])=>
+  groups[key].length?'<h3 class="todo-date-heading todo-date-heading--'+key+'">'+heading+'</h3>'+rows(groups[key],false,expandedNoteId):''
+ ).join('');
+}
+let lastRenderedDay='';
 function taskAppearance(t){
  if(t.done)return {tone:'complete',text:'Completed'};
  if(t.kind==='note')return {tone:'note',text:'Note'};
@@ -123,14 +137,16 @@ function rows(items,completed=false,expandedNoteId=null){
  }).join('');
 }
 function render(expandedNoteId=null){
- const open=tasks.filter(t=>!t.done).sort((a,b)=>sortKey(a).localeCompare(sortKey(b))||String(a.created).localeCompare(String(b.created)));
+ const reference=new Date();
+ lastRenderedDay=localDay(reference);
+ const open=tasks.filter(t=>!t.done).sort((a,b)=>sortKey(a,reference).localeCompare(sortKey(b,reference))||String(a.created).localeCompare(String(b.created)));
  const done=tasks.filter(t=>t.done).sort((a,b)=>String(b.completedAt||'').localeCompare(String(a.completedAt||'')));
  $('count').textContent=open.length+' remaining';
  $('doneCount').textContent='Completed ('+done.length+')';
  $('todoCompletedDetails').hidden=done.length===0;
  $('todoClearCompleted').hidden=done.length===0;
  $('todoClearCompleted').textContent='Clear all ('+done.length+')';
- $('pending').innerHTML=open.length?rows(open,false,expandedNoteId):'<p class="empty">Nothing outstanding.</p>';
+ $('pending').innerHTML=open.length?groupedRows(open,expandedNoteId,reference):'<p class="empty">Nothing outstanding.</p>';
  $('completed').innerHTML=done.length?rows(done,true,expandedNoteId):'<p class="info">No completed items.</p>';
  for(const root of ['pending','completed']){
   $(root).querySelectorAll('[data-edit-note]').forEach(el=>el.addEventListener('click',()=>{
@@ -234,9 +250,20 @@ document.addEventListener('visibilitychange',()=>{
 });
 window.addEventListener('focus',()=>{
  if(document.querySelector('.note-edit-form:not([hidden]), .task-reminder-form:not([hidden])'))return;
- if(pruneCompleted())render();
+ const removed=pruneCompleted();
+ if(removed||lastRenderedDay!==localDay()){
+  const expanded=document.querySelector('#pending .note-details[open] [data-edit-note]');
+  render(expanded?.dataset.editNote||null);
+ }
 });
-setInterval(()=>{if(!document.hidden&&pruneCompleted())render();},60*60*1000);
+setInterval(()=>{
+ if(document.hidden||document.querySelector('.note-edit-form:not([hidden]), .task-reminder-form:not([hidden])'))return;
+ if(lastRenderedDay!==localDay()){
+  const expanded=document.querySelector('#pending .note-details[open] [data-edit-note]');
+  render(expanded?.dataset.editNote||null);
+ }
+},60*1000);
+setInterval(()=>{if(!document.hidden&&!document.querySelector('.note-edit-form:not([hidden]), .task-reminder-form:not([hidden])')&&pruneCompleted())render();},60*60*1000);
 pruneCompleted();
 render();
 })();
